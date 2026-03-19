@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Tweet Test</title></head>
+<body style="background:#111;padding:40px;">
+<h2 style="color:white;font-family:sans-serif;">Twitter Embed Test</h2>
+<p style="color:#888;font-family:sans-serif;" id="status">Loading widgets.js...</p>
+
+<div id="tweet-container">
+  <a class="twitter-timeline"
+     data-theme="dark"
+     data-tweet-limit="3"
+     data-chrome="noheader nofooter noborders"
+     href="https://twitter.com/Ripple">
+     Tweets by @Ripple (if you see this text, widgets.js failed to load)
+  </a>
+</div>
+
+<script>
+  // Method 1: standard async load
+  var script = document.createElement('script');
+  script.src = 'https://platform.twitter.com/widgets.js';
+  script.async = true;
+  script.onload = function() {
+    document.getElementById('status').textContent = '✓ widgets.js loaded. Rendering...';
+    document.getElementById('status').style.color = '#0f0';
+    // Force re-scan the DOM
+    if (window.twttr && twttr.widgets) {
+      twttr.widgets.load(document.getElementById('tweet-container'));
+    }
+  };
+  script.onerror = function() {
+    document.getElementById('status').textContent = '✗ widgets.js BLOCKED — check browser/network';
+    document.getElementById('status').style.color = '#f00';
+  };
+  document.body.appendChild(script);
+</script>
+</body>
+</html>
