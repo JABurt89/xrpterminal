@@ -64,12 +64,10 @@
   .hero-metric .hm-val .pct.up{color:var(--green);}.hero-metric .hm-val .pct.dn{color:var(--red);}
   .hero-sep{width:1px;height:clamp(28px,3.5vw,50px);background:var(--border-lit);flex-shrink:0;}
   .metrics{display:flex;align-items:center;gap:clamp(10px,1.6vw,28px);padding:clamp(6px,.7vw,10px) 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);flex-wrap:wrap;overflow:hidden;}
-  .m{display:flex;flex-direction:column;gap:0;}
-  .m .ml{font-size:clamp(5px,.55vw,8px);letter-spacing:clamp(1px,.15vw,2px);color:var(--text-dim);text-transform:uppercase;}
+  .m{display:flex;flex-direction:column;gap:0;}.m .ml{font-size:clamp(5px,.55vw,8px);letter-spacing:clamp(1px,.15vw,2px);color:var(--text-dim);text-transform:uppercase;}
   .m .mv{font-family:'Outfit',sans-serif;font-size:clamp(13px,1.5vw,24px);font-weight:600;color:var(--text);letter-spacing:-.5px;white-space:nowrap;}
   .m .mv.g{color:var(--green);}.m .mv.c{color:var(--cyan);}.m .mv.a{color:var(--amber);}.m .mv.btc{color:var(--btc);}
-  .m .mv .pct{font-size:.6em;font-weight:500;margin-left:4px;}
-  .m .mv .pct.up{color:var(--green);}.m .mv .pct.dn{color:var(--red);}
+  .m .mv .pct{font-size:.6em;font-weight:500;margin-left:4px;}.m .mv .pct.up{color:var(--green);}.m .mv .pct.dn{color:var(--red);}
   .ms{width:1px;height:clamp(18px,2.2vw,32px);background:var(--border-lit);flex-shrink:0;}
   .charts{display:grid;grid-template-columns:1fr clamp(200px,22vw,340px);gap:clamp(8px,1vw,14px);margin-top:clamp(4px,.5vw,8px);min-height:0;}
   .cpanel{position:relative;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface);min-height:0;}
@@ -81,13 +79,11 @@
   .side-pair em{font-style:normal;color:var(--btc);}
   .sp{font-family:'Outfit',sans-serif;font-size:clamp(11px,1.2vw,16px);font-weight:700;color:var(--text);letter-spacing:-.5px;}
   .sp .spu{font-size:.55em;color:var(--text-dim);font-weight:400;margin-left:3px;}
-  .sp .spp{font-size:.55em;font-weight:500;margin-left:6px;}
-  .sp .spp.up{color:var(--green);}.sp .spp.dn{color:var(--red);}
+  .sp .spp{font-size:.55em;font-weight:500;margin-left:6px;}.sp .spp.up{color:var(--green);}.sp .spp.dn{color:var(--red);}
   .sc{flex:1;min-height:0;}
   .bot{display:flex;align-items:center;justify-content:space-between;padding-top:clamp(3px,.4vw,6px);font-size:clamp(5px,.55vw,8px);letter-spacing:2px;color:var(--text-ghost);text-transform:uppercase;}
   .bot a{color:var(--text-dim);text-decoration:none;}
-  .bot .hint{opacity:0;transition:opacity .3s;}
-  body:not(.idle) .bot .hint{opacity:1;}
+  .bot .hint{opacity:0;transition:opacity .3s;}body:not(.idle) .bot .hint{opacity:1;}
   .top,.hero,.metrics,.charts,.bot{opacity:0;animation:fi .5s ease forwards;}
   .top{animation-delay:0s}.hero{animation-delay:.05s}.metrics{animation-delay:.1s}.charts{animation-delay:.15s}.bot{animation-delay:.2s}
   @keyframes fi{to{opacity:1}}
@@ -119,10 +115,10 @@
             <span id="aqiVal">--</span>
             <span class="aqi-label" id="aqiLabel">AQI</span>
           </div>
-          <span class="aqi-src" id="aqiSrc"></span>
+          <span class="aqi-src">IQAir</span>
         </div>
         <div class="wx-sep"></div>
-        <div class="wx-forecast" id="wxForecast">Loading forecast…</div>
+        <div class="wx-forecast" id="wxForecast">Loading…</div>
       </div>
     </div>
   </div>
@@ -158,13 +154,16 @@
   <div class="bot">
     <span>XRP TERMINAL — NOT FINANCIAL ADVICE</span>
     <span class="hint">PRESS F FOR FULLSCREEN</span>
-    <span>CHARTS: <a href="https://www.tradingview.com/" target="_blank" rel="noopener">TRADINGVIEW</a> LW · DATA: BINANCE · AQI: WAQI/IQAIR</span>
+    <span>CHARTS: <a href="https://www.tradingview.com/" target="_blank" rel="noopener">TRADINGVIEW</a> LW · DATA: BINANCE · AQI: IQAIR</span>
   </div>
 </div>
 <script>
 (function(){
   'use strict';
   const TZ='Asia/Bangkok',TZ_SHIFT=7*3600,LAT=18.8088,LON=98.9717;
+  // IQAir API key
+  const IQAIR_KEY='8a58e160-a04e-44d6-8902-c83fc42021c1';
+
   function fmtBKK(s){return new Date(s*1000).toLocaleTimeString('en-GB',{hour12:false,hour:'2-digit',minute:'2-digit',timeZone:TZ});}
   function fmtBKKfull(s){return new Date(s*1000).toLocaleString('en-GB',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit',day:'2-digit',month:'short',timeZone:TZ});}
   function toBKK(ms){return Math.floor(ms/1000)+TZ_SHIFT;}
@@ -186,7 +185,7 @@
   document.addEventListener('keydown',e=>{if(e.key==='f'||e.key==='F'){if(!document.fullscreenElement)document.documentElement.requestFullscreen().catch(()=>{});else document.exitFullscreen();}});
   (async()=>{try{if('wakeLock' in navigator)await navigator.wakeLock.request('screen');}catch(e){}})();
 
-  // ═══════ WEATHER (Open-Meteo — free, accurate for temp/forecast) ═══════
+  // ═══════ WEATHER (Open-Meteo) ═══════
   const WMO_ICONS={0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',80:'🌦️',81:'🌧️',82:'⛈️',95:'⛈️',96:'⛈️',99:'⛈️'};
   const WMO_DESC={0:'Clear sky',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',45:'Fog',48:'Fog',51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',61:'Light rain',63:'Rain',65:'Heavy rain',80:'Rain showers',81:'Rain showers',82:'Heavy showers',95:'Thunderstorm',96:'Thunderstorm',99:'Severe storm'};
 
@@ -195,25 +194,19 @@
       const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max&hourly=precipitation_probability,weather_code&timezone=Asia%2FBangkok&forecast_days=1`);
       if(!r.ok)return;const d=await r.json();
       const temp=Math.round(d.current.temperature_2m),code=d.current.weather_code;
-      $('wxIcon').textContent=WMO_ICONS[code]||'🌡️';
-      $('wxTemp').textContent=temp+'°C';
-      if(d.daily){$('wxHiLo').textContent='H '+Math.round(d.daily.temperature_2m_max[0])+'° L '+Math.round(d.daily.temperature_2m_min[0])+'°';}
+      $('wxIcon').textContent=WMO_ICONS[code]||'🌡️';$('wxTemp').textContent=temp+'°C';
+      if(d.daily)$('wxHiLo').textContent='H '+Math.round(d.daily.temperature_2m_max[0])+'° L '+Math.round(d.daily.temperature_2m_min[0])+'°';
       if(d.hourly){
         const nowH=parseInt(new Date().toLocaleString('en-US',{hour:'numeric',hour12:false,timeZone:TZ}));
         let rain=null;
-        for(let i=nowH;i<d.hourly.time.length;i++){
-          if(d.hourly.precipitation_probability[i]>40){
-            rain={time:d.hourly.time[i].split('T')[1],prob:d.hourly.precipitation_probability[i],desc:WMO_DESC[d.hourly.weather_code[i]]||'Rain'};break;
-          }
-        }
+        for(let i=nowH;i<d.hourly.time.length;i++){if(d.hourly.precipitation_probability[i]>40){rain={time:d.hourly.time[i].split('T')[1],prob:d.hourly.precipitation_probability[i],desc:WMO_DESC[d.hourly.weather_code[i]]||'Rain'};break;}}
         if(rain){$('wxForecast').textContent='🌧️ '+rain.desc+' ~'+rain.time+' ('+rain.prob+'%)';$('wxForecast').style.color='var(--amber)';}
         else{const desc=WMO_DESC[code]||'';$('wxForecast').textContent=desc+(d.daily?.precipitation_probability_max?.[0]>20?' · '+d.daily.precipitation_probability_max[0]+'% rain chance':'');$('wxForecast').style.color='var(--text-dim)';}
       }
     }catch(e){}
   }
 
-  // ═══════ AQI — WAQI (aqicn.org) primary, IQAir scrape fallback ═══════
-  // WAQI uses real Thai PCD monitoring stations — same data IQAir aggregates
+  // ═══════ AQI — IQAir API (nearest station to Payap University) ═══════
   function getAqiColor(aqi){
     if(aqi<=50)return{bg:'#00e40020',dot:'#00e400',label:'Good'};
     if(aqi<=100)return{bg:'#ffff0018',dot:'#cccc00',label:'Moderate'};
@@ -223,69 +216,28 @@
     return{bg:'#7e002320',dot:'#7e0023',label:'Hazardous'};
   }
 
-  function renderAqi(aqi, pm25, src){
-    const c=getAqiColor(aqi);
-    $('aqiVal').textContent=aqi;
-    $('aqiDot').style.background=c.dot;
-    $('aqiBadge').style.background=c.bg;
-    $('aqiBadge').style.color=c.dot;
-    $('aqiLabel').textContent=c.label+(pm25!=null?' · PM2.5 '+Math.round(pm25):'');
-    $('aqiSrc').textContent=src;
-  }
-
   async function fetchAqi(){
-    let got=false;
-
-    // 1) WAQI API — uses real monitoring station data for Chiang Mai
-    // Station IDs near Payap: try geo-based query
-    if(!got){try{
-      const r=await fetch('https://api.waqi.info/feed/geo:'+LAT+';'+LON+'/?token=demo',{signal:AbortSignal.timeout(6000)});
-      if(r.ok){
-        const d=await r.json();
-        if(d.status==='ok'&&d.data?.aqi){
-          const aqi=d.data.aqi;
-          const pm25=d.data.iaqi?.pm25?.v||null;
-          renderAqi(aqi,pm25,'WAQI');
-          got=true;
-        }
+    try{
+      // IQAir nearest_city endpoint — uses GPS coords to find closest station (Payap)
+      const url=`https://api.airvisual.com/v2/nearest_city?lat=${LAT}&lon=${LON}&key=${IQAIR_KEY}`;
+      const r=await fetch(url,{signal:AbortSignal.timeout(10000)});
+      if(!r.ok){console.warn('IQAir HTTP',r.status);return;}
+      const d=await r.json();
+      if(d.status==='success'&&d.data?.current?.pollution){
+        const pol=d.data.current.pollution;
+        const aqi=pol.aqius; // US AQI
+        const pm25=pol.p2?.conc??null;
+        const c=getAqiColor(aqi);
+        $('aqiVal').textContent=aqi;
+        $('aqiDot').style.background=c.dot;
+        $('aqiBadge').style.background=c.bg;
+        $('aqiBadge').style.color=c.dot;
+        $('aqiLabel').textContent=c.label+(pm25!=null?' · PM2.5 '+Math.round(pm25):'');
+        console.log('✓ IQAir AQI:',aqi,'City:',d.data.city,'Station:',d.data.station||'city-level');
+      }else{
+        console.warn('IQAir response:',d);
       }
-    }catch(e){}}
-
-    // 2) WAQI by city name
-    if(!got){try{
-      const r=await fetch('https://api.waqi.info/feed/chiang-mai/?token=demo',{signal:AbortSignal.timeout(6000)});
-      if(r.ok){
-        const d=await r.json();
-        if(d.status==='ok'&&d.data?.aqi){
-          renderAqi(d.data.aqi,d.data.iaqi?.pm25?.v||null,'WAQI');
-          got=true;
-        }
-      }
-    }catch(e){}}
-
-    // 3) Scrape IQAir Chiang Mai page via CORS proxy
-    if(!got){try{
-      const r=await fetch('https://api.allorigins.win/get?url='+encodeURIComponent('https://www.iqair.com/th-en/thailand/chiang-mai'),{signal:AbortSignal.timeout(10000)});
-      if(r.ok){
-        const w=await r.json();
-        if(w.contents){
-          // IQAir embeds AQI in various data attributes and JSON-LD
-          const m=w.contents.match(/"aqi"\s*:\s*(\d+)/)||w.contents.match(/aqi-value[^>]*>(\d+)/i)||w.contents.match(/class="aqi[^"]*"[^>]*>\s*(\d+)/i);
-          if(m){
-            const aqi=parseInt(m[1]);
-            const pm=w.contents.match(/"pm25"\s*:\s*([\d.]+)/)||w.contents.match(/PM2\.5[^<]*?([\d.]+)\s*µg/i);
-            renderAqi(aqi,pm?parseFloat(pm[1]):null,'IQAir');
-            got=true;
-          }
-        }
-      }
-    }catch(e){}}
-
-    // 4) Fallback to Open-Meteo AQI
-    if(!got){try{
-      const r=await fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${LAT}&longitude=${LON}&current=us_aqi,pm2_5&timezone=Asia%2FBangkok`,{signal:AbortSignal.timeout(6000)});
-      if(r.ok){const d=await r.json();if(d.current){renderAqi(d.current.us_aqi,d.current.pm2_5,'Open-Meteo');}}
-    }catch(e){}}
+    }catch(e){console.error('IQAir fetch error',e);}
   }
 
   // ═══════ CHARTS ═══════
@@ -355,7 +307,9 @@
   fetchFx();fetchBrent();fetchWeather();fetchAqi();
   setInterval(fetchFx,30000);
   setInterval(fetchBrent,120000);
-  setInterval(()=>{fetchWeather();fetchAqi();},300000);
+  setInterval(fetchWeather,300000);
+  // IQAir free plan: 500 calls/day. Every 10 min = 144 calls/day — well within limit
+  setInterval(fetchAqi,600000);
 })();
 </script>
 </body>
