@@ -7,20 +7,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700;800;900&family=Azeret+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 <style>
-  :root{
-    --bg:#04060b;--surface:#080b14;--border:#0f1520;--border-lit:#161e30;
-    --green:#00e87b;--green-soft:#00e87b18;--green-mid:#00e87b40;
-    --red:#ff2952;--red-soft:#ff295218;
-    --amber:#f0b030;--cyan:#3db8f5;--btc:#f7931a;
-    --text:#c8cee0;--text-dim:#3c4560;--text-ghost:#1c2235;
-    /* AQI colors */
-    --aqi-good:#00e400;--aqi-mod:#ffff00;--aqi-usg:#ff7e00;
-    --aqi-unhealthy:#ff0000;--aqi-very:#8f3f97;--aqi-haz:#7e0023;
-  }
+  :root{--bg:#04060b;--surface:#080b14;--border:#0f1520;--border-lit:#161e30;--green:#00e87b;--green-soft:#00e87b18;--green-mid:#00e87b40;--red:#ff2952;--red-soft:#ff295218;--amber:#f0b030;--cyan:#3db8f5;--btc:#f7931a;--text:#c8cee0;--text-dim:#3c4560;--text-ghost:#1c2235;}
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'Azeret Mono',monospace;}
   body.idle{cursor:none;}
-
   .amb{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
   .amb .o{position:absolute;border-radius:50%;filter:blur(130px);opacity:.06;animation:dr 22s ease-in-out infinite alternate;}
   .amb .o1{width:650px;height:650px;background:var(--green);top:-12%;left:-6%;animation-duration:26s;}
@@ -28,80 +18,51 @@
   .amb .o3{width:350px;height:350px;background:var(--btc);top:30%;right:10%;opacity:.025;animation-duration:20s;animation-delay:-6s;}
   @keyframes dr{0%{transform:translate(0,0) scale(1)}100%{transform:translate(50px,35px) scale(1.12)}}
   .noise{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.02;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:128px;}
-
   .dash{position:relative;z-index:2;display:grid;grid-template-rows:auto auto auto 1fr auto;height:100vh;padding:clamp(8px,1vw,16px) clamp(14px,1.8vw,28px) clamp(4px,.6vw,10px);}
-
-  /* ── Top ── */
   .top{display:flex;align-items:flex-start;justify-content:space-between;padding-bottom:clamp(6px,.8vw,12px);border-bottom:1px solid var(--border);gap:16px;}
   .logo{display:flex;align-items:center;gap:clamp(8px,1vw,14px);}
   .logo-ring{width:clamp(26px,2.5vw,36px);height:clamp(26px,2.5vw,36px);border:2px solid var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-weight:900;font-size:clamp(10px,1.2vw,15px);color:var(--green);box-shadow:0 0 18px var(--green-soft);animation:rp 4s ease-in-out infinite;}
   @keyframes rp{0%,100%{box-shadow:0 0 10px var(--green-soft)}50%{box-shadow:0 0 28px var(--green-mid)}}
   .logo-t{font-family:'Outfit',sans-serif;font-size:clamp(14px,1.8vw,22px);font-weight:700;letter-spacing:clamp(3px,.4vw,6px);text-transform:uppercase;}
   .logo-t em{font-style:normal;color:var(--green);}
-
-  /* Top right: status + clock + weather */
   .top-right{display:flex;flex-direction:column;align-items:flex-end;gap:clamp(4px,.5vw,8px);}
-
   .status-row{display:flex;align-items:center;gap:clamp(10px,1.5vw,20px);}
   .wd{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:bl 2s ease-in-out infinite;}
   .wd.off{background:var(--red);box-shadow:0 0 8px var(--red);}
   @keyframes bl{0%,100%{opacity:1}50%{opacity:.25}}
   .si{display:flex;align-items:center;gap:5px;font-size:clamp(8px,.9vw,11px);color:var(--text-dim);letter-spacing:1.5px;}
-
-  /* Bigger clock */
   .clock-row{display:flex;align-items:baseline;gap:clamp(8px,1.2vw,18px);font-family:'Outfit',sans-serif;}
   .clock-time{font-size:clamp(20px,2.5vw,36px);font-weight:700;color:var(--text);letter-spacing:1px;}
   .clock-date{font-size:clamp(11px,1.3vw,18px);font-weight:400;color:var(--text);letter-spacing:.5px;opacity:.7;}
   .clock-tz{font-size:clamp(9px,1vw,14px);font-weight:600;color:var(--cyan);letter-spacing:1px;}
-
-  /* Weather + AQI row */
-  .wx-row{
-    display:flex;align-items:center;gap:clamp(12px,1.6vw,24px);
-    font-family:'Outfit',sans-serif;
-  }
+  .wx-row{display:flex;align-items:center;gap:clamp(12px,1.6vw,24px);font-family:'Outfit',sans-serif;}
   .wx-item{display:flex;align-items:center;gap:clamp(4px,.5vw,8px);}
   .wx-icon{font-size:clamp(16px,2vw,28px);}
   .wx-val{font-size:clamp(12px,1.4vw,20px);font-weight:600;color:var(--text);}
   .wx-sub{font-size:clamp(8px,.9vw,12px);color:var(--text-dim);font-weight:400;}
   .wx-sep{width:1px;height:clamp(16px,2vw,26px);background:var(--border-lit);}
-
-  /* AQI badge */
-  .aqi-badge{
-    display:flex;align-items:center;gap:clamp(4px,.5vw,8px);
-    padding:clamp(2px,.3vw,4px) clamp(6px,.8vw,12px);
-    border-radius:5px;
-    font-size:clamp(11px,1.3vw,18px);font-weight:700;
-    letter-spacing:.5px;
-  }
+  .aqi-badge{display:flex;align-items:center;gap:clamp(4px,.5vw,8px);padding:clamp(2px,.3vw,4px) clamp(6px,.8vw,12px);border-radius:5px;font-size:clamp(11px,1.3vw,18px);font-weight:700;letter-spacing:.5px;}
   .aqi-dot{width:clamp(8px,1vw,14px);height:clamp(8px,1vw,14px);border-radius:50%;flex-shrink:0;}
   .aqi-label{font-size:clamp(7px,.8vw,11px);font-weight:500;opacity:.8;margin-left:2px;letter-spacing:1px;text-transform:uppercase;}
-
-  /* Rain forecast note */
+  .aqi-src{font-size:clamp(6px,.6vw,8px);color:var(--text-ghost);letter-spacing:1px;margin-left:4px;}
   .wx-forecast{font-size:clamp(8px,.9vw,12px);color:var(--amber);font-weight:500;letter-spacing:.3px;}
-
-  /* ── Hero ── */
   .hero{display:flex;align-items:flex-end;justify-content:space-between;padding:clamp(10px,1.4vw,22px) 0 clamp(8px,1vw,16px);gap:clamp(16px,3vw,48px);flex-wrap:wrap;}
   .hero-left{flex-shrink:0;}
   .hp-label{font-family:'Outfit',sans-serif;font-size:clamp(9px,1vw,13px);font-weight:500;letter-spacing:clamp(2px,.35vw,4px);color:var(--text-dim);text-transform:uppercase;margin-bottom:clamp(4px,.5vw,8px);}
   .hl{display:flex;align-items:baseline;gap:clamp(8px,1.2vw,20px);}
   .hp{font-family:'Outfit',sans-serif;font-size:clamp(64px,10vw,150px);font-weight:800;line-height:.88;letter-spacing:-3px;color:var(--green);text-shadow:0 0 70px var(--green-soft),0 0 140px #00e87b06;transition:color .1s,text-shadow .1s;}
-  .hp.fu{color:#55ffaa;text-shadow:0 0 90px #55ffaa30;}
-  .hp.fd{color:#ff6080;text-shadow:0 0 90px #ff608030;}
+  .hp.fu{color:#55ffaa;text-shadow:0 0 90px #55ffaa30;}.hp.fd{color:#ff6080;text-shadow:0 0 90px #ff608030;}
   .hu{font-size:clamp(16px,2.5vw,34px);font-weight:300;color:var(--text-dim);letter-spacing:2px;margin-left:-4px;margin-bottom:clamp(2px,.4vw,8px);}
   .hc{font-family:'Outfit',sans-serif;font-size:clamp(13px,1.6vw,26px);font-weight:600;padding:clamp(3px,.4vw,6px) clamp(10px,1.2vw,18px);border-radius:5px;letter-spacing:.5px;display:inline-block;margin-top:clamp(4px,.5vw,8px);}
   .hc.up{background:var(--green-soft);color:var(--green);}.hc.dn{background:var(--red-soft);color:var(--red);}.hc.fl{background:#ffffff06;color:var(--text-dim);}
-
   .hero-right{display:flex;align-items:center;gap:clamp(14px,2.2vw,36px);flex-wrap:wrap;}
   .hero-metric{display:flex;flex-direction:column;gap:1px;}
   .hero-metric .hm-label{font-size:clamp(6px,.65vw,9px);letter-spacing:clamp(1px,.18vw,2.5px);color:var(--text-dim);text-transform:uppercase;}
   .hero-metric .hm-val{font-family:'Outfit',sans-serif;font-size:clamp(18px,2.4vw,38px);font-weight:700;letter-spacing:-.5px;white-space:nowrap;}
-  .hero-metric .hm-val.btc{color:var(--btc);}
-  .hero-metric .hm-val.g{color:var(--green);}
+  .hero-metric .hm-val.btc{color:var(--btc);}.hero-metric .hm-val.g{color:var(--green);}
   .hero-metric .hm-val .pct{font-size:.55em;font-weight:500;margin-left:4px;}
   .hero-metric .hm-val .pct.up{color:var(--green);}.hero-metric .hm-val .pct.dn{color:var(--red);}
   .hero-sep{width:1px;height:clamp(28px,3.5vw,50px);background:var(--border-lit);flex-shrink:0;}
-
-  /* Metrics strip */
   .metrics{display:flex;align-items:center;gap:clamp(10px,1.6vw,28px);padding:clamp(6px,.7vw,10px) 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);flex-wrap:wrap;overflow:hidden;}
   .m{display:flex;flex-direction:column;gap:0;}
   .m .ml{font-size:clamp(5px,.55vw,8px);letter-spacing:clamp(1px,.15vw,2px);color:var(--text-dim);text-transform:uppercase;}
@@ -110,8 +71,6 @@
   .m .mv .pct{font-size:.6em;font-weight:500;margin-left:4px;}
   .m .mv .pct.up{color:var(--green);}.m .mv .pct.dn{color:var(--red);}
   .ms{width:1px;height:clamp(18px,2.2vw,32px);background:var(--border-lit);flex-shrink:0;}
-
-  /* Charts */
   .charts{display:grid;grid-template-columns:1fr clamp(200px,22vw,340px);gap:clamp(8px,1vw,14px);margin-top:clamp(4px,.5vw,8px);min-height:0;}
   .cpanel{position:relative;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface);min-height:0;}
   .cpanel .clbl{position:absolute;top:8px;left:12px;z-index:5;font-size:clamp(6px,.6vw,9px);letter-spacing:2.5px;color:var(--text-dim);display:flex;align-items:center;gap:6px;}
@@ -125,12 +84,10 @@
   .sp .spp{font-size:.55em;font-weight:500;margin-left:6px;}
   .sp .spp.up{color:var(--green);}.sp .spp.dn{color:var(--red);}
   .sc{flex:1;min-height:0;}
-
   .bot{display:flex;align-items:center;justify-content:space-between;padding-top:clamp(3px,.4vw,6px);font-size:clamp(5px,.55vw,8px);letter-spacing:2px;color:var(--text-ghost);text-transform:uppercase;}
   .bot a{color:var(--text-dim);text-decoration:none;}
   .bot .hint{opacity:0;transition:opacity .3s;}
   body:not(.idle) .bot .hint{opacity:1;}
-
   .top,.hero,.metrics,.charts,.bot{opacity:0;animation:fi .5s ease forwards;}
   .top{animation-delay:0s}.hero{animation-delay:.05s}.metrics{animation-delay:.1s}.charts{animation-delay:.15s}.bot{animation-delay:.2s}
   @keyframes fi{to{opacity:1}}
@@ -141,26 +98,19 @@
 <div class="amb"><div class="o o1"></div><div class="o o2"></div><div class="o o3"></div></div>
 <div class="noise"></div>
 <div class="dash">
-
   <div class="top">
     <div class="logo"><div class="logo-ring">X</div><div class="logo-t"><em>XRP</em> Terminal</div></div>
     <div class="top-right">
-      <div class="status-row">
-        <div class="si"><div class="wd" id="wsD"></div><span id="wsL">CONNECTING</span></div>
-      </div>
+      <div class="status-row"><div class="si"><div class="wd" id="wsD"></div><span id="wsL">CONNECTING</span></div></div>
       <div class="clock-row">
         <span class="clock-time" id="clk">--:--:--</span>
         <span class="clock-date" id="dateLbl">---</span>
         <span class="clock-tz">ICT</span>
       </div>
-      <!-- Weather + AQI -->
       <div class="wx-row">
         <div class="wx-item">
           <span class="wx-icon" id="wxIcon">⏳</span>
-          <div>
-            <div class="wx-val" id="wxTemp">--°</div>
-            <div class="wx-sub" id="wxHiLo">H --° L --°</div>
-          </div>
+          <div><div class="wx-val" id="wxTemp">--°</div><div class="wx-sub" id="wxHiLo">H --° L --°</div></div>
         </div>
         <div class="wx-sep"></div>
         <div class="wx-item">
@@ -169,20 +119,17 @@
             <span id="aqiVal">--</span>
             <span class="aqi-label" id="aqiLabel">AQI</span>
           </div>
+          <span class="aqi-src" id="aqiSrc"></span>
         </div>
         <div class="wx-sep"></div>
         <div class="wx-forecast" id="wxForecast">Loading forecast…</div>
       </div>
     </div>
   </div>
-
   <div class="hero">
     <div class="hero-left">
       <div class="hp-label">XRP / USD</div>
-      <div class="hl">
-        <div class="hp" id="xP">—</div>
-        <div class="hu">USD</div>
-      </div>
+      <div class="hl"><div class="hp" id="xP">—</div><div class="hu">USD</div></div>
       <div class="hc fl" id="xChg">—</div>
     </div>
     <div class="hero-right">
@@ -191,7 +138,6 @@
       <div class="hero-metric"><div class="hm-label">XRP / BTC</div><div class="hm-val g" id="xBtc">—</div></div>
     </div>
   </div>
-
   <div class="metrics">
     <div class="m"><div class="ml">USD / JPY</div><div class="mv c" id="fP">—</div></div><div class="ms"></div>
     <div class="m"><div class="ml">XRP / JPY</div><div class="mv g" id="xJpy">—</div></div><div class="ms"></div>
@@ -202,147 +148,147 @@
     <div class="m"><div class="ml">24H Vol</div><div class="mv" id="tVol">—</div></div><div class="ms"></div>
     <div class="m"><div class="ml">Mkt Cap</div><div class="mv" id="tMcap">—</div></div>
   </div>
-
   <div class="charts">
-    <div class="cpanel">
-      <div class="clbl"><div class="cd"></div>XRP / USDT · 3 MIN · BINANCE · ICT</div>
-      <div class="ci" id="chartMain"></div>
-    </div>
+    <div class="cpanel"><div class="clbl"><div class="cd"></div>XRP / USDT · 3 MIN · BINANCE · ICT</div><div class="ci" id="chartMain"></div></div>
     <div class="cpanel" style="display:flex;flex-direction:column;">
-      <div class="side-hdr">
-        <div class="side-pair">XRP / <em>BTC</em> · 3M</div>
-        <div class="sp" id="xBtcH">—<span class="spu">BTC</span></div>
-      </div>
+      <div class="side-hdr"><div class="side-pair">XRP / <em>BTC</em> · 3M</div><div class="sp" id="xBtcH">—<span class="spu">BTC</span></div></div>
       <div class="sc" id="chartBtc"></div>
     </div>
   </div>
-
   <div class="bot">
     <span>XRP TERMINAL — NOT FINANCIAL ADVICE</span>
     <span class="hint">PRESS F FOR FULLSCREEN</span>
-    <span>CHARTS: <a href="https://www.tradingview.com/" target="_blank" rel="noopener">TRADINGVIEW</a> LW · DATA: BINANCE · WX: OPEN-METEO</span>
+    <span>CHARTS: <a href="https://www.tradingview.com/" target="_blank" rel="noopener">TRADINGVIEW</a> LW · DATA: BINANCE · AQI: WAQI/IQAIR</span>
   </div>
-
 </div>
 <script>
 (function(){
   'use strict';
-
-  // ═══════ CONSTANTS ═══════
-  const TZ='Asia/Bangkok',TZ_SHIFT=7*3600;
-  // Chiang Mai, near Payap University
-  const LAT=18.8088,LON=98.9717;
-
-  function fmtBKK(utcSec){return new Date(utcSec*1000).toLocaleTimeString('en-GB',{hour12:false,hour:'2-digit',minute:'2-digit',timeZone:TZ});}
-  function fmtBKKfull(utcSec){return new Date(utcSec*1000).toLocaleString('en-GB',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit',day:'2-digit',month:'short',timeZone:TZ});}
-  function toBKK(utcMs){return Math.floor(utcMs/1000)+TZ_SHIFT;}
+  const TZ='Asia/Bangkok',TZ_SHIFT=7*3600,LAT=18.8088,LON=98.9717;
+  function fmtBKK(s){return new Date(s*1000).toLocaleTimeString('en-GB',{hour12:false,hour:'2-digit',minute:'2-digit',timeZone:TZ});}
+  function fmtBKKfull(s){return new Date(s*1000).toLocaleString('en-GB',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit',day:'2-digit',month:'short',timeZone:TZ});}
+  function toBKK(ms){return Math.floor(ms/1000)+TZ_SHIFT;}
 
   const S={xrpUsd:null,xrpPrev:null,usdJpy:null,brentUsd:null,btcUsd:null,btc24hPct:null,xrpBtc:null,xrpBtc24hPct:null};
   const $=id=>document.getElementById(id);
   const fP=(v,d)=>v==null?'—':Number(v).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
   const fC=v=>{if(v==null)return'—';const n=+v;return n>=1e12?(n/1e12).toFixed(1)+'T':n>=1e9?(n/1e9).toFixed(1)+'B':n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(0)+'K':n.toFixed(0);};
 
-  // Clock
-  setInterval(()=>{
-    const now=new Date();
-    $('clk').textContent=now.toLocaleTimeString('en-GB',{hour12:false,timeZone:TZ});
-    $('dateLbl').textContent=now.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:TZ});
-  },1000);
+  setInterval(()=>{const now=new Date();$('clk').textContent=now.toLocaleTimeString('en-GB',{hour12:false,timeZone:TZ});$('dateLbl').textContent=now.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:TZ});},1000);
 
   function flash(el,dir){el.classList.remove('fu','fd');void el.offsetWidth;el.classList.add(dir==='up'?'fu':'fd');setTimeout(()=>el.classList.remove('fu','fd'),220);}
   function setChg(el,pct){if(pct==null){el.textContent='—';el.className='hc fl';return;}const p=+pct;el.textContent=(p>0?'▲ ':p<0?'▼ ':'')+(p>=0?'+':'')+p.toFixed(2)+'%';el.className='hc '+(p>0?'up':p<0?'dn':'fl');}
   function pctSpan(pct){if(pct==null)return'';const p=+pct;return '<span class="pct '+(p>=0?'up':'dn')+'">'+(p>=0?'+':'')+p.toFixed(1)+'%</span>';}
-  function updateDerived(){
-    if(S.usdJpy&&S.xrpUsd) $('xJpy').textContent='¥'+fP(S.xrpUsd*S.usdJpy,2);
-    if(S.brentUsd) $('bUsd').textContent='$'+fP(S.brentUsd,2);
-    if(S.brentUsd&&S.usdJpy) $('bJpy').textContent='¥'+fP(S.brentUsd*S.usdJpy,0);
-  }
+  function updateDerived(){if(S.usdJpy&&S.xrpUsd)$('xJpy').textContent='¥'+fP(S.xrpUsd*S.usdJpy,2);if(S.brentUsd)$('bUsd').textContent='$'+fP(S.brentUsd,2);if(S.brentUsd&&S.usdJpy)$('bJpy').textContent='¥'+fP(S.brentUsd*S.usdJpy,0);}
 
-  // Idle + fullscreen + wake lock
   let idleT;function ri(){document.body.classList.remove('idle');clearTimeout(idleT);idleT=setTimeout(()=>document.body.classList.add('idle'),4000);}
   document.addEventListener('mousemove',ri);document.addEventListener('keydown',ri);ri();
   document.addEventListener('keydown',e=>{if(e.key==='f'||e.key==='F'){if(!document.fullscreenElement)document.documentElement.requestFullscreen().catch(()=>{});else document.exitFullscreen();}});
   (async()=>{try{if('wakeLock' in navigator)await navigator.wakeLock.request('screen');}catch(e){}})();
 
-  // ═══════ WEATHER + AQI (Open-Meteo, free, no key) ═══════
-  const WMO_ICONS={0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',56:'🌧️',57:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',66:'🌧️',67:'🌧️',71:'🌨️',73:'🌨️',75:'🌨️',77:'🌨️',80:'🌦️',81:'🌧️',82:'⛈️',85:'🌨️',86:'🌨️',95:'⛈️',96:'⛈️',99:'⛈️'};
+  // ═══════ WEATHER (Open-Meteo — free, accurate for temp/forecast) ═══════
+  const WMO_ICONS={0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',80:'🌦️',81:'🌧️',82:'⛈️',95:'⛈️',96:'⛈️',99:'⛈️'};
   const WMO_DESC={0:'Clear sky',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',45:'Fog',48:'Fog',51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',61:'Light rain',63:'Rain',65:'Heavy rain',80:'Rain showers',81:'Rain showers',82:'Heavy showers',95:'Thunderstorm',96:'Thunderstorm',99:'Severe storm'};
-
-  function getAqiColor(aqi){
-    if(aqi<=50) return {bg:'#00e40020',dot:'#00e400',label:'Good'};
-    if(aqi<=100) return {bg:'#ffff0018',dot:'#cccc00',label:'Moderate'};
-    if(aqi<=150) return {bg:'#ff7e0020',dot:'#ff7e00',label:'USG'};
-    if(aqi<=200) return {bg:'#ff000020',dot:'#ff0000',label:'Unhealthy'};
-    if(aqi<=300) return {bg:'#8f3f9720',dot:'#8f3f97',label:'Very Unhealthy'};
-    return {bg:'#7e002320',dot:'#7e0023',label:'Hazardous'};
-  }
 
   async function fetchWeather(){
     try{
-      const url=`https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max&hourly=precipitation_probability,weather_code&timezone=Asia%2FBangkok&forecast_days=1`;
-      const r=await fetch(url);
-      if(!r.ok) return;
-      const d=await r.json();
-
-      // Current
-      const temp=Math.round(d.current.temperature_2m);
-      const code=d.current.weather_code;
+      const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max&hourly=precipitation_probability,weather_code&timezone=Asia%2FBangkok&forecast_days=1`);
+      if(!r.ok)return;const d=await r.json();
+      const temp=Math.round(d.current.temperature_2m),code=d.current.weather_code;
       $('wxIcon').textContent=WMO_ICONS[code]||'🌡️';
       $('wxTemp').textContent=temp+'°C';
-
-      // Daily hi/lo
-      if(d.daily){
-        const hi=Math.round(d.daily.temperature_2m_max[0]);
-        const lo=Math.round(d.daily.temperature_2m_min[0]);
-        $('wxHiLo').textContent='H '+hi+'° L '+lo+'°';
-      }
-
-      // Rain forecast — find next rainy hour
+      if(d.daily){$('wxHiLo').textContent='H '+Math.round(d.daily.temperature_2m_max[0])+'° L '+Math.round(d.daily.temperature_2m_min[0])+'°';}
       if(d.hourly){
-        const nowHour=new Date().toLocaleString('en-US',{hour:'numeric',hour12:false,timeZone:TZ});
-        const nowIdx=parseInt(nowHour);
-        let rainTime=null;
-        for(let i=nowIdx;i<d.hourly.time.length;i++){
+        const nowH=parseInt(new Date().toLocaleString('en-US',{hour:'numeric',hour12:false,timeZone:TZ}));
+        let rain=null;
+        for(let i=nowH;i<d.hourly.time.length;i++){
           if(d.hourly.precipitation_probability[i]>40){
-            const wc=d.hourly.weather_code[i];
-            const t=d.hourly.time[i].split('T')[1];
-            const prob=d.hourly.precipitation_probability[i];
-            rainTime={time:t,prob,desc:WMO_DESC[wc]||'Rain'};
-            break;
+            rain={time:d.hourly.time[i].split('T')[1],prob:d.hourly.precipitation_probability[i],desc:WMO_DESC[d.hourly.weather_code[i]]||'Rain'};break;
           }
         }
-        if(rainTime){
-          $('wxForecast').textContent='🌧️ '+rainTime.desc+' ~'+rainTime.time+' ('+rainTime.prob+'%)';
-          $('wxForecast').style.color='var(--amber)';
-        }else{
-          const desc=WMO_DESC[code]||'';
-          $('wxForecast').textContent=desc+(d.daily?.precipitation_probability_max?.[0]>20?' · '+d.daily.precipitation_probability_max[0]+'% rain chance':'');
-          $('wxForecast').style.color='var(--text-dim)';
-        }
+        if(rain){$('wxForecast').textContent='🌧️ '+rain.desc+' ~'+rain.time+' ('+rain.prob+'%)';$('wxForecast').style.color='var(--amber)';}
+        else{const desc=WMO_DESC[code]||'';$('wxForecast').textContent=desc+(d.daily?.precipitation_probability_max?.[0]>20?' · '+d.daily.precipitation_probability_max[0]+'% rain chance':'');$('wxForecast').style.color='var(--text-dim)';}
       }
-    }catch(e){console.error('Weather error',e);}
+    }catch(e){}
+  }
+
+  // ═══════ AQI — WAQI (aqicn.org) primary, IQAir scrape fallback ═══════
+  // WAQI uses real Thai PCD monitoring stations — same data IQAir aggregates
+  function getAqiColor(aqi){
+    if(aqi<=50)return{bg:'#00e40020',dot:'#00e400',label:'Good'};
+    if(aqi<=100)return{bg:'#ffff0018',dot:'#cccc00',label:'Moderate'};
+    if(aqi<=150)return{bg:'#ff7e0020',dot:'#ff7e00',label:'USG'};
+    if(aqi<=200)return{bg:'#ff000020',dot:'#ff0000',label:'Unhealthy'};
+    if(aqi<=300)return{bg:'#8f3f9720',dot:'#8f3f97',label:'Very Unhealthy'};
+    return{bg:'#7e002320',dot:'#7e0023',label:'Hazardous'};
+  }
+
+  function renderAqi(aqi, pm25, src){
+    const c=getAqiColor(aqi);
+    $('aqiVal').textContent=aqi;
+    $('aqiDot').style.background=c.dot;
+    $('aqiBadge').style.background=c.bg;
+    $('aqiBadge').style.color=c.dot;
+    $('aqiLabel').textContent=c.label+(pm25!=null?' · PM2.5 '+Math.round(pm25):'');
+    $('aqiSrc').textContent=src;
   }
 
   async function fetchAqi(){
-    try{
-      const url=`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${LAT}&longitude=${LON}&current=us_aqi,pm2_5&timezone=Asia%2FBangkok`;
-      const r=await fetch(url);
-      if(!r.ok) return;
-      const d=await r.json();
-      if(d.current){
-        const aqi=d.current.us_aqi;
-        const pm25=d.current.pm2_5;
-        const c=getAqiColor(aqi);
-        $('aqiVal').textContent=aqi;
-        $('aqiDot').style.background=c.dot;
-        $('aqiBadge').style.background=c.bg;
-        $('aqiBadge').style.color=c.dot;
-        $('aqiLabel').textContent=c.label+(pm25!=null?' · PM2.5 '+Math.round(pm25):'');
+    let got=false;
+
+    // 1) WAQI API — uses real monitoring station data for Chiang Mai
+    // Station IDs near Payap: try geo-based query
+    if(!got){try{
+      const r=await fetch('https://api.waqi.info/feed/geo:'+LAT+';'+LON+'/?token=demo',{signal:AbortSignal.timeout(6000)});
+      if(r.ok){
+        const d=await r.json();
+        if(d.status==='ok'&&d.data?.aqi){
+          const aqi=d.data.aqi;
+          const pm25=d.data.iaqi?.pm25?.v||null;
+          renderAqi(aqi,pm25,'WAQI');
+          got=true;
+        }
       }
-    }catch(e){console.error('AQI error',e);}
+    }catch(e){}}
+
+    // 2) WAQI by city name
+    if(!got){try{
+      const r=await fetch('https://api.waqi.info/feed/chiang-mai/?token=demo',{signal:AbortSignal.timeout(6000)});
+      if(r.ok){
+        const d=await r.json();
+        if(d.status==='ok'&&d.data?.aqi){
+          renderAqi(d.data.aqi,d.data.iaqi?.pm25?.v||null,'WAQI');
+          got=true;
+        }
+      }
+    }catch(e){}}
+
+    // 3) Scrape IQAir Chiang Mai page via CORS proxy
+    if(!got){try{
+      const r=await fetch('https://api.allorigins.win/get?url='+encodeURIComponent('https://www.iqair.com/th-en/thailand/chiang-mai'),{signal:AbortSignal.timeout(10000)});
+      if(r.ok){
+        const w=await r.json();
+        if(w.contents){
+          // IQAir embeds AQI in various data attributes and JSON-LD
+          const m=w.contents.match(/"aqi"\s*:\s*(\d+)/)||w.contents.match(/aqi-value[^>]*>(\d+)/i)||w.contents.match(/class="aqi[^"]*"[^>]*>\s*(\d+)/i);
+          if(m){
+            const aqi=parseInt(m[1]);
+            const pm=w.contents.match(/"pm25"\s*:\s*([\d.]+)/)||w.contents.match(/PM2\.5[^<]*?([\d.]+)\s*µg/i);
+            renderAqi(aqi,pm?parseFloat(pm[1]):null,'IQAir');
+            got=true;
+          }
+        }
+      }
+    }catch(e){}}
+
+    // 4) Fallback to Open-Meteo AQI
+    if(!got){try{
+      const r=await fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${LAT}&longitude=${LON}&current=us_aqi,pm2_5&timezone=Asia%2FBangkok`,{signal:AbortSignal.timeout(6000)});
+      if(r.ok){const d=await r.json();if(d.current){renderAqi(d.current.us_aqi,d.current.pm2_5,'Open-Meteo');}}
+    }catch(e){}}
   }
 
-  // ═══════ CHART FACTORY ═══════
+  // ═══════ CHARTS ═══════
   function makeChart(el,opts={}){
     const c=LightweightCharts.createChart(el,{
       layout:{background:{type:'solid',color:'#080b14'},textColor:'#3c4560',fontFamily:'Azeret Mono,monospace',fontSize:opts.fs||11},
@@ -354,10 +300,8 @@
       handleScroll:true,handleScale:true
     });
     function fit(){c.applyOptions({width:el.clientWidth,height:el.clientHeight});}
-    new ResizeObserver(fit).observe(el);fit();
-    return c;
+    new ResizeObserver(fit).observe(el);fit();return c;
   }
-
   const ch1=makeChart($('chartMain'));
   const cS1=ch1.addCandlestickSeries({upColor:'#00e87b',downColor:'#ff2952',borderUpColor:'#00e87b',borderDownColor:'#ff2952',wickUpColor:'#00e87b70',wickDownColor:'#ff295270'});
   const vS1=ch1.addHistogramSeries({priceFormat:{type:'volume'},priceScaleId:'vol',scaleMargins:{top:.88,bottom:0}});
@@ -382,14 +326,7 @@
     ws.onerror=()=>ws.close();
     ws.onmessage=evt=>{
       const msg=JSON.parse(evt.data),d=msg.data,s=msg.stream;
-      if(s==='xrpusdt@ticker'){
-        S.xrpPrev=S.xrpUsd;S.xrpUsd=+d.c;
-        const el=$('xP');el.textContent=fP(S.xrpUsd,4);
-        if(S.xrpPrev!=null)flash(el,S.xrpUsd>=S.xrpPrev?'up':'down');
-        setChg($('xChg'),+d.P);$('tHi').textContent=fP(+d.h,4);$('tLo').textContent=fP(+d.l,4);
-        $('tVol').textContent='$'+fC(+d.q);if(S.xrpUsd)$('tMcap').textContent='$'+fC(S.xrpUsd*61e9);
-        updateDerived();
-      }
+      if(s==='xrpusdt@ticker'){S.xrpPrev=S.xrpUsd;S.xrpUsd=+d.c;const el=$('xP');el.textContent=fP(S.xrpUsd,4);if(S.xrpPrev!=null)flash(el,S.xrpUsd>=S.xrpPrev?'up':'down');setChg($('xChg'),+d.P);$('tHi').textContent=fP(+d.h,4);$('tLo').textContent=fP(+d.l,4);$('tVol').textContent='$'+fC(+d.q);if(S.xrpUsd)$('tMcap').textContent='$'+fC(S.xrpUsd*61e9);updateDerived();}
       if(s==='xrpusdt@kline_3m'){const k=d.k,t=toBKK(k.t);cS1.update({time:t,open:+k.o,high:+k.h,low:+k.l,close:+k.c});vS1.update({time:t,value:+k.v,color:+k.c>=+k.o?'#00e87b1a':'#ff29521a'});}
       if(s==='btcusdt@ticker'){S.btcUsd=+d.c;S.btc24hPct=+d.P;$('btcP').innerHTML='$'+fP(S.btcUsd,0)+pctSpan(S.btc24hPct);}
       if(s==='xrpbtc@ticker'){S.xrpBtc=+d.c;S.xrpBtc24hPct=+d.P;$('xBtc').innerHTML=fP(S.xrpBtc,8)+pctSpan(S.xrpBtc24hPct);const pc=(+d.P)>=0?'up':'dn';$('xBtcH').innerHTML=fP(S.xrpBtc,8)+'<span class="spu">BTC</span><span class="spp '+pc+'">'+(+d.P>=0?'+':'')+Number(d.P).toFixed(2)+'%</span>';}
@@ -405,14 +342,12 @@
 
   // ═══════ BRENT CRUDE ═══════
   async function fetchBrent(){
-    let price=null;
-    const YH='https://query1.finance.yahoo.com/v8/finance/chart/BZ=F?interval=1d&range=1d';
+    let price=null;const YH='https://query1.finance.yahoo.com/v8/finance/chart/BZ=F?interval=1d&range=1d';
     function yP(d){try{return d.chart.result[0].meta.regularMarketPrice;}catch(e){return null;}}
     if(!price){try{const r=await fetch(YH,{signal:AbortSignal.timeout(5000)});if(r.ok)price=yP(await r.json());}catch(e){}}
     if(!price){try{const r=await fetch('https://corsproxy.io/?'+encodeURIComponent(YH),{signal:AbortSignal.timeout(8000)});if(r.ok)price=yP(await r.json());}catch(e){}}
     if(!price){try{const r=await fetch('https://api.allorigins.win/get?url='+encodeURIComponent(YH),{signal:AbortSignal.timeout(8000)});if(r.ok){const w=await r.json();if(w.contents)price=yP(JSON.parse(w.contents));}}catch(e){}}
     if(!price){try{const r=await fetch('https://api.allorigins.win/get?url='+encodeURIComponent('https://www.google.com/finance/quote/BZ:NYMEX'),{signal:AbortSignal.timeout(8000)});if(r.ok){const w=await r.json();if(w.contents){const m=w.contents.match(/data-last-price="([0-9.]+)"/);if(m)price=parseFloat(m[1]);}}}catch(e){}}
-    if(!price){try{const r=await fetch('https://api.allorigins.win/get?url='+encodeURIComponent('https://www.investing.com/commodities/brent-oil'),{signal:AbortSignal.timeout(8000)});if(r.ok){const w=await r.json();if(w.contents){const m=w.contents.match(/data-test="instrument-price-last"[^>]*>([0-9.,]+)/);if(m)price=parseFloat(m[1].replace(',',''));}}}catch(e){}}
     if(price&&price>20&&price<300){S.brentUsd=price;updateDerived();}
   }
 
@@ -420,8 +355,7 @@
   fetchFx();fetchBrent();fetchWeather();fetchAqi();
   setInterval(fetchFx,30000);
   setInterval(fetchBrent,120000);
-  setInterval(()=>{fetchWeather();fetchAqi();},300000); // weather + AQI every 5 min
-
+  setInterval(()=>{fetchWeather();fetchAqi();},300000);
 })();
 </script>
 </body>
