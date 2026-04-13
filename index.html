@@ -70,6 +70,7 @@
   const TZ='Asia/Bangkok',TZ_SHIFT=7*3600,LAT=18.8088,LON=98.9717;
   const IQAIR_KEY='8a58e160-a04e-44d6-8902-c83fc42021c1';
   const AO='https://api.allorigins.win/get?url=';
+  const CP='https://corsproxy.io/?';
 
   function fmtBKK(s){return new Date(s*1000).toLocaleTimeString('en-GB',{hour12:false,hour:'2-digit',minute:'2-digit',timeZone:TZ});}
   function fmtBKKfull(s){return new Date(s*1000).toLocaleString('en-GB',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit',day:'2-digit',month:'short',timeZone:TZ});}
@@ -90,7 +91,6 @@
     if(S.usdJpy) $('fP').textContent='¥'+fP(S.usdJpy,2);
     if(S.usdJpy&&S.xrpUsd) $('xJpy').textContent='¥'+fP(S.xrpUsd*S.usdJpy,2);
     if(S.brentUsd) $('bUsd').textContent='$'+fP(S.brentUsd,2);
-    // Brent/JPY: prefer direct value, else compute
     if(S.brentJpy) $('bJpy').textContent='¥'+fP(S.brentJpy,0);
     else if(S.brentUsd&&S.usdJpy) $('bJpy').textContent='¥'+fP(S.brentUsd*S.usdJpy,0);
   }
@@ -100,71 +100,125 @@
   document.addEventListener('keydown',e=>{if(e.key==='f'||e.key==='F'){if(!document.fullscreenElement)document.documentElement.requestFullscreen().catch(()=>{});else document.exitFullscreen();}});
   (async()=>{try{if('wakeLock' in navigator)await navigator.wakeLock.request('screen');}catch(e){}})();
 
-  // ═══════ Helper: scrape Google Finance data-last-price ═══════
-  async function scrapeGoogleFinance(pair){
-    // pair like "USD-JPY" or "BZ:NYMEX"
-    const url='https://www.google.com/finance/quote/'+pair;
-    try{
-      const r=await fetch(AO+encodeURIComponent(url),{signal:AbortSignal.timeout(10000)});
-      if(!r.ok) return null;
-      const w=await r.json();
-      if(!w.contents) return null;
-      const m=w.contents.match(/data-last-price="([0-9.]+)"/);
-      if(m) return parseFloat(m[1]);
-    }catch(e){}
-    return null;
-  }
-
-  // ═══════ USD/JPY ═══════
+  // ═══════════════════════════════════════════
+  // USD/JPY — DERIVED FROM COINGECKO
+  // CoinGecko returns crypto prices in multiple fiats.
+  // BTC/JPY ÷ BTC/USD = USD/JPY
+  // This uses the same forex rates that Google uses (Morningstar)
+  // and is CORS-enabled, free, no key, updates every ~60s
+  // ═══════════════════════════════════════════
   async function fetchFx(){
-    let rate=null;
-
-    // 1) Google Finance scrape (real-time)
-    rate=await scrapeGoogleFinance('USD-JPY');
-    if(rate&&rate>100&&rate<200){S.usdJpy=rate;updateDisplay();console.log('✓ USD/JPY via Google:',rate);return;}
-
-    // 2) freeforexapi.com
-    try{const r=await fetch('https://www.freeforexapi.com/api/live?pairs=USDJPY',{signal:AbortSignal.timeout(5000)});if(r.ok){const d=await r.json();if(d.code===200&&d.rates?.USDJPY?.rate){S.usdJpy=d.rates.USDJPY.rate;updateDisplay();console.log('✓ USD/JPY via freeforex:',S.usdJpy);return;}}}catch(e){}
-
-    // 3) open.er-api.com (daily fallback)
-    try{const r=await fetch('https://open.er-api.com/v6/latest/USD',{signal:AbortSignal.timeout(6000)});const d=await r.json();if(d.result==='success'&&d.rates?.JPY){S.usdJpy=d.rates.JPY;updateDisplay();console.log('✓ USD/JPY via er-api:',S.usdJpy);}}catch(e){}
-  }
-
-  // ═══════ BRENT CRUDE ═══════
-  async function fetchBrent(){
-    let usdPrice=null;
-
-    // 1) Google Finance BZ:NYMEX (Brent Last Day Financial)
-    usdPrice=await scrapeGoogleFinance('BZ:NYMEX');
-    if(usdPrice&&usdPrice>20&&usdPrice<300){S.brentUsd=usdPrice;console.log('✓ Brent USD via Google:',usdPrice);}
-
-    // 2) Fallback: Yahoo Finance via allorigins
-    if(!S.brentUsd){try{
-      const r=await fetch(AO+encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/BZ=F?interval=1d&range=1d'),{signal:AbortSignal.timeout(10000)});
-      if(r.ok){const w=await r.json();if(w.contents){try{const p=JSON.parse(w.contents).chart.result[0].meta.regularMarketPrice;if(p>20&&p<300){S.brentUsd=p;console.log('✓ Brent USD via Yahoo:',p);}}catch(e){}}}
-    }catch(e){}}
-
-    // 3) Get Brent/JPY directly from exchangerates.org.uk
     try{
-      const r=await fetch(AO+encodeURIComponent('https://www.exchangerates.org.uk/commodities/live-brent-crude-oil-prices/BRT-JPY.html'),{signal:AbortSignal.timeout(10000)});
+      const r=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,jpy',{signal:AbortSignal.timeout(8000)});
       if(r.ok){
-        const w=await r.json();
-        if(w.contents){
-          // Look for the JPY price — typically shown as a large number like "10,234.56"
-          const m=w.contents.match(/BRT\/JPY[^]*?(?:price|rate|value)[^>]*>\s*¥?\s*([\d,]+\.?\d*)/i)
-            || w.contents.match(/id="shd11"[^>]*>\s*([\d,]+\.?\d*)/i)
-            || w.contents.match(/([\d,]{4,}\.?\d{0,2})\s*(?:JPY|Yen)/i)
-            || w.contents.match(/class="(?:live|spot|price)[^"]*"[^>]*>\s*¥?\s*([\d,]+\.?\d*)/i);
-          if(m){
-            const jpyPrice=parseFloat(m[1].replace(/,/g,''));
-            if(jpyPrice>1000&&jpyPrice<50000){
-              S.brentJpy=jpyPrice;
-              console.log('✓ Brent JPY direct from exchangerates.org.uk:',jpyPrice);
-            }
+        const d=await r.json();
+        if(d.bitcoin?.usd && d.bitcoin?.jpy){
+          const rate = d.bitcoin.jpy / d.bitcoin.usd;
+          // Sanity check: USD/JPY should be between 100-200
+          if(rate>100 && rate<200){
+            S.usdJpy=rate;
+            updateDisplay();
+            console.log('✓ USD/JPY via CoinGecko:',rate.toFixed(2),'(BTC/JPY='+d.bitcoin.jpy+', BTC/USD='+d.bitcoin.usd+')');
+            return;
           }
         }
       }
     }catch(e){}
+
+    // Fallback: exchangerate-api (updates daily but reliable)
+    try{
+      const r=await fetch('https://api.exchangerate-api.com/v4/latest/USD',{signal:AbortSignal.timeout(6000)});
+      if(r.ok){const d=await r.json();if(d.rates?.JPY){S.usdJpy=d.rates.JPY;updateDisplay();console.log('✓ USD/JPY via exchangerate-api:',d.rates.JPY);}}
+    }catch(e){}
+  }
+
+  // ═══════════════════════════════════════════
+  // BRENT CRUDE — MULTI-SOURCE
+  // ═══════════════════════════════════════════
+
+  // Helper: fetch via allorigins proxy, return HTML string or null
+  async function fetchHtml(url){
+    try{
+      const r=await fetch(AO+encodeURIComponent(url),{signal:AbortSignal.timeout(12000)});
+      if(!r.ok) return null;
+      const w=await r.json();
+      return w.contents||null;
+    }catch(e){return null;}
+  }
+
+  // Helper: try corsproxy.io, return HTML string or null
+  async function fetchHtmlCp(url){
+    try{
+      const r=await fetch(CP+encodeURIComponent(url),{signal:AbortSignal.timeout(12000)});
+      if(!r.ok) return null;
+      return await r.text();
+    }catch(e){return null;}
+  }
+
+  // Extract a price from HTML using multiple regex patterns
+  function extractPrice(html, patterns){
+    for(const p of patterns){
+      const m=html.match(p);
+      if(m){
+        const val=parseFloat(m[1].replace(/,/g,''));
+        if(!isNaN(val) && val>0) return val;
+      }
+    }
+    return null;
+  }
+
+  async function fetchBrent(){
+    // ── Brent/JPY direct from exchangerates.org.uk ──
+    const jpyUrl='https://www.exchangerates.org.uk/commodities/live-brent-crude-oil-prices/BRT-JPY.html';
+    let html=await fetchHtml(jpyUrl) || await fetchHtmlCp(jpyUrl);
+    if(html){
+      const jpyPrice=extractPrice(html,[
+        // The big price number — 5+ digits with comma, e.g. "16,780.34"
+        /(\d{1,3},\d{3}\.\d{1,4})/,
+        // With yen sign
+        /¥\s*([\d,]+\.\d+)/,
+        // In an element near BRT/JPY
+        /BRT\/JPY[\s\S]{0,200}?([\d,]{4,}\.\d+)/i,
+        // Generic large number
+        />\s*([\d,]{5,}\.\d{1,4})\s*</,
+      ]);
+      if(jpyPrice && jpyPrice>5000 && jpyPrice<50000){
+        S.brentJpy=jpyPrice;
+        console.log('✓ Brent/JPY direct from exchangerates.org.uk:',jpyPrice);
+      }
+    }
+
+    // ── Brent/USD from exchangerates.org.uk ──
+    const usdUrl='https://www.exchangerates.org.uk/commodities/live-brent-crude-oil-prices/BRT-USD.html';
+    html=await fetchHtml(usdUrl) || await fetchHtmlCp(usdUrl);
+    if(html){
+      const usdPrice=extractPrice(html,[
+        /(\d{2,3}\.\d{1,4})/,
+        /BRT\/USD[\s\S]{0,200}?(\d{2,3}\.\d+)/i,
+        />\s*\$?\s*(\d{2,3}\.\d{1,4})\s*</,
+      ]);
+      if(usdPrice && usdPrice>20 && usdPrice<300){
+        S.brentUsd=usdPrice;
+        console.log('✓ Brent/USD from exchangerates.org.uk:',usdPrice);
+      }
+    }
+
+    // ── Fallback: Google Finance BZ:NYMEX for Brent/USD ──
+    if(!S.brentUsd){
+      html=await fetchHtml('https://www.google.com/finance/quote/BZ:NYMEX');
+      if(html){
+        const p=extractPrice(html,[/data-last-price="([0-9.]+)"/]);
+        if(p && p>20 && p<300){S.brentUsd=p;console.log('✓ Brent/USD via Google Finance:',p);}
+      }
+    }
+
+    // ── Fallback: Yahoo Finance via proxy ──
+    if(!S.brentUsd){
+      try{
+        const r=await fetch(AO+encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/BZ=F?interval=1d&range=1d'),{signal:AbortSignal.timeout(10000)});
+        if(r.ok){const w=await r.json();if(w.contents){try{const p=JSON.parse(w.contents).chart.result[0].meta.regularMarketPrice;if(p>20&&p<300){S.brentUsd=p;console.log('✓ Brent/USD via Yahoo:',p);}}catch(e){}}}
+      }catch(e){}
+    }
 
     updateDisplay();
   }
@@ -190,7 +244,7 @@
     try{const r=await fetch(`https://api.airvisual.com/v2/nearest_city?lat=${LAT}&lon=${LON}&key=${IQAIR_KEY}`,{signal:AbortSignal.timeout(10000)});if(!r.ok)return;const d=await r.json();
       if(d.status==='success'&&d.data?.current?.pollution){const pol=d.data.current.pollution,aqi=pol.aqius,c=getAqiColor(aqi);
         $('aqiVal').textContent=aqi;$('aqiDot').style.background=c.dot;$('aqiBadge').style.background=c.bg;$('aqiBadge').style.color=c.dot;
-        $('aqiLabel').textContent=c.label;console.log('✓ IQAir AQI:',aqi,'City:',d.data.city);}}catch(e){console.error('IQAir err',e);}
+        $('aqiLabel').textContent=c.label;console.log('✓ IQAir AQI:',aqi);}}catch(e){}
   }
 
   // ═══════ CHARTS ═══════
@@ -214,10 +268,10 @@
 
   // ═══════ BOOT ═══════
   fetchFx();fetchBrent();fetchWeather();fetchAqi();
-  setInterval(fetchFx,60000);       // USD/JPY every 60s
-  setInterval(fetchBrent,120000);    // Brent every 2min
-  setInterval(fetchWeather,300000);  // Weather every 5min
-  setInterval(fetchAqi,600000);      // AQI every 10min
+  setInterval(fetchFx,30000);        // USD/JPY every 30s via CoinGecko
+  setInterval(fetchBrent,120000);     // Brent every 2min
+  setInterval(fetchWeather,300000);   // Weather every 5min
+  setInterval(fetchAqi,600000);       // AQI every 10min
 })();
 </script>
 </body>
