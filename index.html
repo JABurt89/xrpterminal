@@ -8,35 +8,135 @@
 <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 <style>
   :root{--bg:#04060b;--surface:#080b14;--border:#0f1520;--border-lit:#161e30;--green:#00e87b;--green-soft:#00e87b18;--green-mid:#00e87b40;--red:#ff2952;--red-soft:#ff295218;--amber:#f0b030;--cyan:#3db8f5;--btc:#f7931a;--text:#c8cee0;--text-dim:#3c4560;--text-ghost:#1c2235;}
-  *{margin:0;padding:0;box-sizing:border-box}html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'Azeret Mono',monospace;}body.idle{cursor:none;}
-  .amb{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}.amb .o{position:absolute;border-radius:50%;filter:blur(130px);opacity:.06;animation:dr 22s ease-in-out infinite alternate;}.amb .o1{width:650px;height:650px;background:var(--green);top:-12%;left:-6%;animation-duration:26s;}.amb .o2{width:500px;height:500px;background:var(--cyan);bottom:-14%;right:-6%;animation-duration:32s;animation-delay:-12s;}.amb .o3{width:350px;height:350px;background:var(--btc);top:30%;right:10%;opacity:.025;animation-duration:20s;animation-delay:-6s;}@keyframes dr{0%{transform:translate(0,0) scale(1)}100%{transform:translate(50px,35px) scale(1.12)}}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'Azeret Mono',monospace;}
+  body.idle{cursor:none;}
+  .amb{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+  .amb .o{position:absolute;border-radius:50%;filter:blur(130px);opacity:.06;animation:dr 22s ease-in-out infinite alternate;}
+  .amb .o1{width:650px;height:650px;background:var(--green);top:-12%;left:-6%;animation-duration:26s;}
+  .amb .o2{width:500px;height:500px;background:var(--cyan);bottom:-14%;right:-6%;animation-duration:32s;animation-delay:-12s;}
+  .amb .o3{width:350px;height:350px;background:var(--btc);top:30%;right:10%;opacity:.025;animation-duration:20s;animation-delay:-6s;}
+  @keyframes dr{0%{transform:translate(0,0) scale(1)}100%{transform:translate(50px,35px) scale(1.12)}}
   .noise{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.02;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:128px;}
   .dash{position:relative;z-index:2;display:grid;grid-template-rows:auto auto auto 1fr auto;height:100vh;padding:clamp(8px,1vw,16px) clamp(14px,1.8vw,28px) clamp(4px,.6vw,10px);}
-  .top{display:flex;align-items:flex-start;justify-content:space-between;padding-bottom:clamp(6px,.8vw,12px);border-bottom:1px solid var(--border);gap:16px;}.logo{display:flex;align-items:center;gap:clamp(8px,1vw,14px);}.logo-ring{width:clamp(26px,2.5vw,36px);height:clamp(26px,2.5vw,36px);border:2px solid var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-weight:900;font-size:clamp(10px,1.2vw,15px);color:var(--green);box-shadow:0 0 18px var(--green-soft);animation:rp 4s ease-in-out infinite;}@keyframes rp{0%,100%{box-shadow:0 0 10px var(--green-soft)}50%{box-shadow:0 0 28px var(--green-mid)}}.logo-t{font-family:'Outfit',sans-serif;font-size:clamp(14px,1.8vw,22px);font-weight:700;letter-spacing:clamp(3px,.4vw,6px);text-transform:uppercase;}.logo-t em{font-style:normal;color:var(--green);}
-  .top-right{display:flex;flex-direction:column;align-items:flex-end;gap:clamp(4px,.5vw,8px);}.status-row{display:flex;align-items:center;gap:clamp(10px,1.5vw,20px);}.wd{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:bl 2s ease-in-out infinite;}.wd.off{background:var(--red);box-shadow:0 0 8px var(--red);}@keyframes bl{0%,100%{opacity:1}50%{opacity:.25}}.si{display:flex;align-items:center;gap:5px;font-size:clamp(8px,.9vw,11px);color:var(--text-dim);letter-spacing:1.5px;}
-  .clock-row{display:flex;align-items:baseline;gap:clamp(8px,1.2vw,18px);font-family:'Outfit',sans-serif;}.clock-time{font-size:clamp(20px,2.5vw,36px);font-weight:700;color:var(--text);letter-spacing:1px;}.clock-date{font-size:clamp(11px,1.3vw,18px);font-weight:400;color:var(--text);letter-spacing:.5px;opacity:.7;}.clock-tz{font-size:clamp(9px,1vw,14px);font-weight:600;color:var(--cyan);letter-spacing:1px;}
-  .wx-row{display:flex;align-items:center;gap:clamp(12px,1.6vw,24px);font-family:'Outfit',sans-serif;}.wx-item{display:flex;align-items:center;gap:clamp(4px,.5vw,8px);}.wx-icon{font-size:clamp(16px,2vw,28px);}.wx-val{font-size:clamp(12px,1.4vw,20px);font-weight:600;color:var(--text);}.wx-sub{font-size:clamp(8px,.9vw,12px);color:var(--text-dim);font-weight:400;}.wx-sep{width:1px;height:clamp(16px,2vw,26px);background:var(--border-lit);}
-  .aqi-badge{display:flex;align-items:center;gap:clamp(4px,.5vw,8px);padding:clamp(2px,.3vw,4px) clamp(6px,.8vw,12px);border-radius:5px;font-size:clamp(11px,1.3vw,18px);font-weight:700;letter-spacing:.5px;}.aqi-dot{width:clamp(8px,1vw,14px);height:clamp(8px,1vw,14px);border-radius:50%;flex-shrink:0;}.aqi-label{font-size:clamp(7px,.8vw,11px);font-weight:500;opacity:.8;margin-left:2px;letter-spacing:1px;text-transform:uppercase;}.aqi-src{font-size:clamp(6px,.6vw,8px);color:var(--text-ghost);letter-spacing:1px;margin-left:4px;}.wx-forecast{font-size:clamp(8px,.9vw,12px);color:var(--amber);font-weight:500;letter-spacing:.3px;}
-  .hero{display:flex;align-items:flex-end;justify-content:space-between;padding:clamp(10px,1.4vw,22px) 0 clamp(8px,1vw,16px);gap:clamp(16px,3vw,48px);flex-wrap:wrap;}.hero-left{flex-shrink:0;}.hp-label{font-family:'Outfit',sans-serif;font-size:clamp(9px,1vw,13px);font-weight:500;letter-spacing:clamp(2px,.35vw,4px);color:var(--text-dim);text-transform:uppercase;margin-bottom:clamp(4px,.5vw,8px);}.hl{display:flex;align-items:baseline;gap:clamp(8px,1.2vw,20px);}.hp{font-family:'Outfit',sans-serif;font-size:clamp(64px,10vw,150px);font-weight:800;line-height:.88;letter-spacing:-3px;color:var(--green);text-shadow:0 0 70px var(--green-soft),0 0 140px #00e87b06;transition:color .1s,text-shadow .1s;}.hp.fu{color:#55ffaa;text-shadow:0 0 90px #55ffaa30;}.hp.fd{color:#ff6080;text-shadow:0 0 90px #ff608030;}.hu{font-size:clamp(16px,2.5vw,34px);font-weight:300;color:var(--text-dim);letter-spacing:2px;margin-left:-4px;margin-bottom:clamp(2px,.4vw,8px);}.hc{font-family:'Outfit',sans-serif;font-size:clamp(13px,1.6vw,26px);font-weight:600;padding:clamp(3px,.4vw,6px) clamp(10px,1.2vw,18px);border-radius:5px;letter-spacing:.5px;display:inline-block;margin-top:clamp(4px,.5vw,8px);}.hc.up{background:var(--green-soft);color:var(--green);}.hc.dn{background:var(--red-soft);color:var(--red);}.hc.fl{background:#ffffff06;color:var(--text-dim);}
-  .hero-right{display:flex;align-items:center;gap:clamp(14px,2.2vw,36px);flex-wrap:wrap;}.hero-metric{display:flex;flex-direction:column;gap:1px;}.hero-metric .hm-label{font-size:clamp(6px,.65vw,9px);letter-spacing:clamp(1px,.18vw,2.5px);color:var(--text-dim);text-transform:uppercase;}.hero-metric .hm-val{font-family:'Outfit',sans-serif;font-size:clamp(18px,2.4vw,38px);font-weight:700;letter-spacing:-.5px;white-space:nowrap;}.hero-metric .hm-val.btc{color:var(--btc);}.hero-metric .hm-val.g{color:var(--green);}.hero-metric .hm-val .pct{font-size:.55em;font-weight:500;margin-left:4px;}.hero-metric .hm-val .pct.up{color:var(--green);}.hero-metric .hm-val .pct.dn{color:var(--red);}.hero-sep{width:1px;height:clamp(28px,3.5vw,50px);background:var(--border-lit);flex-shrink:0;}
-  .metrics{display:flex;align-items:center;gap:clamp(10px,1.6vw,28px);padding:clamp(6px,.7vw,10px) 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);flex-wrap:wrap;overflow:hidden;}.m{display:flex;flex-direction:column;gap:0;}.m .ml{font-size:clamp(5px,.55vw,8px);letter-spacing:clamp(1px,.15vw,2px);color:var(--text-dim);text-transform:uppercase;}.m .mv{font-family:'Outfit',sans-serif;font-size:clamp(13px,1.5vw,24px);font-weight:600;color:var(--text);letter-spacing:-.5px;white-space:nowrap;}.m .mv.g{color:var(--green);}.m .mv.c{color:var(--cyan);}.m .mv.a{color:var(--amber);}.m .mv.btc{color:var(--btc);}.m .mv .pct{font-size:.6em;font-weight:500;margin-left:4px;}.m .mv .pct.up{color:var(--green);}.m .mv .pct.dn{color:var(--red);}.ms{width:1px;height:clamp(18px,2.2vw,32px);background:var(--border-lit);flex-shrink:0;}
-  .charts{display:grid;grid-template-columns:1fr clamp(200px,22vw,340px);gap:clamp(8px,1vw,14px);margin-top:clamp(4px,.5vw,8px);min-height:0;}.cpanel{position:relative;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface);min-height:0;}.cpanel .clbl{position:absolute;top:8px;left:12px;z-index:5;font-size:clamp(6px,.6vw,9px);letter-spacing:2.5px;color:var(--text-dim);display:flex;align-items:center;gap:6px;}.cpanel .clbl .cd{width:4px;height:4px;border-radius:50%;background:var(--green);box-shadow:0 0 5px var(--green);animation:bl 1.5s ease-in-out infinite;}.ci{width:100%;height:100%;}.side-hdr{padding:clamp(6px,.7vw,10px) clamp(10px,1.2vw,16px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}.side-pair{font-family:'Outfit',sans-serif;font-size:clamp(9px,1vw,13px);font-weight:700;letter-spacing:1px;}.side-pair em{font-style:normal;color:var(--btc);}.sp{font-family:'Outfit',sans-serif;font-size:clamp(11px,1.2vw,16px);font-weight:700;color:var(--text);letter-spacing:-.5px;}.sp .spu{font-size:.55em;color:var(--text-dim);font-weight:400;margin-left:3px;}.sp .spp{font-size:.55em;font-weight:500;margin-left:6px;}.sp .spp.up{color:var(--green);}.sp .spp.dn{color:var(--red);}.sc{flex:1;min-height:0;}
-  .bot{display:flex;align-items:center;justify-content:space-between;padding-top:clamp(3px,.4vw,6px);font-size:clamp(5px,.55vw,8px);letter-spacing:2px;color:var(--text-ghost);text-transform:uppercase;}.bot a{color:var(--text-dim);text-decoration:none;}.bot .hint{opacity:0;transition:opacity .3s;}body:not(.idle) .bot .hint{opacity:1;}
-  .top,.hero,.metrics,.charts,.bot{opacity:0;animation:fi .5s ease forwards;}.top{animation-delay:0s}.hero{animation-delay:.05s}.metrics{animation-delay:.1s}.charts{animation-delay:.15s}.bot{animation-delay:.2s}@keyframes fi{to{opacity:1}}
-  @media(max-width:900px){.charts{grid-template-columns:1fr;}.hero-sep{display:none;}.ms{display:none;}.wx-row{flex-wrap:wrap;}}
+
+  /* Top */
+  .top{display:flex;align-items:flex-start;justify-content:space-between;padding-bottom:clamp(6px,.8vw,12px);border-bottom:1px solid var(--border);gap:16px;}
+  .logo{display:flex;align-items:center;gap:clamp(8px,1vw,14px);}
+  .logo-ring{width:clamp(26px,2.5vw,36px);height:clamp(26px,2.5vw,36px);border:2px solid var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-weight:900;font-size:clamp(10px,1.2vw,15px);color:var(--green);box-shadow:0 0 18px var(--green-soft);animation:rp 4s ease-in-out infinite;}
+  @keyframes rp{0%,100%{box-shadow:0 0 10px var(--green-soft)}50%{box-shadow:0 0 28px var(--green-mid)}}
+  .logo-t{font-family:'Outfit',sans-serif;font-size:clamp(14px,1.8vw,22px);font-weight:700;letter-spacing:clamp(3px,.4vw,6px);text-transform:uppercase;}
+  .logo-t em{font-style:normal;color:var(--green);}
+  .top-right{display:flex;flex-direction:column;align-items:flex-end;gap:clamp(4px,.5vw,8px);}
+  .status-row{display:flex;align-items:center;gap:clamp(10px,1.5vw,20px);}
+  .wd{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:bl 2s ease-in-out infinite;}
+  .wd.off{background:var(--red);box-shadow:0 0 8px var(--red);}
+  @keyframes bl{0%,100%{opacity:1}50%{opacity:.25}}
+  .si{display:flex;align-items:center;gap:5px;font-size:clamp(8px,.9vw,11px);color:var(--text-dim);letter-spacing:1.5px;}
+  .clock-row{display:flex;align-items:baseline;gap:clamp(6px,.8vw,14px);font-family:'Outfit',sans-serif;}
+  .clock-time{font-size:clamp(20px,2.5vw,36px);font-weight:700;color:var(--text);letter-spacing:1px;}
+  .clock-sec{font-size:clamp(11px,1.3vw,18px);font-weight:500;color:var(--text-dim);letter-spacing:.5px;margin-left:-4px;}
+  .clock-date{font-size:clamp(11px,1.3vw,18px);font-weight:400;color:var(--text);letter-spacing:.5px;opacity:.7;}
+  .clock-tz{font-size:clamp(9px,1vw,14px);font-weight:600;color:var(--cyan);letter-spacing:1px;}
+  .wx-row{display:flex;align-items:center;gap:clamp(10px,1.4vw,22px);font-family:'Outfit',sans-serif;}
+  .wx-item{display:flex;align-items:center;gap:clamp(4px,.5vw,8px);}
+  .wx-icon{font-size:clamp(16px,2vw,28px);}
+  .wx-val{font-size:clamp(12px,1.4vw,20px);font-weight:600;color:var(--text);}
+  .wx-sub{font-size:clamp(8px,.9vw,12px);color:var(--text-dim);font-weight:400;}
+  .wx-sep{width:1px;height:clamp(16px,2vw,26px);background:var(--border-lit);}
+  .aqi-badge{display:flex;align-items:center;gap:clamp(4px,.5vw,8px);padding:clamp(2px,.3vw,4px) clamp(6px,.8vw,12px);border-radius:5px;font-size:clamp(11px,1.3vw,18px);font-weight:700;letter-spacing:.5px;}
+  .aqi-dot{width:clamp(8px,1vw,14px);height:clamp(8px,1vw,14px);border-radius:50%;flex-shrink:0;}
+  .aqi-label{font-size:clamp(7px,.8vw,11px);font-weight:500;opacity:.8;margin-left:2px;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;}
+  .aqi-src{font-size:clamp(6px,.6vw,8px);color:var(--text-ghost);letter-spacing:1px;margin-left:4px;}
+  .wx-forecast{font-size:clamp(8px,.9vw,12px);color:var(--amber);font-weight:500;letter-spacing:.3px;}
+
+  /* Stale-data indicator — dims an element when its source hasn't updated */
+  .stale{opacity:.45;transition:opacity .4s;}
+
+  /* Hero */
+  .hero{display:flex;align-items:flex-end;justify-content:space-between;padding:clamp(10px,1.4vw,22px) 0 clamp(8px,1vw,16px);gap:clamp(16px,3vw,48px);flex-wrap:wrap;}
+  .hero-left{flex-shrink:0;}
+  .hp-label{font-family:'Outfit',sans-serif;font-size:clamp(9px,1vw,13px);font-weight:500;letter-spacing:clamp(2px,.35vw,4px);color:var(--text-dim);text-transform:uppercase;margin-bottom:clamp(4px,.5vw,8px);}
+  .hl{display:flex;align-items:baseline;gap:clamp(8px,1.2vw,20px);}
+  .hp{font-family:'Outfit',sans-serif;font-size:clamp(64px,10vw,150px);font-weight:800;line-height:.88;letter-spacing:-3px;color:var(--green);text-shadow:0 0 70px var(--green-soft),0 0 140px #00e87b06;transition:color .15s,text-shadow .15s,transform .25s cubic-bezier(.34,1.56,.64,1);}
+  .hp.fu{color:#55ffaa;text-shadow:0 0 90px #55ffaa40;transform:scale(1.018);}
+  .hp.fd{color:#ff6080;text-shadow:0 0 90px #ff608040;transform:scale(.985);}
+  .hu{font-size:clamp(16px,2.5vw,34px);font-weight:300;color:var(--text-dim);letter-spacing:2px;margin-left:-4px;margin-bottom:clamp(2px,.4vw,8px);}
+  .hc{font-family:'Outfit',sans-serif;font-size:clamp(13px,1.6vw,26px);font-weight:600;padding:clamp(3px,.4vw,6px) clamp(10px,1.2vw,18px);border-radius:5px;letter-spacing:.5px;display:inline-flex;align-items:center;gap:10px;margin-top:clamp(4px,.5vw,8px);}
+  .hc.up{background:var(--green-soft);color:var(--green);}.hc.dn{background:var(--red-soft);color:var(--red);}.hc.fl{background:#ffffff06;color:var(--text-dim);}
+  .hc-ath{font-size:clamp(9px,1vw,14px);font-weight:400;opacity:.7;}
+  .hero-right{display:flex;align-items:center;gap:clamp(14px,2.2vw,36px);flex-wrap:wrap;}
+  .hero-metric{display:flex;flex-direction:column;gap:1px;}
+  .hero-metric .hm-label{font-size:clamp(6px,.65vw,9px);letter-spacing:clamp(1px,.18vw,2.5px);color:var(--text-dim);text-transform:uppercase;}
+  .hm-row{display:flex;align-items:baseline;gap:clamp(6px,.8vw,12px);}
+  .hero-metric .hm-val{font-family:'Outfit',sans-serif;font-size:clamp(18px,2.4vw,38px);font-weight:700;letter-spacing:-.5px;white-space:nowrap;}
+  .hero-metric .hm-val.btc{color:var(--btc);}.hero-metric .hm-val.g{color:var(--green);}
+  .hero-metric .hm-val .pct{font-size:.55em;font-weight:500;margin-left:4px;}
+  .hero-metric .hm-val .pct.up{color:var(--green);}.hero-metric .hm-val .pct.dn{color:var(--red);}
+  .hero-sep{width:1px;height:clamp(28px,3.5vw,50px);background:var(--border-lit);flex-shrink:0;}
+  /* Sparkline canvas in hero */
+  .spark{display:block;width:clamp(60px,6vw,100px);height:clamp(20px,2.4vw,32px);flex-shrink:0;}
+
+  /* Metrics */
+  .metrics{display:flex;align-items:center;gap:clamp(10px,1.6vw,28px);padding:clamp(6px,.7vw,10px) 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);flex-wrap:wrap;overflow:hidden;}
+  .m{display:flex;flex-direction:column;gap:0;}
+  .m .ml{font-size:clamp(5px,.55vw,8px);letter-spacing:clamp(1px,.15vw,2px);color:var(--text-dim);text-transform:uppercase;}
+  .m .mv{font-family:'Outfit',sans-serif;font-size:clamp(13px,1.5vw,24px);font-weight:600;color:var(--text);letter-spacing:-.5px;white-space:nowrap;}
+  .m .mv.g{color:var(--green);}.m .mv.c{color:var(--cyan);}.m .mv.a{color:var(--amber);}.m .mv.btc{color:var(--btc);}
+  .m .mv .pct{font-size:.6em;font-weight:500;margin-left:4px;}
+  .m .mv .pct.up{color:var(--green);}.m .mv .pct.dn{color:var(--red);}
+  .ms{width:1px;height:clamp(18px,2.2vw,32px);background:var(--border-lit);flex-shrink:0;}
+
+  /* Charts */
+  .charts{display:grid;grid-template-columns:1fr clamp(200px,22vw,340px);gap:clamp(8px,1vw,14px);margin-top:clamp(4px,.5vw,8px);min-height:0;}
+  .cpanel{position:relative;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface);min-height:0;}
+  .cpanel .clbl{position:absolute;top:8px;left:12px;z-index:5;font-size:clamp(6px,.6vw,9px);letter-spacing:2.5px;color:var(--text-dim);display:flex;align-items:center;gap:6px;}
+  .cpanel .clbl .cd{width:4px;height:4px;border-radius:50%;background:var(--green);box-shadow:0 0 5px var(--green);animation:bl 1.5s ease-in-out infinite;}
+  .cpanel .creset{position:absolute;top:8px;right:12px;z-index:5;font-size:clamp(5px,.55vw,8px);letter-spacing:2px;color:var(--text-ghost);opacity:0;transition:opacity .3s;pointer-events:none;}
+  body:not(.idle) .cpanel .creset{opacity:.6;}
+  .ci{width:100%;height:100%;}
+  .side-hdr{padding:clamp(6px,.7vw,10px) clamp(10px,1.2vw,16px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+  .side-pair{font-family:'Outfit',sans-serif;font-size:clamp(9px,1vw,13px);font-weight:700;letter-spacing:1px;}
+  .side-pair em{font-style:normal;color:var(--btc);}
+  .sp{font-family:'Outfit',sans-serif;font-size:clamp(11px,1.2vw,16px);font-weight:700;color:var(--text);letter-spacing:-.5px;}
+  .sp .spu{font-size:.55em;color:var(--text-dim);font-weight:400;margin-left:3px;}
+  .sp .spp{font-size:.55em;font-weight:500;margin-left:6px;}
+  .sp .spp.up{color:var(--green);}.sp .spp.dn{color:var(--red);}
+  .sc{flex:1;min-height:0;}
+
+  /* Bottom */
+  .bot{display:flex;align-items:center;justify-content:space-between;padding-top:clamp(3px,.4vw,6px);font-size:clamp(5px,.55vw,8px);letter-spacing:2px;color:var(--text-ghost);text-transform:uppercase;}
+  .bot a{color:var(--text-dim);text-decoration:none;}
+  .bot .hint{opacity:0;transition:opacity .3s;}
+  body:not(.idle) .bot .hint{opacity:1;}
+
+  .top,.hero,.metrics,.charts,.bot{opacity:0;animation:fi .5s ease forwards;}
+  .top{animation-delay:0s}.hero{animation-delay:.05s}.metrics{animation-delay:.1s}.charts{animation-delay:.15s}.bot{animation-delay:.2s}
+  @keyframes fi{to{opacity:1}}
+  @media(max-width:900px){.charts{grid-template-columns:1fr;}.hero-sep{display:none;}.ms{display:none;}.wx-row{flex-wrap:wrap;}.spark{display:none;}}
 </style>
 </head>
 <body>
 <div class="amb"><div class="o o1"></div><div class="o o2"></div><div class="o o3"></div></div>
 <div class="noise"></div>
 <div class="dash">
+
   <div class="top">
     <div class="logo"><div class="logo-ring">X</div><div class="logo-t"><em>XRP</em> Terminal</div></div>
     <div class="top-right">
       <div class="status-row"><div class="si"><div class="wd" id="wsD"></div><span id="wsL">CONNECTING</span></div></div>
-      <div class="clock-row"><span class="clock-time" id="clk">--:--:--</span><span class="clock-date" id="dateLbl">---</span><span class="clock-tz">ICT</span></div>
+      <div class="clock-row">
+        <span class="clock-time" id="clk">--:--:--</span>
+        <span class="clock-date" id="dateLbl">---</span>
+        <span class="clock-tz">ICT</span>
+      </div>
       <div class="wx-row">
-        <div class="wx-item"><span class="wx-icon" id="wxIcon">⏳</span><div><div class="wx-val" id="wxTemp">--°</div><div class="wx-sub" id="wxHiLo">H --° L --°</div></div></div>
+        <div class="wx-item">
+          <span class="wx-icon" id="wxIcon">⏳</span>
+          <div><div class="wx-val" id="wxTemp">--°</div><div class="wx-sub" id="wxHiLo">H --° L --°</div></div>
+        </div>
+        <div class="wx-sep"></div>
+        <div class="wx-item"><span class="wx-icon">💧</span><div><div class="wx-val" id="wxHum">--%</div><div class="wx-sub">Humidity</div></div></div>
         <div class="wx-sep"></div>
         <div class="wx-item"><div class="aqi-badge" id="aqiBadge" style="background:#ffffff08;"><div class="aqi-dot" id="aqiDot" style="background:#555;"></div><span id="aqiVal">--</span><span class="aqi-label" id="aqiLabel">AQI</span></div><span class="aqi-src">IQAir</span></div>
         <div class="wx-sep"></div>
@@ -44,10 +144,32 @@
       </div>
     </div>
   </div>
+
   <div class="hero">
-    <div class="hero-left"><div class="hp-label">XRP / USD</div><div class="hl"><div class="hp" id="xP">—</div><div class="hu">USD</div></div><div class="hc fl" id="xChg">—</div></div>
-    <div class="hero-right"><div class="hero-metric"><div class="hm-label">BTC / USD</div><div class="hm-val btc" id="btcP">—</div></div><div class="hero-sep"></div><div class="hero-metric"><div class="hm-label">XRP / BTC</div><div class="hm-val g" id="xBtc">—</div></div></div>
+    <div class="hero-left">
+      <div class="hp-label">XRP / USD</div>
+      <div class="hl"><div class="hp" id="xP">—</div><div class="hu">USD</div></div>
+      <div class="hc fl" id="xChg"><span id="xChgVal">—</span><span class="hc-ath" id="xAth"></span></div>
+    </div>
+    <div class="hero-right">
+      <div class="hero-metric">
+        <div class="hm-label">BTC / USD</div>
+        <div class="hm-row">
+          <div class="hm-val btc" id="btcP">—</div>
+          <canvas class="spark" id="sparkBtc"></canvas>
+        </div>
+      </div>
+      <div class="hero-sep"></div>
+      <div class="hero-metric">
+        <div class="hm-label">XRP / BTC</div>
+        <div class="hm-row">
+          <div class="hm-val g" id="xBtc">—</div>
+          <canvas class="spark" id="sparkXrpBtc"></canvas>
+        </div>
+      </div>
+    </div>
   </div>
+
   <div class="metrics">
     <div class="m"><div class="ml">USD / JPY</div><div class="mv c" id="fP">—</div></div><div class="ms"></div>
     <div class="m"><div class="ml">XRP / JPY</div><div class="mv g" id="xJpy">—</div></div><div class="ms"></div>
@@ -58,33 +180,90 @@
     <div class="m"><div class="ml">24H Vol</div><div class="mv" id="tVol">—</div></div><div class="ms"></div>
     <div class="m"><div class="ml">Mkt Cap</div><div class="mv" id="tMcap">—</div></div>
   </div>
+
   <div class="charts">
-    <div class="cpanel"><div class="clbl"><div class="cd"></div>XRP / USDT · 3 MIN · BINANCE · ICT</div><div class="ci" id="chartMain"></div></div>
-    <div class="cpanel" style="display:flex;flex-direction:column;"><div class="side-hdr"><div class="side-pair">XRP / <em>BTC</em> · 3M</div><div class="sp" id="xBtcH">—<span class="spu">BTC</span></div></div><div class="sc" id="chartBtc"></div></div>
+    <div class="cpanel">
+      <div class="clbl"><div class="cd"></div>XRP / USDT · 3 MIN · BINANCE · ICT</div>
+      <div class="creset">DBL-CLICK TO RESET ZOOM</div>
+      <div class="ci" id="chartMain"></div>
+    </div>
+    <div class="cpanel" style="display:flex;flex-direction:column;">
+      <div class="side-hdr"><div class="side-pair">XRP / <em>BTC</em> · 3M</div><div class="sp" id="xBtcH">—<span class="spu">BTC</span></div></div>
+      <div class="sc" id="chartBtc"></div>
+    </div>
   </div>
-  <div class="bot"><span>XRP TERMINAL — NOT FINANCIAL ADVICE</span><span class="hint">PRESS F FOR FULLSCREEN</span><span>CHARTS: <a href="https://www.tradingview.com/" target="_blank" rel="noopener">TRADINGVIEW</a> LW · DATA: BINANCE · AQI: IQAIR</span></div>
+
+  <div class="bot">
+    <span>XRP TERMINAL — NOT FINANCIAL ADVICE</span>
+    <span class="hint">[F] FULLSCREEN · [DBL-CLICK] RESET ZOOM</span>
+    <span>DATA: BINANCE · IQAIR · OPEN-METEO · COINGECKO</span>
+  </div>
+
 </div>
 <script>
 (function(){
   'use strict';
+  // ═════════ CONFIG ═════════
   const TZ='Asia/Bangkok',TZ_SHIFT=7*3600,LAT=18.8088,LON=98.9717;
   const IQAIR_KEY='8a58e160-a04e-44d6-8902-c83fc42021c1';
   const AO='https://api.allorigins.win/get?url=';
   const CP='https://corsproxy.io/?';
+  const MAX_CANDLES=2000;  // memory hygiene: cap candle data
 
+  // ═════════ UTILS ═════════
   function fmtBKK(s){return new Date(s*1000).toLocaleTimeString('en-GB',{hour12:false,hour:'2-digit',minute:'2-digit',timeZone:TZ});}
   function fmtBKKfull(s){return new Date(s*1000).toLocaleString('en-GB',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit',day:'2-digit',month:'short',timeZone:TZ});}
   function toBKK(ms){return Math.floor(ms/1000)+TZ_SHIFT;}
-
-  const S={xrpUsd:null,xrpPrev:null,usdJpy:null,brentUsd:null,brentJpy:null,btcUsd:null,btc24hPct:null,xrpBtc:null,xrpBtc24hPct:null};
   const $=id=>document.getElementById(id);
   const fP=(v,d)=>v==null?'—':Number(v).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
   const fC=v=>{if(v==null)return'—';const n=+v;return n>=1e12?(n/1e12).toFixed(1)+'T':n>=1e9?(n/1e9).toFixed(1)+'B':n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(0)+'K':n.toFixed(0);};
 
-  setInterval(()=>{const now=new Date();$('clk').textContent=now.toLocaleTimeString('en-GB',{hour12:false,timeZone:TZ});$('dateLbl').textContent=now.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:TZ});},1000);
+  // ═════════ STATE ═════════
+  const S={
+    xrpUsd:null,xrpPrev:null,usdJpy:null,brentUsd:null,brentJpy:null,
+    btcUsd:null,btc24hPct:null,xrpBtc:null,xrpBtc24hPct:null,
+    xrpSupply:60.88e9,   // default; refreshed from CoinGecko
+    xrpAth:null,         // refreshed from CoinGecko
+    lastUpdate:{fx:0,brent:0,weather:0,aqi:0}, // Freshness tracking
+    sparkBtc:[],sparkXrpBtc:[],
+  };
+  // Each source gets an expected max-interval — if older than this, show as stale
+  const STALE_MS={fx:120000,brent:300000,weather:900000,aqi:1500000};
 
-  function flash(el,dir){el.classList.remove('fu','fd');void el.offsetWidth;el.classList.add(dir==='up'?'fu':'fd');setTimeout(()=>el.classList.remove('fu','fd'),220);}
-  function setChg(el,pct){if(pct==null){el.textContent='—';el.className='hc fl';return;}const p=+pct;el.textContent=(p>0?'▲ ':p<0?'▼ ':'')+(p>=0?'+':'')+p.toFixed(2)+'%';el.className='hc '+(p>0?'up':p<0?'dn':'fl');}
+  // ═════════ CLOCK ═════════
+  setInterval(()=>{
+    const now=new Date();
+    const fullTime=now.toLocaleTimeString('en-GB',{hour12:false,timeZone:TZ});
+    // Split HH:MM from :SS for dimmer seconds
+    const [hhmm,ss]=[fullTime.slice(0,5),fullTime.slice(5)];
+    $('clk').textContent=hhmm;
+    $('clkSec')&&($('clkSec').textContent=ss);
+    $('dateLbl').textContent=now.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:TZ});
+    updateStaleness();
+  },1000);
+
+  // Mark elements as stale when their data source hasn't updated recently
+  function updateStaleness(){
+    const now=Date.now();
+    const s=(k,ids)=>ids.forEach(i=>{const el=$(i);if(el){if(S.lastUpdate[k]&&(now-S.lastUpdate[k])>STALE_MS[k])el.classList.add('stale');else el.classList.remove('stale');}});
+    s('fx',['fP','xJpy']);
+    s('brent',['bUsd','bJpy']);
+    s('weather',['wxTemp','wxHiLo','wxHum','wxForecast','wxIcon']);
+    s('aqi',['aqiBadge']);
+  }
+
+  // ═════════ PRICE FLASH + UPDATE ═════════
+  function flash(el,dir){
+    el.classList.remove('fu','fd');void el.offsetWidth;
+    el.classList.add(dir==='up'?'fu':'fd');
+    setTimeout(()=>el.classList.remove('fu','fd'),400);
+  }
+  function setChg(el,valEl,pct){
+    if(pct==null){valEl.textContent='—';el.className='hc fl';return;}
+    const p=+pct;
+    valEl.textContent=(p>0?'▲ ':p<0?'▼ ':'')+(p>=0?'+':'')+p.toFixed(2)+'%';
+    el.className='hc '+(p>0?'up':p<0?'dn':'fl');
+  }
   function pctSpan(pct){if(pct==null)return'';const p=+pct;return '<span class="pct '+(p>=0?'up':'dn')+'">'+(p>=0?'+':'')+p.toFixed(1)+'%</span>';}
 
   function updateDisplay(){
@@ -93,185 +272,262 @@
     if(S.brentUsd) $('bUsd').textContent='$'+fP(S.brentUsd,2);
     if(S.brentJpy) $('bJpy').textContent='¥'+fP(S.brentJpy,0);
     else if(S.brentUsd&&S.usdJpy) $('bJpy').textContent='¥'+fP(S.brentUsd*S.usdJpy,0);
+    if(S.xrpUsd) $('tMcap').textContent='$'+fC(S.xrpUsd*S.xrpSupply);
+    // ATH distance
+    if(S.xrpAth && S.xrpUsd){
+      const dist=((S.xrpUsd/S.xrpAth-1)*100);
+      $('xAth').textContent='ATH '+(dist>=0?'+':'')+dist.toFixed(1)+'%';
+    }
   }
 
+  // ═════════ IDLE / FULLSCREEN / WAKE LOCK ═════════
   let idleT;function ri(){document.body.classList.remove('idle');clearTimeout(idleT);idleT=setTimeout(()=>document.body.classList.add('idle'),4000);}
   document.addEventListener('mousemove',ri);document.addEventListener('keydown',ri);ri();
   document.addEventListener('keydown',e=>{if(e.key==='f'||e.key==='F'){if(!document.fullscreenElement)document.documentElement.requestFullscreen().catch(()=>{});else document.exitFullscreen();}});
   (async()=>{try{if('wakeLock' in navigator)await navigator.wakeLock.request('screen');}catch(e){}})();
 
-  // ═══════════════════════════════════════════
-  // USD/JPY — DERIVED FROM COINGECKO
-  // CoinGecko returns crypto prices in multiple fiats.
-  // BTC/JPY ÷ BTC/USD = USD/JPY
-  // This uses the same forex rates that Google uses (Morningstar)
-  // and is CORS-enabled, free, no key, updates every ~60s
-  // ═══════════════════════════════════════════
+  // ═════════ SPARKLINE RENDERER ═════════
+  function drawSpark(canvas, values, color){
+    if(!canvas || values.length<2) return;
+    const dpr=window.devicePixelRatio||1;
+    const w=canvas.clientWidth, h=canvas.clientHeight;
+    canvas.width=w*dpr; canvas.height=h*dpr;
+    const ctx=canvas.getContext('2d');
+    ctx.scale(dpr,dpr);
+    ctx.clearRect(0,0,w,h);
+    const min=Math.min(...values), max=Math.max(...values);
+    const range=(max-min)||1;
+    const step=w/(values.length-1);
+    // Area fill
+    ctx.beginPath();
+    ctx.moveTo(0,h);
+    values.forEach((v,i)=>{const y=h-((v-min)/range)*h*.8-h*.1;ctx.lineTo(i*step,y);});
+    ctx.lineTo(w,h);
+    ctx.closePath();
+    ctx.fillStyle=color+'20';
+    ctx.fill();
+    // Line
+    ctx.beginPath();
+    values.forEach((v,i)=>{const y=h-((v-min)/range)*h*.8-h*.1;if(i===0)ctx.moveTo(0,y);else ctx.lineTo(i*step,y);});
+    ctx.strokeStyle=color;
+    ctx.lineWidth=1.5;
+    ctx.lineJoin='round';
+    ctx.stroke();
+  }
+  const SPARK_LEN=80; // last 80 ticks = roughly last few minutes
+  function pushSpark(arr, v){arr.push(v); if(arr.length>SPARK_LEN) arr.shift();}
+
+  // ═════════ FX — USD/JPY VIA COINGECKO ═════════
   async function fetchFx(){
     try{
       const r=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,jpy',{signal:AbortSignal.timeout(8000)});
-      if(r.ok){
-        const d=await r.json();
+      if(r.ok){const d=await r.json();
         if(d.bitcoin?.usd && d.bitcoin?.jpy){
-          const rate = d.bitcoin.jpy / d.bitcoin.usd;
-          // Sanity check: USD/JPY should be between 100-200
+          const rate=d.bitcoin.jpy/d.bitcoin.usd;
           if(rate>100 && rate<200){
-            S.usdJpy=rate;
-            updateDisplay();
-            console.log('✓ USD/JPY via CoinGecko:',rate.toFixed(2),'(BTC/JPY='+d.bitcoin.jpy+', BTC/USD='+d.bitcoin.usd+')');
+            S.usdJpy=rate; S.lastUpdate.fx=Date.now(); updateDisplay();
+            console.log('✓ USD/JPY',rate.toFixed(2));
             return;
           }
         }
       }
     }catch(e){}
+    try{const r=await fetch('https://api.exchangerate-api.com/v4/latest/USD',{signal:AbortSignal.timeout(6000)});if(r.ok){const d=await r.json();if(d.rates?.JPY){S.usdJpy=d.rates.JPY;S.lastUpdate.fx=Date.now();updateDisplay();}}}catch(e){}
+  }
 
-    // Fallback: exchangerate-api (updates daily but reliable)
+  // ═════════ XRP METADATA (supply + ATH) — fetch hourly ═════════
+  async function fetchXrpMeta(){
     try{
-      const r=await fetch('https://api.exchangerate-api.com/v4/latest/USD',{signal:AbortSignal.timeout(6000)});
-      if(r.ok){const d=await r.json();if(d.rates?.JPY){S.usdJpy=d.rates.JPY;updateDisplay();console.log('✓ USD/JPY via exchangerate-api:',d.rates.JPY);}}
+      const r=await fetch('https://api.coingecko.com/api/v3/coins/ripple?localization=false&tickers=false&community_data=false&developer_data=false&sparkline=false',{signal:AbortSignal.timeout(8000)});
+      if(r.ok){const d=await r.json();
+        if(d.market_data?.circulating_supply) S.xrpSupply=d.market_data.circulating_supply;
+        if(d.market_data?.ath?.usd) S.xrpAth=d.market_data.ath.usd;
+        updateDisplay();
+        console.log('✓ XRP meta: supply',S.xrpSupply,'ATH $'+S.xrpAth);
+      }
     }catch(e){}
   }
 
-  // ═══════════════════════════════════════════
-  // BRENT CRUDE — MULTI-SOURCE
-  // ═══════════════════════════════════════════
-
-  // Helper: fetch via allorigins proxy, return HTML string or null
-  async function fetchHtml(url){
-    try{
-      const r=await fetch(AO+encodeURIComponent(url),{signal:AbortSignal.timeout(12000)});
-      if(!r.ok) return null;
-      const w=await r.json();
-      return w.contents||null;
-    }catch(e){return null;}
-  }
-
-  // Helper: try corsproxy.io, return HTML string or null
-  async function fetchHtmlCp(url){
-    try{
-      const r=await fetch(CP+encodeURIComponent(url),{signal:AbortSignal.timeout(12000)});
-      if(!r.ok) return null;
-      return await r.text();
-    }catch(e){return null;}
-  }
-
-  // Extract a price from HTML using multiple regex patterns
-  function extractPrice(html, patterns){
-    for(const p of patterns){
-      const m=html.match(p);
-      if(m){
-        const val=parseFloat(m[1].replace(/,/g,''));
-        if(!isNaN(val) && val>0) return val;
-      }
-    }
-    return null;
-  }
+  // ═════════ BRENT ═════════
+  async function fetchHtml(url){try{const r=await fetch(AO+encodeURIComponent(url),{signal:AbortSignal.timeout(12000)});if(!r.ok)return null;const w=await r.json();return w.contents||null;}catch(e){return null;}}
+  async function fetchHtmlCp(url){try{const r=await fetch(CP+encodeURIComponent(url),{signal:AbortSignal.timeout(12000)});if(!r.ok)return null;return await r.text();}catch(e){return null;}}
+  function extractPrice(html,patterns){for(const p of patterns){const m=html.match(p);if(m){const val=parseFloat(m[1].replace(/,/g,''));if(!isNaN(val)&&val>0)return val;}}return null;}
 
   async function fetchBrent(){
-    // ── Brent/JPY direct from exchangerates.org.uk ──
     const jpyUrl='https://www.exchangerates.org.uk/commodities/live-brent-crude-oil-prices/BRT-JPY.html';
-    let html=await fetchHtml(jpyUrl) || await fetchHtmlCp(jpyUrl);
+    let html=await fetchHtml(jpyUrl)||await fetchHtmlCp(jpyUrl);
     if(html){
-      const jpyPrice=extractPrice(html,[
-        // The big price number — 5+ digits with comma, e.g. "16,780.34"
-        /(\d{1,3},\d{3}\.\d{1,4})/,
-        // With yen sign
-        /¥\s*([\d,]+\.\d+)/,
-        // In an element near BRT/JPY
-        /BRT\/JPY[\s\S]{0,200}?([\d,]{4,}\.\d+)/i,
-        // Generic large number
-        />\s*([\d,]{5,}\.\d{1,4})\s*</,
-      ]);
-      if(jpyPrice && jpyPrice>5000 && jpyPrice<50000){
-        S.brentJpy=jpyPrice;
-        console.log('✓ Brent/JPY direct from exchangerates.org.uk:',jpyPrice);
-      }
+      const jpy=extractPrice(html,[/(\d{1,3},\d{3}\.\d{1,4})/,/¥\s*([\d,]+\.\d+)/,/BRT\/JPY[\s\S]{0,200}?([\d,]{4,}\.\d+)/i,/>\s*([\d,]{5,}\.\d{1,4})\s*</]);
+      if(jpy&&jpy>5000&&jpy<50000){S.brentJpy=jpy;S.lastUpdate.brent=Date.now();console.log('✓ Brent/JPY',jpy);}
     }
-
-    // ── Brent/USD from exchangerates.org.uk ──
     const usdUrl='https://www.exchangerates.org.uk/commodities/live-brent-crude-oil-prices/BRT-USD.html';
-    html=await fetchHtml(usdUrl) || await fetchHtmlCp(usdUrl);
+    html=await fetchHtml(usdUrl)||await fetchHtmlCp(usdUrl);
     if(html){
-      const usdPrice=extractPrice(html,[
-        /(\d{2,3}\.\d{1,4})/,
-        /BRT\/USD[\s\S]{0,200}?(\d{2,3}\.\d+)/i,
-        />\s*\$?\s*(\d{2,3}\.\d{1,4})\s*</,
-      ]);
-      if(usdPrice && usdPrice>20 && usdPrice<300){
-        S.brentUsd=usdPrice;
-        console.log('✓ Brent/USD from exchangerates.org.uk:',usdPrice);
-      }
+      const usd=extractPrice(html,[/(\d{2,3}\.\d{1,4})/,/BRT\/USD[\s\S]{0,200}?(\d{2,3}\.\d+)/i,/>\s*\$?\s*(\d{2,3}\.\d{1,4})\s*</]);
+      if(usd&&usd>20&&usd<300){S.brentUsd=usd;S.lastUpdate.brent=Date.now();console.log('✓ Brent/USD',usd);}
     }
-
-    // ── Fallback: Google Finance BZ:NYMEX for Brent/USD ──
-    if(!S.brentUsd){
-      html=await fetchHtml('https://www.google.com/finance/quote/BZ:NYMEX');
-      if(html){
-        const p=extractPrice(html,[/data-last-price="([0-9.]+)"/]);
-        if(p && p>20 && p<300){S.brentUsd=p;console.log('✓ Brent/USD via Google Finance:',p);}
-      }
-    }
-
-    // ── Fallback: Yahoo Finance via proxy ──
-    if(!S.brentUsd){
-      try{
-        const r=await fetch(AO+encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/BZ=F?interval=1d&range=1d'),{signal:AbortSignal.timeout(10000)});
-        if(r.ok){const w=await r.json();if(w.contents){try{const p=JSON.parse(w.contents).chart.result[0].meta.regularMarketPrice;if(p>20&&p<300){S.brentUsd=p;console.log('✓ Brent/USD via Yahoo:',p);}}catch(e){}}}
-      }catch(e){}
-    }
-
+    if(!S.brentUsd){html=await fetchHtml('https://www.google.com/finance/quote/BZ:NYMEX');if(html){const p=extractPrice(html,[/data-last-price="([0-9.]+)"/]);if(p&&p>20&&p<300){S.brentUsd=p;S.lastUpdate.brent=Date.now();}}}
     updateDisplay();
   }
 
-  // ═══════ WEATHER ═══════
+  // ═════════ WEATHER (+ humidity) ═════════
   const WMO_ICONS={0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',80:'🌦️',81:'🌧️',82:'⛈️',95:'⛈️',96:'⛈️',99:'⛈️'};
   const WMO_DESC={0:'Clear sky',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',45:'Fog',48:'Fog',51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',61:'Light rain',63:'Rain',65:'Heavy rain',80:'Rain showers',81:'Rain showers',82:'Heavy showers',95:'Thunderstorm',96:'Thunderstorm',99:'Severe storm'};
+
   async function fetchWeather(){
-    try{const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max&hourly=precipitation_probability,weather_code&timezone=Asia%2FBangkok&forecast_days=1`);if(!r.ok)return;const d=await r.json();
+    try{
+      const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current=temperature_2m,weather_code,relative_humidity_2m&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max&hourly=precipitation_probability,weather_code&timezone=Asia%2FBangkok&forecast_days=1`);
+      if(!r.ok)return;const d=await r.json();
       const temp=Math.round(d.current.temperature_2m),code=d.current.weather_code;
-      $('wxIcon').textContent=WMO_ICONS[code]||'🌡️';$('wxTemp').textContent=temp+'°C';
+      $('wxIcon').textContent=WMO_ICONS[code]||'🌡️';
+      $('wxTemp').textContent=temp+'°C';
+      if(d.current.relative_humidity_2m!=null) $('wxHum').textContent=Math.round(d.current.relative_humidity_2m)+'%';
       if(d.daily)$('wxHiLo').textContent='H '+Math.round(d.daily.temperature_2m_max[0])+'° L '+Math.round(d.daily.temperature_2m_min[0])+'°';
-      if(d.hourly){const nowH=parseInt(new Date().toLocaleString('en-US',{hour:'numeric',hour12:false,timeZone:TZ}));let rain=null;
+      if(d.hourly){
+        const nowH=parseInt(new Date().toLocaleString('en-US',{hour:'numeric',hour12:false,timeZone:TZ}));
+        let rain=null;
         for(let i=nowH;i<d.hourly.time.length;i++){if(d.hourly.precipitation_probability[i]>40){rain={time:d.hourly.time[i].split('T')[1],prob:d.hourly.precipitation_probability[i],desc:WMO_DESC[d.hourly.weather_code[i]]||'Rain'};break;}}
         if(rain){$('wxForecast').textContent='🌧️ '+rain.desc+' ~'+rain.time+' ('+rain.prob+'%)';$('wxForecast').style.color='var(--amber)';}
-        else{const desc=WMO_DESC[code]||'';$('wxForecast').textContent=desc+(d.daily?.precipitation_probability_max?.[0]>20?' · '+d.daily.precipitation_probability_max[0]+'% rain chance':'');$('wxForecast').style.color='var(--text-dim)';}}
+        else{const desc=WMO_DESC[code]||'';$('wxForecast').textContent=desc+(d.daily?.precipitation_probability_max?.[0]>20?' · '+d.daily.precipitation_probability_max[0]+'% rain chance':'');$('wxForecast').style.color='var(--text-dim)';}
+      }
+      S.lastUpdate.weather=Date.now();
     }catch(e){}
   }
 
-  // ═══════ AQI — IQAir ═══════
-  function getAqiColor(aqi){if(aqi<=50)return{bg:'#00e40020',dot:'#00e400',label:'Good'};if(aqi<=100)return{bg:'#ffff0018',dot:'#cccc00',label:'Moderate'};if(aqi<=150)return{bg:'#ff7e0020',dot:'#ff7e00',label:'USG'};if(aqi<=200)return{bg:'#ff000020',dot:'#ff0000',label:'Unhealthy'};if(aqi<=300)return{bg:'#8f3f9720',dot:'#8f3f97',label:'Very Unhealthy'};return{bg:'#7e002320',dot:'#7e0023',label:'Hazardous'};}
+  // ═════════ AQI — IQAir ═════════
+  function getAqiColor(aqi){
+    if(aqi<=50)return{bg:'#00e40020',dot:'#00e400',label:'Good'};
+    if(aqi<=100)return{bg:'#ffff0018',dot:'#cccc00',label:'Moderate'};
+    if(aqi<=150)return{bg:'#ff7e0020',dot:'#ff7e00',label:'Unhealthy·Sensitive'};
+    if(aqi<=200)return{bg:'#ff000020',dot:'#ff0000',label:'Unhealthy'};
+    if(aqi<=300)return{bg:'#8f3f9720',dot:'#8f3f97',label:'Very Unhealthy'};
+    return{bg:'#7e002320',dot:'#7e0023',label:'Hazardous'};
+  }
   async function fetchAqi(){
-    try{const r=await fetch(`https://api.airvisual.com/v2/nearest_city?lat=${LAT}&lon=${LON}&key=${IQAIR_KEY}`,{signal:AbortSignal.timeout(10000)});if(!r.ok)return;const d=await r.json();
-      if(d.status==='success'&&d.data?.current?.pollution){const pol=d.data.current.pollution,aqi=pol.aqius,c=getAqiColor(aqi);
-        $('aqiVal').textContent=aqi;$('aqiDot').style.background=c.dot;$('aqiBadge').style.background=c.bg;$('aqiBadge').style.color=c.dot;
-        $('aqiLabel').textContent=c.label;console.log('✓ IQAir AQI:',aqi);}}catch(e){}
+    try{
+      const r=await fetch(`https://api.airvisual.com/v2/nearest_city?lat=${LAT}&lon=${LON}&key=${IQAIR_KEY}`,{signal:AbortSignal.timeout(10000)});
+      if(!r.ok)return;const d=await r.json();
+      if(d.status==='success'&&d.data?.current?.pollution){
+        const aqi=d.data.current.pollution.aqius,c=getAqiColor(aqi);
+        $('aqiVal').textContent=aqi;
+        $('aqiDot').style.background=c.dot;
+        $('aqiBadge').style.background=c.bg;
+        $('aqiBadge').style.color=c.dot;
+        $('aqiLabel').textContent=c.label;
+        S.lastUpdate.aqi=Date.now();
+        console.log('✓ AQI',aqi,c.label);
+      }
+    }catch(e){}
   }
 
-  // ═══════ CHARTS ═══════
-  function makeChart(el,opts={}){const c=LightweightCharts.createChart(el,{layout:{background:{type:'solid',color:'#080b14'},textColor:'#3c4560',fontFamily:'Azeret Mono,monospace',fontSize:opts.fs||11},grid:{vertLines:{color:'#0f1520'+(opts.ga||'18')},horzLines:{color:'#0f1520'+(opts.ga||'38')}},crosshair:{mode:LightweightCharts.CrosshairMode.Normal,vertLine:{color:'#3c456040',width:1,style:2,labelBackgroundColor:'#161e30'},horzLine:{color:'#3c456040',width:1,style:2,labelBackgroundColor:'#161e30'}},rightPriceScale:{borderColor:'#0f1520',scaleMargins:{top:.04,bottom:.04}},timeScale:{borderColor:'#0f1520',timeVisible:true,secondsVisible:false,tickMarkFormatter:t=>fmtBKK(t-TZ_SHIFT)},localization:{timeFormatter:t=>fmtBKKfull(t-TZ_SHIFT)},handleScroll:true,handleScale:true});function fit(){c.applyOptions({width:el.clientWidth,height:el.clientHeight});}new ResizeObserver(fit).observe(el);fit();return c;}
-  const ch1=makeChart($('chartMain'));const cS1=ch1.addCandlestickSeries({upColor:'#00e87b',downColor:'#ff2952',borderUpColor:'#00e87b',borderDownColor:'#ff2952',wickUpColor:'#00e87b70',wickDownColor:'#ff295270'});const vS1=ch1.addHistogramSeries({priceFormat:{type:'volume'},priceScaleId:'vol',scaleMargins:{top:.88,bottom:0}});
-  const ch2=makeChart($('chartBtc'),{fs:10,ga:'10'});const cS2=ch2.addCandlestickSeries({upColor:'#f7931a',downColor:'#ff2952',borderUpColor:'#f7931a',borderDownColor:'#ff2952',wickUpColor:'#f7931a60',wickDownColor:'#ff295260'});const vS2=ch2.addHistogramSeries({priceFormat:{type:'volume'},priceScaleId:'vol2',scaleMargins:{top:.9,bottom:0}});
-  async function loadKlines(sym,cs,vs,uC,dC,chart){try{const r=await fetch('https://api.binance.com/api/v3/klines?symbol='+sym+'&interval=3m&limit=500');const d=await r.json(),ca=[],va=[];d.forEach(k=>{const t=toBKK(k[0]),o=+k[1],h=+k[2],l=+k[3],c=+k[4],v=+k[5];ca.push({time:t,open:o,high:h,low:l,close:c});va.push({time:t,value:v,color:c>=o?uC:dC});});cs.setData(ca);vs.setData(va);chart.timeScale().fitContent();}catch(e){}}
-  loadKlines('XRPUSDT',cS1,vS1,'#00e87b1a','#ff29521a',ch1);loadKlines('XRPBTC',cS2,vS2,'#f7931a1a','#ff29521a',ch2);
+  // ═════════ CHARTS ═════════
+  function makeChart(el,opts={}){
+    const c=LightweightCharts.createChart(el,{
+      layout:{background:{type:'solid',color:'#080b14'},textColor:'#3c4560',fontFamily:'Azeret Mono,monospace',fontSize:opts.fs||11},
+      grid:{vertLines:{color:'#0f1520'+(opts.ga||'18')},horzLines:{color:'#0f1520'+(opts.ga||'38')}},
+      crosshair:{mode:LightweightCharts.CrosshairMode.Normal,vertLine:{color:'#3c456040',width:1,style:2,labelBackgroundColor:'#161e30'},horzLine:{color:'#3c456040',width:1,style:2,labelBackgroundColor:'#161e30'}},
+      rightPriceScale:{borderColor:'#0f1520',scaleMargins:{top:.04,bottom:.04}},
+      timeScale:{borderColor:'#0f1520',timeVisible:true,secondsVisible:false,tickMarkFormatter:t=>fmtBKK(t-TZ_SHIFT)},
+      localization:{timeFormatter:t=>fmtBKKfull(t-TZ_SHIFT)},
+      handleScroll:true,handleScale:true
+    });
+    function fit(){c.applyOptions({width:el.clientWidth,height:el.clientHeight});}
+    new ResizeObserver(fit).observe(el);fit();
+    // Double-click resets zoom
+    el.addEventListener('dblclick',()=>c.timeScale().fitContent());
+    return c;
+  }
+  const ch1=makeChart($('chartMain'));
+  const cS1=ch1.addCandlestickSeries({upColor:'#00e87b',downColor:'#ff2952',borderUpColor:'#00e87b',borderDownColor:'#ff2952',wickUpColor:'#00e87b70',wickDownColor:'#ff295270'});
+  const vS1=ch1.addHistogramSeries({priceFormat:{type:'volume'},priceScaleId:'vol',scaleMargins:{top:.88,bottom:0}});
+  const ch2=makeChart($('chartBtc'),{fs:10,ga:'10'});
+  const cS2=ch2.addCandlestickSeries({upColor:'#f7931a',downColor:'#ff2952',borderUpColor:'#f7931a',borderDownColor:'#ff2952',wickUpColor:'#f7931a60',wickDownColor:'#ff295260'});
+  const vS2=ch2.addHistogramSeries({priceFormat:{type:'volume'},priceScaleId:'vol2',scaleMargins:{top:.9,bottom:0}});
 
-  // ═══════ WEBSOCKET ═══════
-  (function go(){const ws=new WebSocket('wss://stream.binance.com:9443/stream?streams=xrpusdt@ticker/xrpusdt@kline_3m/btcusdt@ticker/xrpbtc@ticker/xrpbtc@kline_3m');
-    ws.onopen=()=>{$('wsD').classList.remove('off');$('wsL').textContent='LIVE';};ws.onclose=()=>{$('wsD').classList.add('off');$('wsL').textContent='RECONNECTING';setTimeout(go,3000);};ws.onerror=()=>ws.close();
-    ws.onmessage=evt=>{const msg=JSON.parse(evt.data),d=msg.data,s=msg.stream;
-      if(s==='xrpusdt@ticker'){S.xrpPrev=S.xrpUsd;S.xrpUsd=+d.c;const el=$('xP');el.textContent=fP(S.xrpUsd,4);if(S.xrpPrev!=null)flash(el,S.xrpUsd>=S.xrpPrev?'up':'down');setChg($('xChg'),+d.P);$('tHi').textContent=fP(+d.h,4);$('tLo').textContent=fP(+d.l,4);$('tVol').textContent='$'+fC(+d.q);if(S.xrpUsd)$('tMcap').textContent='$'+fC(S.xrpUsd*61e9);updateDisplay();}
-      if(s==='xrpusdt@kline_3m'){const k=d.k,t=toBKK(k.t);cS1.update({time:t,open:+k.o,high:+k.h,low:+k.l,close:+k.c});vS1.update({time:t,value:+k.v,color:+k.c>=+k.o?'#00e87b1a':'#ff29521a'});}
-      if(s==='btcusdt@ticker'){S.btcUsd=+d.c;S.btc24hPct=+d.P;$('btcP').innerHTML='$'+fP(S.btcUsd,0)+pctSpan(S.btc24hPct);}
-      if(s==='xrpbtc@ticker'){S.xrpBtc=+d.c;S.xrpBtc24hPct=+d.P;$('xBtc').innerHTML=fP(S.xrpBtc,8)+pctSpan(S.xrpBtc24hPct);const pc=(+d.P)>=0?'up':'dn';$('xBtcH').innerHTML=fP(S.xrpBtc,8)+'<span class="spu">BTC</span><span class="spp '+pc+'">'+(+d.P>=0?'+':'')+Number(d.P).toFixed(2)+'%</span>';}
-      if(s==='xrpbtc@kline_3m'){const k=d.k,t=toBKK(k.t);cS2.update({time:t,open:+k.o,high:+k.h,low:+k.l,close:+k.c});vS2.update({time:t,value:+k.v,color:+k.c>=+k.o?'#f7931a1a':'#ff29521a'});}
+  // Memory hygiene: trim candles if they grow too large
+  let c1Data=[],v1Data=[],c2Data=[],v2Data=[];
+  function trimChart(cs,vs,cData,vData){
+    if(cData.length>MAX_CANDLES){
+      const trim=cData.length-MAX_CANDLES;
+      cData.splice(0,trim);vData.splice(0,trim);
+      cs.setData(cData);vs.setData(vData);
+    }
+  }
+
+  async function loadKlines(sym,cs,vs,uC,dC,chart,cDataRef,vDataRef){
+    try{const r=await fetch('https://api.binance.com/api/v3/klines?symbol='+sym+'&interval=3m&limit=500');const d=await r.json();
+      d.forEach(k=>{const t=toBKK(k[0]),o=+k[1],h=+k[2],l=+k[3],c=+k[4],v=+k[5];cDataRef.push({time:t,open:o,high:h,low:l,close:c});vDataRef.push({time:t,value:v,color:c>=o?uC:dC});});
+      cs.setData(cDataRef);vs.setData(vDataRef);chart.timeScale().fitContent();
+    }catch(e){}
+  }
+  loadKlines('XRPUSDT',cS1,vS1,'#00e87b1a','#ff29521a',ch1,c1Data,v1Data);
+  loadKlines('XRPBTC',cS2,vS2,'#f7931a1a','#ff29521a',ch2,c2Data,v2Data);
+
+  // ═════════ WEBSOCKET ═════════
+  (function go(){
+    const ws=new WebSocket('wss://stream.binance.com:9443/stream?streams=xrpusdt@ticker/xrpusdt@kline_3m/btcusdt@ticker/xrpbtc@ticker/xrpbtc@kline_3m');
+    ws.onopen=()=>{$('wsD').classList.remove('off');$('wsL').textContent='LIVE';};
+    ws.onclose=()=>{$('wsD').classList.add('off');$('wsL').textContent='RECONNECTING';setTimeout(go,3000);};
+    ws.onerror=()=>ws.close();
+    ws.onmessage=evt=>{
+      const msg=JSON.parse(evt.data),d=msg.data,s=msg.stream;
+      if(s==='xrpusdt@ticker'){
+        S.xrpPrev=S.xrpUsd;S.xrpUsd=+d.c;
+        const el=$('xP');el.textContent=fP(S.xrpUsd,4);
+        if(S.xrpPrev!=null && S.xrpPrev!==S.xrpUsd)flash(el,S.xrpUsd>S.xrpPrev?'up':'down');
+        setChg($('xChg'),$('xChgVal'),+d.P);
+        $('tHi').textContent=fP(+d.h,4);$('tLo').textContent=fP(+d.l,4);
+        $('tVol').textContent='$'+fC(+d.q);
+        updateDisplay();
+      }
+      if(s==='xrpusdt@kline_3m'){
+        const k=d.k,t=toBKK(k.t);
+        const last=c1Data[c1Data.length-1];
+        const cdl={time:t,open:+k.o,high:+k.h,low:+k.l,close:+k.c};
+        const vol={time:t,value:+k.v,color:+k.c>=+k.o?'#00e87b1a':'#ff29521a'};
+        if(last&&last.time===t){c1Data[c1Data.length-1]=cdl;v1Data[v1Data.length-1]=vol;}
+        else{c1Data.push(cdl);v1Data.push(vol);trimChart(cS1,vS1,c1Data,v1Data);}
+        cS1.update(cdl);vS1.update(vol);
+      }
+      if(s==='btcusdt@ticker'){
+        S.btcUsd=+d.c;S.btc24hPct=+d.P;
+        $('btcP').innerHTML='$'+fP(S.btcUsd,0)+pctSpan(S.btc24hPct);
+        pushSpark(S.sparkBtc,S.btcUsd);
+        drawSpark($('sparkBtc'),S.sparkBtc,'#f7931a');
+      }
+      if(s==='xrpbtc@ticker'){
+        S.xrpBtc=+d.c;S.xrpBtc24hPct=+d.P;
+        $('xBtc').innerHTML=fP(S.xrpBtc,8)+pctSpan(S.xrpBtc24hPct);
+        const pc=(+d.P)>=0?'up':'dn';
+        $('xBtcH').innerHTML=fP(S.xrpBtc,8)+'<span class="spu">BTC</span><span class="spp '+pc+'">'+(+d.P>=0?'+':'')+Number(d.P).toFixed(2)+'%</span>';
+        pushSpark(S.sparkXrpBtc,S.xrpBtc);
+        drawSpark($('sparkXrpBtc'),S.sparkXrpBtc,'#00e87b');
+      }
+      if(s==='xrpbtc@kline_3m'){
+        const k=d.k,t=toBKK(k.t);
+        const last=c2Data[c2Data.length-1];
+        const cdl={time:t,open:+k.o,high:+k.h,low:+k.l,close:+k.c};
+        const vol={time:t,value:+k.v,color:+k.c>=+k.o?'#f7931a1a':'#ff29521a'};
+        if(last&&last.time===t){c2Data[c2Data.length-1]=cdl;v2Data[v2Data.length-1]=vol;}
+        else{c2Data.push(cdl);v2Data.push(vol);trimChart(cS2,vS2,c2Data,v2Data);}
+        cS2.update(cdl);vS2.update(vol);
+      }
     };
   })();
 
-  // ═══════ BOOT ═══════
-  fetchFx();fetchBrent();fetchWeather();fetchAqi();
-  setInterval(fetchFx,30000);        // USD/JPY every 30s via CoinGecko
-  setInterval(fetchBrent,120000);     // Brent every 2min
-  setInterval(fetchWeather,300000);   // Weather every 5min
-  setInterval(fetchAqi,600000);       // AQI every 10min
+  // ═════════ BOOT ═════════
+  fetchFx();fetchBrent();fetchWeather();fetchAqi();fetchXrpMeta();
+  setInterval(fetchFx,30000);
+  setInterval(fetchBrent,120000);
+  setInterval(fetchWeather,300000);
+  setInterval(fetchAqi,600000);
+  setInterval(fetchXrpMeta,3600000); // XRP supply/ATH every hour
+
+  // Redraw sparklines on resize
+  window.addEventListener('resize',()=>{
+    drawSpark($('sparkBtc'),S.sparkBtc,'#f7931a');
+    drawSpark($('sparkXrpBtc'),S.sparkXrpBtc,'#00e87b');
+  });
 })();
 </script>
 </body>
