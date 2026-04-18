@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>XRP Terminal</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%2304060b'/><path d='M8 9 L16 17 L24 9 M8 23 L16 15 L24 23' stroke='%2300e87b' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700;800;900&family=Azeret+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 <style>
@@ -23,8 +24,9 @@
   /* Top */
   .top{display:flex;align-items:flex-start;justify-content:space-between;padding-bottom:clamp(6px,.8vw,12px);border-bottom:1px solid var(--border);gap:16px;}
   .logo{display:flex;align-items:center;gap:clamp(8px,1vw,14px);}
-  .logo-ring{width:clamp(26px,2.5vw,36px);height:clamp(26px,2.5vw,36px);border:2px solid var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-weight:900;font-size:clamp(10px,1.2vw,15px);color:var(--green);box-shadow:0 0 18px var(--green-soft);animation:rp 4s ease-in-out infinite;}
-  @keyframes rp{0%,100%{box-shadow:0 0 10px var(--green-soft)}50%{box-shadow:0 0 28px var(--green-mid)}}
+  .logo-ring{width:clamp(32px,3vw,44px);height:clamp(32px,3vw,44px);display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 0 12px var(--green-soft));animation:rp 4s ease-in-out infinite;}
+  .logo-ring svg{width:100%;height:100%;}
+  @keyframes rp{0%,100%{filter:drop-shadow(0 0 8px var(--green-soft))}50%{filter:drop-shadow(0 0 22px var(--green-mid))}}
   .logo-t{font-family:'Outfit',sans-serif;font-size:clamp(14px,1.8vw,22px);font-weight:700;letter-spacing:clamp(3px,.4vw,6px);text-transform:uppercase;}
   .logo-t em{font-style:normal;color:var(--green);}
   .top-right{display:flex;flex-direction:column;align-items:flex-end;gap:clamp(4px,.5vw,8px);}
@@ -122,7 +124,7 @@
 <div class="dash">
 
   <div class="top">
-    <div class="logo"><div class="logo-ring">X</div><div class="logo-t"><em>XRP</em> Terminal</div></div>
+    <div class="logo"><div class="logo-ring"><svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="M6 7 L16 17 L26 7 M6 25 L16 15 L26 25" stroke="#00e87b" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="logo-t"><em>XRP</em> Terminal</div></div>
     <div class="top-right">
       <div class="status-row"><div class="si"><div class="wd" id="wsD"></div><span id="wsL">CONNECTING</span></div></div>
       <div class="clock-row">
@@ -478,6 +480,10 @@
         setChg($('xChg'),$('xChgVal'),+d.P);
         $('tHi').textContent=fP(+d.h,4);$('tLo').textContent=fP(+d.l,4);
         $('tVol').textContent='$'+fC(+d.q);
+        // Update browser tab title with live price + direction arrow
+        const p=+d.P;
+        const arrow=p>0?'▲':p<0?'▼':'·';
+        document.title=arrow+' $'+S.xrpUsd.toFixed(4)+' XRP · Terminal';
         updateDisplay();
       }
       if(s==='xrpusdt@kline_3m'){
