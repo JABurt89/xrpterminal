@@ -307,7 +307,7 @@
         <span class="ath-note" id="xrpAth">ATH <span class="val">—</span></span>
       </div>
       <div class="portfolio">
-        <div class="portfolio-label">$1M Portfolio · 24H</div>
+        <div class="portfolio-label">1M XRP Portfolio · 24H</div>
         <div class="portfolio-line">
           <span class="portfolio-val" id="portfolioVal">—</span>
           <span class="pill fl portfolio-pnl" id="portfolioPnl">—</span>
@@ -794,12 +794,17 @@ function updateXrpChange(pct){
   D.xrpChg.textContent = (pct == null ? '—' : arrow + ' ' + sign + pct.toFixed(2) + '%');
   D.xrpChg.className = 'pill chg-pill ' + cls;
 
-  // $1M portfolio: if held $1M of XRP 24h ago
-  const value = 1_000_000 * (1 + pct / 100);
-  const pnl   = value - 1_000_000;
-  D.portfolioVal.textContent = '$' + value.toLocaleString('en-US', {maximumFractionDigits:0});
-  D.portfolioPnl.textContent = signDollar(pnl);
-  D.portfolioPnl.className = 'pill portfolio-pnl ' + cls;
+  // 1M XRP portfolio: current USD value of 1,000,000 XRP + 24h USD P&L
+  const XRP_TOKENS = 1_000_000;
+  if (S.xrpUsd != null) {
+    const value = XRP_TOKENS * S.xrpUsd;
+    // 24h ago price = current / (1 + pct/100); pnl = (current - prev) * tokens
+    const prevPrice = S.xrpUsd / (1 + pct / 100);
+    const pnl = (S.xrpUsd - prevPrice) * XRP_TOKENS;
+    D.portfolioVal.textContent = '$' + value.toLocaleString('en-US', {maximumFractionDigits:0});
+    D.portfolioPnl.textContent = signDollar(pnl);
+    D.portfolioPnl.className = 'pill portfolio-pnl ' + cls;
+  }
 
   // Tab title
   if (S.xrpUsd != null) {
