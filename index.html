@@ -29,19 +29,14 @@
 <style>
   /* ══════════ DESIGN TOKENS ══════════ */
   :root {
-    /* Surfaces */
     --bg:         #04060b;
     --surface:    #080b14;
     --surface-2:  #0b1020;
     --border:     #0f1520;
     --border-hi:  #1a2238;
-
-    /* Text */
     --text:       #c8cee0;
     --text-dim:   #5a6482;
     --text-ghost: #2a3248;
-
-    /* Accents */
     --green:      #00e87b;
     --green-2:    #55ffaa;
     --green-bg:   rgba(0,232,123,.10);
@@ -54,8 +49,6 @@
     --cyan:       #3db8f5;
     --btc:        #f7931a;
     --flat-bg:    rgba(255,255,255,.04);
-
-    /* Fluid type scale */
     --fs-micro: clamp(6px, .6vw, 9px);
     --fs-xs:    clamp(8px, .85vw, 11px);
     --fs-sm:    clamp(10px, 1.05vw, 14px);
@@ -64,16 +57,12 @@
     --fs-xl:    clamp(22px, 2.8vw, 42px);
     --fs-xxl:   clamp(28px, 3.6vw, 56px);
     --fs-price: clamp(64px, 10vw, 150px);
-
-    /* Spacing scale */
     --sp-1: clamp(2px, .3vw, 5px);
     --sp-2: clamp(4px, .5vw, 8px);
     --sp-3: clamp(6px, .8vw, 12px);
     --sp-4: clamp(10px, 1.2vw, 18px);
     --sp-5: clamp(14px, 1.8vw, 28px);
     --sp-6: clamp(20px, 2.5vw, 40px);
-
-    /* Radii & transitions */
     --r-sm: 4px;
     --r-md: 6px;
     --r-lg: 10px;
@@ -82,28 +71,20 @@
     --t-bounce: 250ms cubic-bezier(.34,1.56,.64,1);
   }
 
-  /* ══════════ RESET & BASE ══════════ */
   *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
   html, body { height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'Azeret Mono', ui-monospace, monospace; }
   body.idle { cursor:none; }
 
-  /* ══════════ STATE UTILITIES ══════════ */
-  /* State pills (background + text) */
   .pill          { display:inline-flex; align-items:center; gap:var(--sp-2); padding:var(--sp-1) var(--sp-3); border-radius:var(--r-sm); font-weight:600; line-height:1; letter-spacing:.3px; white-space:nowrap; }
   .pill.up       { background:var(--green-bg); color:var(--green); }
   .pill.dn       { background:var(--red-bg);   color:var(--red); }
   .pill.fl       { background:var(--flat-bg);  color:var(--text-dim); }
-
-  /* Inline state text (no background) */
   .s-up { color:var(--green); }
   .s-dn { color:var(--red); }
   .s-fl { color:var(--text-dim); }
-
-  /* Stale data — dims elements whose source hasn't updated in its expected window */
   .stale { opacity:.40; transition:opacity var(--t-med); }
 
   /* ══════════ BACKGROUND LAYERS ══════════ */
-  /* Ambient video — behind everything. Dimmed + slightly blurred to keep dashboard readable. */
   .bg-video { position:fixed; inset:0; z-index:-1; overflow:hidden; pointer-events:none; }
   .bg-video video {
     position:absolute; top:50%; left:50%;
@@ -114,7 +95,6 @@
     opacity:.32;
     filter:blur(1px) saturate(.85);
   }
-  /* Dark gradient overlay so the dashboard text stays legible over any video frame */
   .bg-video::after {
     content:''; position:absolute; inset:0;
     background:radial-gradient(ellipse at center, rgba(4,6,11,.55) 0%, rgba(4,6,11,.78) 100%);
@@ -131,10 +111,8 @@
     background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     background-size:128px; }
 
-  /* ══════════ DASHBOARD SHELL ══════════ */
   .dash { position:relative; z-index:2; display:grid; grid-template-rows:auto auto auto 1fr auto; height:100vh; padding:var(--sp-3) var(--sp-5) var(--sp-2); gap:0; }
 
-  /* Fade-in stagger on load */
   .dash > * { opacity:0; animation:fade-in .5s ease forwards; }
   .dash > :nth-child(1) { animation-delay:0ms; }
   .dash > :nth-child(2) { animation-delay:60ms; }
@@ -143,10 +121,8 @@
   .dash > :nth-child(5) { animation-delay:240ms; }
   @keyframes fade-in { to { opacity:1; } }
 
-  /* ══════════ HEADER ══════════ */
   .topbar { display:flex; align-items:flex-start; justify-content:space-between; gap:var(--sp-4); padding-bottom:var(--sp-3); border-bottom:1px solid var(--border); }
 
-  /* Brand */
   .brand { display:flex; align-items:center; gap:var(--sp-3); }
   .brand-icon { width:clamp(32px, 3vw, 44px); height:clamp(32px, 3vw, 44px); filter:drop-shadow(0 0 12px var(--green-glow)); animation:pulse-glow 4s ease-in-out infinite; }
   .brand-icon svg { width:100%; height:100%; }
@@ -154,10 +130,8 @@
   .brand-name { font-family:'Outfit',sans-serif; font-size:clamp(14px,1.8vw,22px); font-weight:700; letter-spacing:clamp(3px,.4vw,6px); text-transform:uppercase; }
   .brand-name em { font-style:normal; color:var(--green); }
 
-  /* Top-right: two compact rows */
   .topinfo { display:flex; flex-direction:column; align-items:flex-end; gap:var(--sp-2); }
 
-  /* Status + clock row */
   .clock-line { display:flex; align-items:baseline; gap:var(--sp-3); font-family:'Outfit',sans-serif; }
   .status { display:inline-flex; align-items:center; gap:6px; font-size:var(--fs-xs); color:var(--text-dim); letter-spacing:1.5px; margin-right:var(--sp-2); }
   .status-dot { width:8px; height:8px; border-radius:50%; background:var(--green); box-shadow:0 0 10px var(--green); animation:blink 2s ease-in-out infinite; }
@@ -167,7 +141,6 @@
   .clock-date { font-size:var(--fs-md); font-weight:400; opacity:.65; }
   .clock-tz   { font-size:var(--fs-sm); font-weight:600; color:var(--cyan); letter-spacing:1px; }
 
-  /* Env row: weather + AQI + forecast */
   .env-line { display:flex; align-items:center; gap:var(--sp-4); font-family:'Outfit',sans-serif; flex-wrap:wrap; justify-content:flex-end; }
   .env-item { display:flex; align-items:center; gap:var(--sp-2); }
   .env-icon { font-size:var(--fs-lg); line-height:1; }
@@ -177,16 +150,13 @@
   .env-forecast { font-size:var(--fs-xs); color:var(--text-dim); font-weight:500; letter-spacing:.3px; }
   .env-forecast.rain { color:var(--amber); }
 
-  /* AQI badge */
   .aqi { padding:var(--sp-1) var(--sp-3); border-radius:var(--r-md); display:inline-flex; align-items:center; gap:var(--sp-2); font-weight:700; }
   .aqi-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
   .aqi-val { font-size:var(--fs-md); line-height:1; }
   .aqi-level { font-size:var(--fs-xs); font-weight:500; opacity:.85; letter-spacing:.5px; text-transform:uppercase; white-space:nowrap; }
 
-  /* ══════════ HERO ══════════ */
   .hero { display:flex; align-items:flex-end; justify-content:space-between; gap:var(--sp-6); padding:var(--sp-4) 0; flex-wrap:wrap; }
 
-  /* Main price column */
   .hero-main { flex-shrink:0; }
   .price-label { font-family:'Outfit',sans-serif; font-size:var(--fs-sm); font-weight:500; letter-spacing:clamp(2px,.35vw,4px); color:var(--text-dim); text-transform:uppercase; margin-bottom:var(--sp-2); }
   .price-line { display:flex; align-items:baseline; gap:var(--sp-4); }
@@ -197,20 +167,17 @@
   .price-big.flash-dn { color:var(--red-2);   text-shadow:0 0 90px var(--red-glow);   transform:scale(.985); }
   .price-unit { font-size:clamp(16px,2.5vw,34px); font-weight:300; color:var(--text-dim); letter-spacing:2px; margin-left:-4px; margin-bottom:var(--sp-1); }
 
-  /* Change + ATH row (now separated for clarity) */
   .price-meta { display:flex; align-items:center; gap:var(--sp-4); margin-top:var(--sp-3); }
   .chg-pill { font-family:'Outfit',sans-serif; font-size:clamp(13px,1.6vw,26px); }
   .ath-note { font-family:'Outfit',sans-serif; font-size:var(--fs-md); color:var(--text-dim); letter-spacing:.5px; }
   .ath-note .val { font-weight:600; color:var(--text); }
 
-  /* Portfolio block */
   .portfolio { margin-top:var(--sp-4); }
   .portfolio-label { font-family:'Outfit',sans-serif; font-size:var(--fs-xs); font-weight:500; letter-spacing:clamp(1.5px,.2vw,3px); color:var(--text-dim); text-transform:uppercase; margin-bottom:var(--sp-1); }
   .portfolio-line { display:flex; align-items:baseline; gap:var(--sp-4); flex-wrap:wrap; }
   .portfolio-val  { font-family:'Outfit',sans-serif; font-size:var(--fs-xl); font-weight:700; letter-spacing:-.5px; line-height:1; }
   .portfolio-pnl  { font-family:'Outfit',sans-serif; font-size:clamp(14px,1.8vw,26px); }
 
-  /* Aside: BTC / XRP-BTC metrics with sparklines underneath */
   .hero-aside { display:flex; align-items:stretch; gap:var(--sp-5); flex-wrap:wrap; }
   .aside-metric { display:flex; flex-direction:column; gap:var(--sp-2); min-width:clamp(140px,14vw,220px); }
   .aside-label  { font-family:'Outfit',sans-serif; font-size:var(--fs-micro); font-weight:500; letter-spacing:2px; color:var(--text-dim); text-transform:uppercase; }
@@ -221,7 +188,6 @@
   .aside-chg    { font-family:'Outfit',sans-serif; font-size:var(--fs-sm); font-weight:500; }
   .spark-canvas { display:block; width:100%; height:clamp(28px,3vw,44px); }
 
-  /* ══════════ STATS STRIP (grouped by category) ══════════ */
   .stats { display:flex; align-items:center; padding:var(--sp-3) 0; border-top:1px solid var(--border); border-bottom:1px solid var(--border); gap:var(--sp-6); flex-wrap:wrap; overflow:hidden; }
   .stat-group { display:flex; align-items:center; gap:var(--sp-5); position:relative; }
   .stat-group + .stat-group::before { content:''; position:absolute; left:calc(-1 * var(--sp-6) / 2); top:10%; bottom:10%; width:1px; background:var(--border-hi); }
@@ -232,7 +198,6 @@
   .stat-val.xrp { color:var(--green); }
   .stat-val.oil { color:var(--amber); }
 
-  /* ══════════ CHARTS ══════════ */
   .charts { display:grid; grid-template-columns:1fr clamp(200px,22vw,340px); gap:var(--sp-3); margin-top:var(--sp-2); min-height:0; }
   .chart-panel { position:relative; border:1px solid var(--border); border-radius:var(--r-lg); overflow:hidden; background:var(--surface); min-height:0; display:flex; flex-direction:column; }
   .chart-header { display:flex; align-items:center; justify-content:space-between; padding:var(--sp-2) var(--sp-3); border-bottom:1px solid var(--border); }
@@ -246,12 +211,10 @@
   .aside-price-small .unit { font-size:.55em; color:var(--text-dim); font-weight:400; margin-left:3px; }
   .aside-price-small .chg  { font-size:.55em; font-weight:500; margin-left:6px; }
 
-  /* ══════════ FOOTER ══════════ */
   .footbar { display:flex; align-items:center; justify-content:space-between; padding-top:var(--sp-1); font-size:var(--fs-micro); letter-spacing:2px; color:var(--text-ghost); text-transform:uppercase; }
   .footbar .hint { opacity:0; transition:opacity var(--t-med); }
   body:not(.idle) .footbar .hint { opacity:1; }
 
-  /* ══════════ RESPONSIVE ══════════ */
   @media (max-width:900px) {
     .charts { grid-template-columns:1fr; }
     .hero-aside { gap:var(--sp-4); }
@@ -262,23 +225,18 @@
 </head>
 <body>
 
-<!-- Background layers -->
 <!--
   ════════════════════════════════════════════════════════════
-  AMBIENT VIDEO — Pixabay rain on glass (#108595)
-  Source: https://pixabay.com/videos/rain-glass-raindrops-on-glass-108595/
+  AMBIENT VIDEO — Pixabay rain on glass
   License: Pixabay free use, no attribution required
   ════════════════════════════════════════════════════════════
   TO CHANGE THE VIDEO:
-  1. Find a video on Pixabay (or any free stock site)
-  2. On Pixabay: click "Free Download", choose 1080p, copy the download URL
-  3. Replace the <source> URL below
-  Multiple <source> elements act as fallbacks if the first one fails.
+  1. Drop a new MP4 file into the same folder as index.html in your repo
+  2. Replace the filename in <source src="..."> below
+  Multiple <source> elements act as fallbacks.
 -->
 <div class="bg-video">
   <video autoplay muted loop playsinline disablepictureinpicture preload="auto" id="bgVideo">
-    <!-- Pixabay video #108595 — rain on glass -->
-  <source src="217379_medium.mp4" type="video/mp4">
     <source src="217379_medium.mp4" type="video/mp4">
   </video>
 </div>
@@ -288,7 +246,6 @@
 
 <div class="dash">
 
-  <!-- ─── HEADER ─── -->
   <header class="topbar">
     <div class="brand">
       <div class="brand-icon">
@@ -300,14 +257,12 @@
     </div>
 
     <div class="topinfo">
-      <!-- Clock line: status + time + date + TZ -->
       <div class="clock-line">
         <div class="status"><div class="status-dot" id="wsDot"></div><span id="wsLabel">CONNECTING</span></div>
         <span class="clock-time" id="clk">--:--:--</span>
         <span class="clock-date" id="clkDate">—</span>
         <span class="clock-tz">ICT</span>
       </div>
-      <!-- Env line: weather | humidity | AQI | forecast -->
       <div class="env-line">
         <div class="env-item">
           <span class="env-icon" id="wxIcon">⏳</span>
@@ -332,7 +287,6 @@
     </div>
   </header>
 
-  <!-- ─── HERO ─── -->
   <section class="hero">
     <div class="hero-main">
       <div class="price-label">XRP / USD</div>
@@ -373,7 +327,6 @@
     </div>
   </section>
 
-  <!-- ─── STATS STRIP (grouped) ─── -->
   <section class="stats">
     <div class="stat-group">
       <div class="stat"><span class="stat-label">USD / JPY</span><span class="stat-val fx" id="usdJpy">—</span></div>
@@ -391,7 +344,6 @@
     </div>
   </section>
 
-  <!-- ─── CHARTS ─── -->
   <section class="charts">
     <div class="chart-panel">
       <div class="chart-header">
@@ -409,7 +361,6 @@
     </div>
   </section>
 
-  <!-- ─── FOOTER ─── -->
   <footer class="footbar">
     <span>XRP Terminal — Not financial advice</span>
     <span class="hint">[F] Fullscreen · [Dbl-click chart] Reset zoom</span>
@@ -423,9 +374,6 @@ function startApp(){
 (function(){
 'use strict';
 
-// ════════════════════════════════════════════════════════════
-// CONFIG
-// ════════════════════════════════════════════════════════════
 const CFG = {
   TZ: 'Asia/Bangkok',
   TZ_OFFSET_SEC: 7 * 3600,
@@ -437,15 +385,10 @@ const CFG = {
   MAX_CANDLES: 2000,
   SPARK_POINTS: 80,
   IDLE_MS: 4000,
-  // How often each data source should refresh (ms)
   POLL: { fx: 30_000, brent: 120_000, weather: 300_000, aqi: 600_000, meta: 3_600_000 },
-  // Max staleness before dimming (typically 2× the poll interval)
   STALE: { fx: 120_000, brent: 300_000, weather: 900_000, aqi: 1_500_000 },
 };
 
-// ════════════════════════════════════════════════════════════
-// DOM CACHE
-// ════════════════════════════════════════════════════════════
 const D = {};
 [
   'wsDot','wsLabel','clk','clkDate',
@@ -460,23 +403,17 @@ const D = {};
   'chartMain','chartSide','xrpBtcMini',
 ].forEach(id => D[id] = document.getElementById(id));
 
-// ════════════════════════════════════════════════════════════
-// STATE
-// ════════════════════════════════════════════════════════════
 const S = {
   xrpUsd: null, xrpPrev: null, xrp24hPct: null,
   btcUsd: null, btc24hPct: null,
   xrpBtc: null, xrpBtc24hPct: null,
   usdJpy: null, brentUsd: null, brentJpy: null,
-  xrpSupply: 60.88e9,  // default, refreshed from CoinGecko
+  xrpSupply: 60.88e9,
   xrpAth: null,
   sparkBtc: [], sparkXrpBtc: [],
   lastUpdate: { fx: 0, brent: 0, weather: 0, aqi: 0 },
 };
 
-// ════════════════════════════════════════════════════════════
-// UTILITIES
-// ════════════════════════════════════════════════════════════
 const TZ_OFFSET = CFG.TZ_OFFSET_SEC;
 const fmtTime   = s => new Date(s*1000).toLocaleTimeString('en-GB', {hour12:false, hour:'2-digit', minute:'2-digit', timeZone: CFG.TZ});
 const fmtFull   = s => new Date(s*1000).toLocaleString('en-GB', {hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit', day:'2-digit', month:'short', timeZone: CFG.TZ});
@@ -494,9 +431,6 @@ const compact   = v => {
 const signDollar = v => (v >= 0 ? '+' : '−') + '$' + Math.abs(v).toLocaleString('en-US', {maximumFractionDigits:0});
 const stateClass = pct => pct > 0 ? 'up' : pct < 0 ? 'dn' : 'fl';
 
-// ════════════════════════════════════════════════════════════
-// SAFE FETCH HELPERS (DRY)
-// ════════════════════════════════════════════════════════════
 async function safeFetch(url, timeout = 10000){
   try {
     const r = await fetch(url, {signal: AbortSignal.timeout(timeout)});
@@ -509,7 +443,6 @@ async function safeJson(url, timeout){
   try { return await r.json(); } catch { return null; }
 }
 async function proxyHtml(url, timeout = 12000){
-  // Try allorigins first, corsproxy.io as fallback
   const ao = await safeJson(CFG.PROXY_AO + encodeURIComponent(url), timeout);
   if (ao?.contents) return ao.contents;
   const cp = await safeFetch(CFG.PROXY_CP + encodeURIComponent(url), timeout);
@@ -527,7 +460,6 @@ function extractPrice(html, patterns){
   return null;
 }
 
-// Generic "try sources in order" helper
 async function trySources(key, sources){
   for (const src of sources) {
     try {
@@ -538,9 +470,6 @@ async function trySources(key, sources){
   return null;
 }
 
-// ════════════════════════════════════════════════════════════
-// STALE TRACKING
-// ════════════════════════════════════════════════════════════
 const STALE_MAP = {
   fx:      ['usdJpy','xrpJpy'],
   brent:   ['brentUsd','brentJpy'],
@@ -555,9 +484,6 @@ function refreshStaleness(){
   }
 }
 
-// ════════════════════════════════════════════════════════════
-// RENDER (derived displays)
-// ════════════════════════════════════════════════════════════
 function render(){
   if (S.usdJpy)                   D.usdJpy.textContent   = '¥' + num(S.usdJpy, 2);
   if (S.usdJpy && S.xrpUsd)       D.xrpJpy.textContent   = '¥' + num(S.xrpUsd * S.usdJpy, 2);
@@ -571,9 +497,6 @@ function render(){
   }
 }
 
-// ════════════════════════════════════════════════════════════
-// CLOCK + STALENESS (1s tick)
-// ════════════════════════════════════════════════════════════
 setInterval(() => {
   const now = new Date();
   D.clk.textContent     = now.toLocaleTimeString('en-GB', {hour12:false, timeZone: CFG.TZ});
@@ -581,9 +504,6 @@ setInterval(() => {
   refreshStaleness();
 }, 1000);
 
-// ════════════════════════════════════════════════════════════
-// FLASH ANIMATIONS
-// ════════════════════════════════════════════════════════════
 function flashPrice(el, dir){
   const cls = dir === 'up' ? 'flash-up' : 'flash-dn';
   el.classList.remove('flash-up','flash-dn');
@@ -592,9 +512,6 @@ function flashPrice(el, dir){
   setTimeout(() => el.classList.remove(cls), 400);
 }
 
-// ════════════════════════════════════════════════════════════
-// IDLE / FULLSCREEN / WAKE LOCK
-// ════════════════════════════════════════════════════════════
 let idleTimer;
 function resetIdle(){
   document.body.classList.remove('idle');
@@ -616,9 +533,6 @@ document.addEventListener('keydown', e => {
   try { if ('wakeLock' in navigator) await navigator.wakeLock.request('screen'); } catch {}
 })();
 
-// ════════════════════════════════════════════════════════════
-// SPARKLINES
-// ════════════════════════════════════════════════════════════
 function drawSpark(canvas, values, color){
   if (!canvas || values.length < 2) return;
   const dpr = window.devicePixelRatio || 1;
@@ -631,7 +545,6 @@ function drawSpark(canvas, values, color){
   const step = w / (values.length - 1);
   const yFor = v => h - ((v - min) / range) * h * .78 - h * .11;
 
-  // Area fill
   ctx.beginPath();
   ctx.moveTo(0, h);
   values.forEach((v, i) => ctx.lineTo(i * step, yFor(v)));
@@ -641,18 +554,12 @@ function drawSpark(canvas, values, color){
   grad.addColorStop(1, color + '02');
   ctx.fillStyle = grad; ctx.fill();
 
-  // Line
   ctx.beginPath();
   values.forEach((v, i) => { const y = yFor(v); i === 0 ? ctx.moveTo(0, y) : ctx.lineTo(i * step, y); });
   ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.lineJoin = 'round'; ctx.stroke();
 }
 function pushSpark(arr, v){ arr.push(v); if (arr.length > CFG.SPARK_POINTS) arr.shift(); }
 
-// ════════════════════════════════════════════════════════════
-// DATA SOURCES
-// ════════════════════════════════════════════════════════════
-
-// --- USD/JPY via CoinGecko BTC-pair derivation ---
 async function fetchFx(){
   const rate = await trySources('fx', [
     async () => {
@@ -669,9 +576,7 @@ async function fetchFx(){
   if (rate) { S.usdJpy = rate; render(); console.log('✓ USD/JPY', rate.toFixed(2)); }
 }
 
-// --- Brent Crude (USD + JPY, multi-source) ---
 async function fetchBrent(){
-  // Brent/JPY direct
   const jpyHtml = await proxyHtml('https://www.exchangerates.org.uk/commodities/live-brent-crude-oil-prices/BRT-JPY.html');
   if (jpyHtml) {
     const v = extractPrice(jpyHtml, [
@@ -681,7 +586,6 @@ async function fetchBrent(){
     ]);
     if (v && v > 5000 && v < 50000) { S.brentJpy = v; S.lastUpdate.brent = Date.now(); }
   }
-  // Brent/USD direct
   const usdHtml = await proxyHtml('https://www.exchangerates.org.uk/commodities/live-brent-crude-oil-prices/BRT-USD.html');
   if (usdHtml) {
     const v = extractPrice(usdHtml, [
@@ -690,7 +594,6 @@ async function fetchBrent(){
     ]);
     if (v && v > 20 && v < 300) { S.brentUsd = v; S.lastUpdate.brent = Date.now(); }
   }
-  // Fallback: Google Finance
   if (!S.brentUsd) {
     const g = await proxyHtml('https://www.google.com/finance/quote/BZ:NYMEX');
     if (g) {
@@ -702,7 +605,6 @@ async function fetchBrent(){
   if (S.brentUsd || S.brentJpy) console.log('✓ Brent USD', S.brentUsd, '| JPY', S.brentJpy);
 }
 
-// --- Weather (Open-Meteo) ---
 const WMO_ICONS = {0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',80:'🌦️',81:'🌧️',82:'⛈️',95:'⛈️',96:'⛈️',99:'⛈️'};
 const WMO_DESC  = {0:'Clear sky',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',45:'Fog',48:'Fog',51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',61:'Light rain',63:'Rain',65:'Heavy rain',80:'Rain showers',81:'Rain showers',82:'Heavy showers',95:'Thunderstorm',96:'Thunderstorm',99:'Severe storm'};
 
@@ -734,7 +636,6 @@ async function fetchWeather(){
   S.lastUpdate.weather = Date.now();
 }
 
-// --- AQI (IQAir nearest station) ---
 function aqiStyle(aqi){
   if (aqi <=  50) return { bg:'rgba(0,228,0,.12)',     dot:'#00e400', label:'Good' };
   if (aqi <= 100) return { bg:'rgba(204,204,0,.12)',   dot:'#cccc00', label:'Moderate' };
@@ -757,7 +658,6 @@ async function fetchAqi(){
   }
 }
 
-// --- XRP metadata (supply + ATH) ---
 async function fetchXrpMeta(){
   const d = await safeJson('https://api.coingecko.com/api/v3/coins/ripple?localization=false&tickers=false&community_data=false&developer_data=false&sparkline=false', 8000);
   if (!d?.market_data) return;
@@ -767,9 +667,6 @@ async function fetchXrpMeta(){
   console.log('✓ XRP meta: supply', (S.xrpSupply/1e9).toFixed(2) + 'B, ATH $' + S.xrpAth);
 }
 
-// ════════════════════════════════════════════════════════════
-// CHARTS (Lightweight Charts)
-// ════════════════════════════════════════════════════════════
 function createChart(el, opts = {}){
   const c = LightweightCharts.createChart(el, {
     layout: { background: {type:'solid', color:'#080b14'}, textColor:'#5a6482', fontFamily:'Azeret Mono,monospace', fontSize: opts.fs || 11 },
@@ -794,7 +691,6 @@ const chartSide = createChart(D.chartSide, {fs:10, ga:'10'});
 const candleSide = chartSide.addCandlestickSeries({upColor:'#f7931a', downColor:'#ff2952', borderUpColor:'#f7931a', borderDownColor:'#ff2952', wickUpColor:'#f7931a60', wickDownColor:'#ff295260'});
 const volSide    = chartSide.addHistogramSeries({priceFormat:{type:'volume'}, priceScaleId:'vol2', scaleMargins:{top:.9, bottom:0}});
 
-// Raw data arrays (for trim + in-place kline updates)
 const data = {
   main: { candles: [], volumes: [] },
   side: { candles: [], volumes: [] },
@@ -822,9 +718,6 @@ async function loadKlines(symbol, kind, series, upColor, dnColor){
 loadKlines('XRPUSDT', 'main', {candles: candleMain, volumes: volMain, chart: chartMain}, '#00e87b1a', '#ff29521a');
 loadKlines('XRPBTC',  'side', {candles: candleSide, volumes: volSide, chart: chartSide}, '#f7931a1a', '#ff29521a');
 
-// ════════════════════════════════════════════════════════════
-// LIVE CHANGE / PORTFOLIO / TAB TITLE
-// ════════════════════════════════════════════════════════════
 function updateXrpChange(pct){
   const cls = stateClass(pct);
   const arrow = pct > 0 ? '▲' : pct < 0 ? '▼' : '·';
@@ -832,11 +725,9 @@ function updateXrpChange(pct){
   D.xrpChg.textContent = (pct == null ? '—' : arrow + ' ' + sign + pct.toFixed(2) + '%');
   D.xrpChg.className = 'pill chg-pill ' + cls;
 
-  // 1M XRP portfolio: current USD value of 1,000,000 XRP + 24h USD P&L
   const XRP_TOKENS = 1_000_000;
   if (S.xrpUsd != null) {
     const value = XRP_TOKENS * S.xrpUsd;
-    // 24h ago price = current / (1 + pct/100); pnl = (current - prev) * tokens
     const prevPrice = S.xrpUsd / (1 + pct / 100);
     const pnl = (S.xrpUsd - prevPrice) * XRP_TOKENS;
     D.portfolioVal.textContent = '$' + value.toLocaleString('en-US', {maximumFractionDigits:0});
@@ -844,7 +735,6 @@ function updateXrpChange(pct){
     D.portfolioPnl.className = 'pill portfolio-pnl ' + cls;
   }
 
-  // Tab title
   if (S.xrpUsd != null) {
     document.title = arrow + ' $' + S.xrpUsd.toFixed(4) + ' XRP · Terminal';
   }
@@ -863,9 +753,6 @@ function updateMiniPrice(pct){
     + '<span class="chg ' + cls + '">' + sign + pct.toFixed(2) + '%</span>';
 }
 
-// ════════════════════════════════════════════════════════════
-// CANDLE UPDATE HELPER
-// ════════════════════════════════════════════════════════════
 function applyKline(kind, series, k, upColor, dnColor){
   const t = toTzSec(k.t);
   const candle = { time:t, open:+k.o, high:+k.h, low:+k.l, close:+k.c };
@@ -883,9 +770,6 @@ function applyKline(kind, series, k, upColor, dnColor){
   series.volumes.update(volume);
 }
 
-// ════════════════════════════════════════════════════════════
-// WEBSOCKET (auto-reconnect)
-// ════════════════════════════════════════════════════════════
 function connectWs(){
   const ws = new WebSocket('wss://stream.binance.com:9443/stream?streams=xrpusdt@ticker/xrpusdt@kline_3m/btcusdt@ticker/xrpbtc@ticker/xrpbtc@kline_3m');
   ws.onopen  = () => { D.wsDot.classList.remove('off'); D.wsLabel.textContent = 'LIVE'; };
@@ -930,9 +814,6 @@ function connectWs(){
 }
 connectWs();
 
-// ════════════════════════════════════════════════════════════
-// SCHEDULER (DRY polling)
-// ════════════════════════════════════════════════════════════
 const jobs = [
   [fetchFx,       CFG.POLL.fx],
   [fetchBrent,    CFG.POLL.brent],
@@ -942,9 +823,6 @@ const jobs = [
 ];
 jobs.forEach(([fn, interval]) => { fn(); setInterval(fn, interval); });
 
-// ════════════════════════════════════════════════════════════
-// RESIZE: redraw sparklines
-// ════════════════════════════════════════════════════════════
 window.addEventListener('resize', () => {
   drawSpark(D.sparkBtc,    S.sparkBtc,    '#f7931a');
   drawSpark(D.sparkXrpBtc, S.sparkXrpBtc, '#00e87b');
@@ -953,7 +831,6 @@ window.addEventListener('resize', () => {
 })();
 }
 
-// Start app once the charts library loads (or immediately if already loaded)
 if (window.__chartsReady) startApp();
 else window.addEventListener('chartsReady', startApp);
 </script>
