@@ -72,7 +72,8 @@
   }
 
   *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-  html, body { height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'Azeret Mono', ui-monospace, monospace; }
+  html { background:var(--bg); }
+  body { height:100%; overflow:hidden; color:var(--text); font-family:'Azeret Mono', ui-monospace, monospace; background:transparent; }
   body.idle { cursor:none; }
 
   .pill          { display:inline-flex; align-items:center; gap:var(--sp-2); padding:var(--sp-1) var(--sp-3); border-radius:var(--r-sm); font-weight:600; line-height:1; letter-spacing:.3px; white-space:nowrap; }
@@ -85,33 +86,33 @@
   .stale { opacity:.40; transition:opacity var(--t-med); }
 
   /* ══════════ BACKGROUND LAYERS ══════════ */
-  .bg-video { position:fixed; inset:0; z-index:-1; overflow:hidden; pointer-events:none; }
+  .bg-video { position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none; background:#000; }
   .bg-video video {
     position:absolute; top:50%; left:50%;
     min-width:100%; min-height:100%;
     width:auto; height:auto;
     transform:translate(-50%, -50%);
     object-fit:cover;
-    opacity:.32;
+    opacity:.45;
     filter:blur(1px) saturate(.85);
   }
   .bg-video::after {
     content:''; position:absolute; inset:0;
-    background:radial-gradient(ellipse at center, rgba(4,6,11,.55) 0%, rgba(4,6,11,.78) 100%);
+    background:radial-gradient(ellipse at center, rgba(4,6,11,.45) 0%, rgba(4,6,11,.72) 100%);
     pointer-events:none;
   }
 
-  .bg-orbs { position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none; }
+  .bg-orbs { position:fixed; inset:0; z-index:1; overflow:hidden; pointer-events:none; }
   .bg-orbs .orb { position:absolute; border-radius:50%; filter:blur(130px); animation:orb-drift 22s ease-in-out infinite alternate; }
   .bg-orbs .orb.a { width:650px; height:650px; background:var(--green); top:-12%; left:-6%; opacity:.04; animation-duration:26s; }
   .bg-orbs .orb.b { width:500px; height:500px; background:var(--cyan);  bottom:-14%; right:-6%; opacity:.04; animation-duration:32s; animation-delay:-12s; }
   .bg-orbs .orb.c { width:350px; height:350px; background:var(--btc);   top:30%; right:10%; opacity:.02; animation-duration:20s; animation-delay:-6s; }
   @keyframes orb-drift { 0% { transform:translate(0,0) scale(1); } 100% { transform:translate(50px,35px) scale(1.12); } }
-  .bg-noise { position:fixed; inset:0; z-index:1; pointer-events:none; opacity:.02;
+  .bg-noise { position:fixed; inset:0; z-index:2; pointer-events:none; opacity:.02;
     background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     background-size:128px; }
 
-  .dash { position:relative; z-index:2; display:grid; grid-template-rows:auto auto auto 1fr auto; height:100vh; padding:var(--sp-3) var(--sp-5) var(--sp-2); gap:0; }
+  .dash { position:relative; z-index:3; display:grid; grid-template-rows:auto auto auto 1fr auto; height:100vh; padding:var(--sp-3) var(--sp-5) var(--sp-2); gap:0; }
 
   .dash > * { opacity:0; animation:fade-in .5s ease forwards; }
   .dash > :nth-child(1) { animation-delay:0ms; }
@@ -240,6 +241,20 @@
     <source src="217379_medium.mp4" type="video/mp4">
   </video>
 </div>
+<script>
+  // Diagnostic logging for the background video
+  (function(){
+    var v = document.getElementById('bgVideo');
+    if (!v) return;
+    v.addEventListener('loadeddata',  function(){ console.log('✓ Background video loaded, attempting play'); });
+    v.addEventListener('canplay',     function(){ console.log('✓ Video can play'); v.play().catch(function(e){ console.error('Play blocked:', e); }); });
+    v.addEventListener('playing',     function(){ console.log('✓ Video is playing'); });
+    v.addEventListener('error',       function(){ var s = v.querySelector('source'); console.error('✗ Video error. Src:', s ? s.src : 'none', 'Code:', v.error && v.error.code, 'Msg:', v.error && v.error.message); });
+    v.addEventListener('stalled',     function(){ console.warn('Video stalled'); });
+    var src = v.querySelector('source');
+    if (src) console.log('Background video source:', src.src);
+  })();
+</script>
 
 <div class="bg-orbs"><div class="orb a"></div><div class="orb b"></div><div class="orb c"></div></div>
 <div class="bg-noise"></div>
