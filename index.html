@@ -86,19 +86,19 @@
   .stale { opacity:.40; transition:opacity var(--t-med); }
 
   /* ══════════ BACKGROUND LAYERS ══════════ */
-  .bg-video { position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none; background:#000; }
+  .bg-video { position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none; }
   .bg-video video {
     position:absolute; top:50%; left:50%;
     min-width:100%; min-height:100%;
     width:auto; height:auto;
     transform:translate(-50%, -50%);
     object-fit:cover;
-    opacity:.45;
-    filter:blur(1px) saturate(.85);
+    opacity:.85;
+    filter:saturate(.85);
   }
   .bg-video::after {
     content:''; position:absolute; inset:0;
-    background:radial-gradient(ellipse at center, rgba(4,6,11,.45) 0%, rgba(4,6,11,.72) 100%);
+    background:radial-gradient(ellipse at center, rgba(4,6,11,.30) 0%, rgba(4,6,11,.55) 100%);
     pointer-events:none;
   }
 
@@ -241,20 +241,6 @@
     <source src="217379_medium.mp4" type="video/mp4">
   </video>
 </div>
-<script>
-  // Diagnostic logging for the background video
-  (function(){
-    var v = document.getElementById('bgVideo');
-    if (!v) return;
-    v.addEventListener('loadeddata',  function(){ console.log('✓ Background video loaded, attempting play'); });
-    v.addEventListener('canplay',     function(){ console.log('✓ Video can play'); v.play().catch(function(e){ console.error('Play blocked:', e); }); });
-    v.addEventListener('playing',     function(){ console.log('✓ Video is playing'); });
-    v.addEventListener('error',       function(){ var s = v.querySelector('source'); console.error('✗ Video error. Src:', s ? s.src : 'none', 'Code:', v.error && v.error.code, 'Msg:', v.error && v.error.message); });
-    v.addEventListener('stalled',     function(){ console.warn('Video stalled'); });
-    var src = v.querySelector('source');
-    if (src) console.log('Background video source:', src.src);
-  })();
-</script>
 
 <div class="bg-orbs"><div class="orb a"></div><div class="orb b"></div><div class="orb c"></div></div>
 <div class="bg-noise"></div>
