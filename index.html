@@ -103,11 +103,29 @@
   .stale { opacity:.40; transition:opacity var(--t-med); }
 
   /* ══════════ BACKGROUND LAYERS ══════════ */
+  /* Ambient video — behind everything. Dimmed + slightly blurred to keep dashboard readable. */
+  .bg-video { position:fixed; inset:0; z-index:-1; overflow:hidden; pointer-events:none; }
+  .bg-video video {
+    position:absolute; top:50%; left:50%;
+    min-width:100%; min-height:100%;
+    width:auto; height:auto;
+    transform:translate(-50%, -50%);
+    object-fit:cover;
+    opacity:.32;
+    filter:blur(1px) saturate(.85);
+  }
+  /* Dark gradient overlay so the dashboard text stays legible over any video frame */
+  .bg-video::after {
+    content:''; position:absolute; inset:0;
+    background:radial-gradient(ellipse at center, rgba(4,6,11,.55) 0%, rgba(4,6,11,.78) 100%);
+    pointer-events:none;
+  }
+
   .bg-orbs { position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none; }
   .bg-orbs .orb { position:absolute; border-radius:50%; filter:blur(130px); animation:orb-drift 22s ease-in-out infinite alternate; }
-  .bg-orbs .orb.a { width:650px; height:650px; background:var(--green); top:-12%; left:-6%; opacity:.06; animation-duration:26s; }
-  .bg-orbs .orb.b { width:500px; height:500px; background:var(--cyan);  bottom:-14%; right:-6%; opacity:.06; animation-duration:32s; animation-delay:-12s; }
-  .bg-orbs .orb.c { width:350px; height:350px; background:var(--btc);   top:30%; right:10%; opacity:.025; animation-duration:20s; animation-delay:-6s; }
+  .bg-orbs .orb.a { width:650px; height:650px; background:var(--green); top:-12%; left:-6%; opacity:.04; animation-duration:26s; }
+  .bg-orbs .orb.b { width:500px; height:500px; background:var(--cyan);  bottom:-14%; right:-6%; opacity:.04; animation-duration:32s; animation-delay:-12s; }
+  .bg-orbs .orb.c { width:350px; height:350px; background:var(--btc);   top:30%; right:10%; opacity:.02; animation-duration:20s; animation-delay:-6s; }
   @keyframes orb-drift { 0% { transform:translate(0,0) scale(1); } 100% { transform:translate(50px,35px) scale(1.12); } }
   .bg-noise { position:fixed; inset:0; z-index:1; pointer-events:none; opacity:.02;
     background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
@@ -245,6 +263,27 @@
 <body>
 
 <!-- Background layers -->
+<!--
+  ════════════════════════════════════════════════════════════
+  AMBIENT VIDEO — Pixabay rain on glass (#108595)
+  Source: https://pixabay.com/videos/rain-glass-raindrops-on-glass-108595/
+  License: Pixabay free use, no attribution required
+  ════════════════════════════════════════════════════════════
+  TO CHANGE THE VIDEO:
+  1. Find a video on Pixabay (or any free stock site)
+  2. On Pixabay: click "Free Download", choose 1080p, copy the download URL
+  3. Replace the <source> URL below
+  Multiple <source> elements act as fallbacks if the first one fails.
+-->
+<div class="bg-video">
+  <video autoplay muted loop playsinline disablepictureinpicture preload="auto" id="bgVideo">
+    <!-- Pixabay video #108595 — rain on glass — 1080p direct CDN URL -->
+    <source src="https://pixabay.com/videos/download/video-108595_medium.mp4" type="video/mp4">
+    <!-- Fallback to medium quality if 1080p fails -->
+    <source src="https://pixabay.com/videos/download/video-108595_medium.mp4" type="video/mp4">
+  </video>
+</div>
+
 <div class="bg-orbs"><div class="orb a"></div><div class="orb b"></div><div class="orb c"></div></div>
 <div class="bg-noise"></div>
 
