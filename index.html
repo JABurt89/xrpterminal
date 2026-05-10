@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>XRP Terminal</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%2304060b'/><path d='M8 9 L16 17 L24 9 M8 23 L16 15 L24 23' stroke='%2300e87b' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Azeret+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -69,7 +71,6 @@
     --t-fast: 120ms ease;
     --t-med: 300ms ease;
     --t-bounce: 250ms cubic-bezier(.34,1.56,.64,1);
-    /* Tight dark halo so any text is legible on any background */
     --txt-shadow:
       0 0 2px rgba(0,0,0,.95),
       0 0 4px rgba(0,0,0,.85),
@@ -83,7 +84,6 @@
          text-shadow: var(--txt-shadow); }
   body.idle { cursor:none; }
 
-  /* Canvas-backed elements should not inherit the halo (it bleeds onto the canvas drawing) */
   canvas { text-shadow:none; }
 
   .pill          { display:inline-flex; align-items:center; gap:var(--sp-2); padding:var(--sp-1) var(--sp-3); border-radius:var(--r-sm); font-weight:600; line-height:1; letter-spacing:.3px; white-space:nowrap;
@@ -179,7 +179,6 @@
   .price-label { font-family:'Outfit',sans-serif; font-size:var(--fs-sm); font-weight:500; letter-spacing:clamp(2px,.35vw,4px); color:var(--text-dim); text-transform:uppercase; margin-bottom:var(--sp-2); }
   .price-line { display:flex; align-items:baseline; gap:var(--sp-4); }
   .price-big  { font-family:'Outfit',sans-serif; font-size:var(--fs-price); font-weight:800; line-height:.88; letter-spacing:-3px; color:var(--green);
-                /* Combined: tight dark halo for legibility + green glow for character */
                 text-shadow:
                   0 0 3px rgba(0,0,0,.9),
                   0 2px 6px rgba(0,0,0,.85),
@@ -251,6 +250,123 @@
     .env-line { justify-content:flex-start; }
     .stat-group + .stat-group::before { display:none; }
   }
+
+  /* ══════════ MOBILE MODE ══════════
+     Activated by body.mobile (set via JS detection or ?mobile=1).
+     Desktop / TV view is unaffected — body.mobile is never set there. */
+  .mobile-view { display:none; }
+  body.mobile { overflow:hidden; }
+  body.mobile .dash { display:none; }
+  body.mobile .mobile-view {
+    position:fixed; inset:0; z-index:3;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    grid-template-rows:auto 1fr 1fr;
+    gap:8px;
+    padding:max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+  }
+
+  .m-bar {
+    grid-column:1 / -1;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:6px 12px;
+    font-family:'Outfit',sans-serif;
+    font-size:11px; letter-spacing:2px; text-transform:uppercase;
+    color:var(--text-dim);
+    border-radius:8px;
+    background:rgba(8,11,20,.55);
+    backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+    border:1px solid var(--border-hi);
+  }
+  .m-bar .m-brand { display:flex; align-items:center; gap:8px; color:var(--text); font-weight:700; letter-spacing:3px; }
+  .m-bar .m-brand em { font-style:normal; color:var(--green); }
+  .m-bar .m-brand svg { width:18px; height:18px; filter:drop-shadow(0 0 6px var(--green-glow)); }
+  .m-bar .m-clock { font-family:'Outfit',sans-serif; font-weight:600; font-size:13px; letter-spacing:1px; color:var(--text); }
+  .m-bar .m-status { display:inline-flex; align-items:center; gap:6px; }
+  .m-bar .m-status .dot { width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 8px var(--green); animation:blink 2s ease-in-out infinite; }
+  .m-bar .m-status .dot.off { background:var(--red); box-shadow:0 0 8px var(--red); }
+
+  .m-card {
+    position:relative;
+    display:flex; flex-direction:column; justify-content:space-between;
+    padding:14px 16px;
+    border-radius:14px;
+    background:linear-gradient(135deg, rgba(11,16,32,.78) 0%, rgba(8,11,20,.65) 100%);
+    border:1px solid var(--border-hi);
+    backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+    box-shadow:0 6px 24px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.03);
+    overflow:hidden;
+    transition:border-color .25s ease, box-shadow .25s ease;
+  }
+  .m-card::before {
+    content:''; position:absolute; inset:0;
+    background:radial-gradient(120% 70% at 100% 0%, var(--accent, transparent) 0%, transparent 60%);
+    opacity:.10; pointer-events:none;
+  }
+  .m-card.up { border-color:rgba(0,232,123,.35); box-shadow:0 6px 28px rgba(0,232,123,.10), inset 0 1px 0 rgba(255,255,255,.03); }
+  .m-card.dn { border-color:rgba(255,41,82,.30); box-shadow:0 6px 28px rgba(255,41,82,.08), inset 0 1px 0 rgba(255,255,255,.03); }
+  .m-card.fl { border-color:var(--border-hi); }
+
+  .m-card-head { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .m-label {
+    font-family:'Outfit',sans-serif;
+    font-size:11px; font-weight:600; letter-spacing:3px;
+    color:var(--text-dim); text-transform:uppercase;
+  }
+  .m-label .ticker { color:var(--accent, var(--text)); font-weight:700; letter-spacing:2px; }
+  .m-chg {
+    font-family:'Outfit',sans-serif;
+    font-size:13px; font-weight:600;
+    padding:3px 8px; border-radius:5px;
+    background:var(--flat-bg); color:var(--text-dim);
+    line-height:1; white-space:nowrap;
+  }
+  .m-chg.up { background:var(--green-bg); color:var(--green); }
+  .m-chg.dn { background:var(--red-bg); color:var(--red); }
+
+  .m-price {
+    font-family:'Outfit',sans-serif;
+    font-weight:800;
+    font-size:clamp(34px, 9vw, 78px);
+    line-height:.95;
+    letter-spacing:-1.5px;
+    color:var(--accent, var(--text));
+    text-shadow:0 0 3px rgba(0,0,0,.9), 0 2px 6px rgba(0,0,0,.85), 0 0 40px var(--accent-glow, transparent);
+    transition:transform var(--t-bounce), color .15s ease;
+    word-break:break-all;
+  }
+  .m-price.flash-up { transform:scale(1.025); color:var(--green-2); }
+  .m-price.flash-dn { transform:scale(.98);  color:var(--red-2); }
+  .m-price .unit {
+    font-size:.32em; font-weight:400; color:var(--text-dim); letter-spacing:1.5px; margin-left:6px; vertical-align:.18em;
+  }
+
+  .m-sub {
+    font-family:'Azeret Mono',monospace;
+    font-size:10px; letter-spacing:1.5px; color:var(--text-ghost); text-transform:uppercase;
+  }
+
+  /* per-card accents */
+  #mXrpUsd  { --accent:var(--green); --accent-glow:var(--green-glow); }
+  #mXrpBtc  { --accent:var(--green); --accent-glow:var(--green-glow); }
+  #mUsdJpy  { --accent:var(--cyan);  --accent-glow:rgba(94,200,255,.20); }
+  #mBrentJpy{ --accent:var(--amber); --accent-glow:rgba(240,176,48,.20); }
+
+  /* tiny portrait fallback — still 2x2, just shorter */
+  @media (orientation:portrait) {
+    body.mobile .mobile-view { grid-template-rows:auto 1fr 1fr 1fr 1fr; grid-template-columns:1fr; }
+    body.mobile .m-card { padding:12px 14px; }
+    body.mobile .m-price { font-size:clamp(40px, 13vw, 84px); }
+  }
+
+  /* very small landscape phones */
+  @media (orientation:landscape) and (max-height:380px) {
+    body.mobile .m-bar { padding:4px 10px; font-size:9px; }
+    body.mobile .m-bar .m-clock { font-size:11px; }
+    body.mobile .m-card { padding:10px 12px; border-radius:11px; }
+    body.mobile .m-label { font-size:10px; }
+    body.mobile .m-price { font-size:clamp(30px, 8.5vw, 64px); }
+  }
 </style>
 </head>
 <body>
@@ -273,6 +389,56 @@
 
 <div class="bg-orbs"><div class="orb a"></div><div class="orb b"></div><div class="orb c"></div></div>
 <div class="bg-noise"></div>
+
+<!-- ══════════ MOBILE VIEW ══════════ -->
+<div class="mobile-view" aria-hidden="true">
+  <div class="m-bar">
+    <div class="m-brand">
+      <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <path d="M6 7 L16 17 L26 7 M6 25 L16 15 L26 25" stroke="#00e87b" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span><em>XRP</em> · TERMINAL</span>
+    </div>
+    <div class="m-clock" id="mClk">--:--</div>
+    <div class="m-status"><div class="dot" id="mDot"></div><span id="mLabel">LIVE</span></div>
+  </div>
+
+  <div class="m-card fl" id="mXrpUsd">
+    <div class="m-card-head">
+      <div class="m-label"><span class="ticker">XRP</span> / USD</div>
+      <div class="m-chg" id="mXrpUsdChg">—</div>
+    </div>
+    <div class="m-price" id="mXrpUsdVal">—<span class="unit">USD</span></div>
+    <div class="m-sub" id="mXrpUsdSub">—</div>
+  </div>
+
+  <div class="m-card fl" id="mXrpBtc">
+    <div class="m-card-head">
+      <div class="m-label"><span class="ticker">XRP</span> / BTC</div>
+      <div class="m-chg" id="mXrpBtcChg">—</div>
+    </div>
+    <div class="m-price" id="mXrpBtcVal">—<span class="unit">SAT</span></div>
+    <div class="m-sub" id="mXrpBtcSub">—</div>
+  </div>
+
+  <div class="m-card fl" id="mUsdJpy">
+    <div class="m-card-head">
+      <div class="m-label"><span class="ticker">USD</span> / JPY</div>
+      <div class="m-chg" id="mUsdJpyChg">—</div>
+    </div>
+    <div class="m-price" id="mUsdJpyVal">—<span class="unit">JPY</span></div>
+    <div class="m-sub" id="mUsdJpySub">—</div>
+  </div>
+
+  <div class="m-card fl" id="mBrentJpy">
+    <div class="m-card-head">
+      <div class="m-label"><span class="ticker">BRENT</span> / JPY</div>
+      <div class="m-chg" id="mBrentJpyChg">—</div>
+    </div>
+    <div class="m-price" id="mBrentJpyVal">—<span class="unit">JPY</span></div>
+    <div class="m-sub" id="mBrentJpySub">—</div>
+  </div>
+</div>
 
 <div class="dash">
 
@@ -400,6 +566,20 @@
 </div>
 
 <script>
+// ══════════ MOBILE MODE DETECTION ══════════
+// Set BEFORE startApp so charts skip rendering on phone (saves CPU/memory).
+(function detectMobile(){
+  var qs = new URLSearchParams(location.search);
+  if (qs.get('mobile') === '1') { document.body.classList.add('mobile'); return; }
+  if (qs.get('mobile') === '0' || qs.get('tv') === '1') return;
+  // Heuristic: small screen with touch input. TVs are large + non-touch, so this excludes them.
+  var smallScreen = Math.min(window.innerWidth, window.innerHeight) < 600;
+  var coarsePointer = matchMedia('(pointer: coarse)').matches && matchMedia('(hover: none)').matches;
+  var uaPhone = /iPhone|iPod|Android.*Mobile|Mobile.*Firefox|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  if (uaPhone || (smallScreen && coarsePointer)) document.body.classList.add('mobile');
+})();
+var IS_MOBILE = document.body.classList.contains('mobile');
+
 function startApp(){
 (function(){
 'use strict';
@@ -431,13 +611,21 @@ const D = {};
   'usdJpy','xrpJpy','brentUsd','brentJpy',
   'hi24','lo24','vol24','mcap',
   'chartMain','chartSide','xrpBtcMini',
+  // mobile
+  'mClk','mDot','mLabel',
+  'mXrpUsd','mXrpUsdVal','mXrpUsdChg','mXrpUsdSub',
+  'mXrpBtc','mXrpBtcVal','mXrpBtcChg','mXrpBtcSub',
+  'mUsdJpy','mUsdJpyVal','mUsdJpyChg','mUsdJpySub',
+  'mBrentJpy','mBrentJpyVal','mBrentJpyChg','mBrentJpySub',
 ].forEach(id => D[id] = document.getElementById(id));
 
 const S = {
   xrpUsd: null, xrpPrev: null, xrp24hPct: null,
   btcUsd: null, btc24hPct: null,
-  xrpBtc: null, xrpBtc24hPct: null,
-  usdJpy: null, brentUsd: null, brentJpy: null,
+  xrpBtc: null, xrpBtcPrev: null, xrpBtc24hPct: null,
+  usdJpy: null, usdJpyPrev: null,
+  brentUsd: null, brentUsdPrev: null,
+  brentJpy: null, brentJpyPrev: null,
   xrpSupply: 60.88e9,
   xrpAth: null,
   sparkBtc: [], sparkXrpBtc: [],
@@ -501,8 +689,8 @@ async function trySources(key, sources){
 }
 
 const STALE_MAP = {
-  fx:      ['usdJpy','xrpJpy'],
-  brent:   ['brentUsd','brentJpy'],
+  fx:      ['usdJpy','xrpJpy','mUsdJpy'],
+  brent:   ['brentUsd','brentJpy','mBrentJpy'],
   weather: ['wxIcon','wxTemp','wxHiLo','wxHum','wxForecast'],
   aqi:     ['aqiBadge'],
 };
@@ -525,12 +713,64 @@ function render(){
     const dist = (S.xrpUsd / S.xrpAth - 1) * 100;
     D.xrpAth.querySelector('.val').textContent = (dist >= 0 ? '+' : '') + dist.toFixed(1) + '%';
   }
+  renderMobile();
+}
+
+// ══════════ MOBILE RENDER ══════════
+function flashMobile(el, dir){
+  if (!el) return;
+  const cls = dir === 'up' ? 'flash-up' : 'flash-dn';
+  el.classList.remove('flash-up','flash-dn');
+  void el.offsetWidth;
+  el.classList.add(cls);
+  setTimeout(() => el.classList.remove(cls), 400);
+}
+function setCardChg(card, chg, pct){
+  const cls = stateClass(pct);
+  card.classList.remove('up','dn','fl'); card.classList.add(cls);
+  chg.classList.remove('up','dn','fl'); chg.classList.add(cls);
+  const arrow = pct > 0 ? '▲' : pct < 0 ? '▼' : '·';
+  const sign = pct >= 0 ? '+' : '';
+  chg.textContent = arrow + ' ' + sign + pct.toFixed(2) + '%';
+}
+function renderMobile(){
+  if (!IS_MOBILE) return;
+
+  // XRP / USD
+  if (S.xrpUsd != null) {
+    D.mXrpUsdVal.innerHTML = '$' + num(S.xrpUsd, 4) + '<span class="unit">USD</span>';
+    if (S.xrp24hPct != null) setCardChg(D.mXrpUsd, D.mXrpUsdChg, S.xrp24hPct);
+  }
+
+  // XRP / BTC — display in sats for legibility
+  if (S.xrpBtc != null) {
+    const sats = Math.round(S.xrpBtc * 1e8);
+    D.mXrpBtcVal.innerHTML = sats.toLocaleString('en-US') + '<span class="unit">SAT</span>';
+    D.mXrpBtcSub.textContent = num(S.xrpBtc, 8) + ' BTC';
+    if (S.xrpBtc24hPct != null) setCardChg(D.mXrpBtc, D.mXrpBtcChg, S.xrpBtc24hPct);
+  }
+
+  // USD / JPY
+  if (S.usdJpy != null) {
+    D.mUsdJpyVal.innerHTML = '¥' + num(S.usdJpy, 2) + '<span class="unit">JPY</span>';
+  }
+
+  // Brent / JPY
+  if (S.brentJpy != null) {
+    D.mBrentJpyVal.innerHTML = '¥' + num(S.brentJpy, 0) + '<span class="unit">JPY</span>';
+    if (S.brentUsd) D.mBrentJpySub.textContent = '$' + num(S.brentUsd, 2) + ' USD';
+  } else if (S.brentUsd != null && S.usdJpy != null) {
+    D.mBrentJpyVal.innerHTML = '¥' + num(S.brentUsd * S.usdJpy, 0) + '<span class="unit">JPY</span>';
+    D.mBrentJpySub.textContent = '$' + num(S.brentUsd, 2) + ' USD · derived';
+  }
 }
 
 setInterval(() => {
   const now = new Date();
-  D.clk.textContent     = now.toLocaleTimeString('en-GB', {hour12:false, timeZone: CFG.TZ});
+  const t = now.toLocaleTimeString('en-GB', {hour12:false, timeZone: CFG.TZ});
+  D.clk.textContent     = t;
   D.clkDate.textContent = now.toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short', year:'numeric', timeZone: CFG.TZ});
+  if (D.mClk) D.mClk.textContent = t.slice(0,5) + ' ICT';
   refreshStaleness();
 }, 1000);
 
@@ -567,6 +807,7 @@ function drawSpark(canvas, values, color){
   if (!canvas || values.length < 2) return;
   const dpr = window.devicePixelRatio || 1;
   const w = canvas.clientWidth, h = canvas.clientHeight;
+  if (w === 0 || h === 0) return;
   canvas.width = w * dpr; canvas.height = h * dpr;
   const ctx = canvas.getContext('2d');
   ctx.scale(dpr, dpr); ctx.clearRect(0,0,w,h);
@@ -639,6 +880,7 @@ const WMO_ICONS = {0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'�
 const WMO_DESC  = {0:'Clear sky',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',45:'Fog',48:'Fog',51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',61:'Light rain',63:'Rain',65:'Heavy rain',80:'Rain showers',81:'Rain showers',82:'Heavy showers',95:'Thunderstorm',96:'Thunderstorm',99:'Severe storm'};
 
 async function fetchWeather(){
+  if (IS_MOBILE) return; // skip on mobile
   const d = await safeJson(`https://api.open-meteo.com/v1/forecast?latitude=${CFG.LAT}&longitude=${CFG.LON}&current=temperature_2m,weather_code,relative_humidity_2m&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max&hourly=precipitation_probability,weather_code&timezone=Asia%2FBangkok&forecast_days=1`);
   if (!d) return;
   const temp = Math.round(d.current.temperature_2m), code = d.current.weather_code;
@@ -675,6 +917,7 @@ function aqiStyle(aqi){
   return                { bg:'rgba(126,0,35,.30)',    dot:'#7e0023', label:'Hazardous' };
 }
 async function fetchAqi(){
+  if (IS_MOBILE) return; // skip on mobile
   const d = await safeJson(`https://api.airvisual.com/v2/nearest_city?lat=${CFG.LAT}&lon=${CFG.LON}&key=${CFG.IQAIR_KEY}`, 10000);
   if (d?.status === 'success' && d.data?.current?.pollution) {
     const aqi = d.data.current.pollution.aqius, style = aqiStyle(aqi);
@@ -689,6 +932,7 @@ async function fetchAqi(){
 }
 
 async function fetchXrpMeta(){
+  if (IS_MOBILE) return; // skip on mobile (only used for ATH/mcap on desktop)
   const d = await safeJson('https://api.coingecko.com/api/v3/coins/ripple?localization=false&tickers=false&community_data=false&developer_data=false&sparkline=false', 8000);
   if (!d?.market_data) return;
   if (d.market_data.circulating_supply) S.xrpSupply = d.market_data.circulating_supply;
@@ -696,6 +940,10 @@ async function fetchXrpMeta(){
   render();
   console.log('✓ XRP meta: supply', (S.xrpSupply/1e9).toFixed(2) + 'B, ATH $' + S.xrpAth);
 }
+
+// ══════════ CHARTS — desktop only ══════════
+let candleMain, volMain, candleSide, volSide, chartMain, chartSide;
+const data = { main: { candles: [], volumes: [] }, side: { candles: [], volumes: [] } };
 
 function createChart(el, opts = {}){
   const c = LightweightCharts.createChart(el, {
@@ -713,18 +961,16 @@ function createChart(el, opts = {}){
   return c;
 }
 
-const chartMain = createChart(D.chartMain);
-const candleMain = chartMain.addCandlestickSeries({upColor:'#00e87b', downColor:'#ff2952', borderUpColor:'#00e87b', borderDownColor:'#ff2952', wickUpColor:'#00e87b70', wickDownColor:'#ff295270'});
-const volMain    = chartMain.addHistogramSeries({priceFormat:{type:'volume'}, priceScaleId:'vol', scaleMargins:{top:.88, bottom:0}});
+if (!IS_MOBILE) {
+  chartMain = createChart(D.chartMain);
+  candleMain = chartMain.addCandlestickSeries({upColor:'#00e87b', downColor:'#ff2952', borderUpColor:'#00e87b', borderDownColor:'#ff2952', wickUpColor:'#00e87b70', wickDownColor:'#ff295270'});
+  volMain    = chartMain.addHistogramSeries({priceFormat:{type:'volume'}, priceScaleId:'vol', scaleMargins:{top:.88, bottom:0}});
 
-const chartSide = createChart(D.chartSide, {fs:10, ga:'10'});
-const candleSide = chartSide.addCandlestickSeries({upColor:'#f7931a', downColor:'#ff2952', borderUpColor:'#f7931a', borderDownColor:'#ff2952', wickUpColor:'#f7931a60', wickDownColor:'#ff295260'});
-const volSide    = chartSide.addHistogramSeries({priceFormat:{type:'volume'}, priceScaleId:'vol2', scaleMargins:{top:.9, bottom:0}});
+  chartSide = createChart(D.chartSide, {fs:10, ga:'10'});
+  candleSide = chartSide.addCandlestickSeries({upColor:'#f7931a', downColor:'#ff2952', borderUpColor:'#f7931a', borderDownColor:'#ff2952', wickUpColor:'#f7931a60', wickDownColor:'#ff295260'});
+  volSide    = chartSide.addHistogramSeries({priceFormat:{type:'volume'}, priceScaleId:'vol2', scaleMargins:{top:.9, bottom:0}});
+}
 
-const data = {
-  main: { candles: [], volumes: [] },
-  side: { candles: [], volumes: [] },
-};
 function trimChart(kind, series){
   const arr = data[kind];
   if (arr.candles.length > CFG.MAX_CANDLES) {
@@ -734,6 +980,7 @@ function trimChart(kind, series){
   }
 }
 async function loadKlines(symbol, kind, series, upColor, dnColor){
+  if (IS_MOBILE) return;
   const d = await safeJson('https://api.binance.com/api/v3/klines?symbol=' + symbol + '&interval=3m&limit=500');
   if (!Array.isArray(d)) return;
   d.forEach(k => {
@@ -745,8 +992,10 @@ async function loadKlines(symbol, kind, series, upColor, dnColor){
   series.volumes.setData(data[kind].volumes);
   series.chart.timeScale().fitContent();
 }
-loadKlines('XRPUSDT', 'main', {candles: candleMain, volumes: volMain, chart: chartMain}, '#00e87b1a', '#ff29521a');
-loadKlines('XRPBTC',  'side', {candles: candleSide, volumes: volSide, chart: chartSide}, '#f7931a1a', '#ff29521a');
+if (!IS_MOBILE) {
+  loadKlines('XRPUSDT', 'main', {candles: candleMain, volumes: volMain, chart: chartMain}, '#00e87b1a', '#ff29521a');
+  loadKlines('XRPBTC',  'side', {candles: candleSide, volumes: volSide, chart: chartSide}, '#f7931a1a', '#ff29521a');
+}
 
 function updateXrpChange(pct){
   const cls = stateClass(pct);
@@ -784,6 +1033,7 @@ function updateMiniPrice(pct){
 }
 
 function applyKline(kind, series, k, upColor, dnColor){
+  if (IS_MOBILE) return;
   const t = toTzSec(k.t);
   const candle = { time:t, open:+k.o, high:+k.h, low:+k.l, close:+k.c };
   const volume = { time:t, value:+k.v, color: +k.c >= +k.o ? upColor : dnColor };
@@ -800,10 +1050,20 @@ function applyKline(kind, series, k, upColor, dnColor){
   series.volumes.update(volume);
 }
 
+function setMobileStatus(live){
+  if (!D.mDot) return;
+  D.mDot.classList.toggle('off', !live);
+  D.mLabel.textContent = live ? 'LIVE' : 'RECONNECTING';
+}
+
 function connectWs(){
-  const ws = new WebSocket('wss://stream.binance.com:9443/stream?streams=xrpusdt@ticker/xrpusdt@kline_3m/btcusdt@ticker/xrpbtc@ticker/xrpbtc@kline_3m');
-  ws.onopen  = () => { D.wsDot.classList.remove('off'); D.wsLabel.textContent = 'LIVE'; };
-  ws.onclose = () => { D.wsDot.classList.add('off'); D.wsLabel.textContent = 'RECONNECTING'; setTimeout(connectWs, 3000); };
+  // Mobile drops chart streams; only ticker streams needed
+  const streams = IS_MOBILE
+    ? 'xrpusdt@ticker/btcusdt@ticker/xrpbtc@ticker'
+    : 'xrpusdt@ticker/xrpusdt@kline_3m/btcusdt@ticker/xrpbtc@ticker/xrpbtc@kline_3m';
+  const ws = new WebSocket('wss://stream.binance.com:9443/stream?streams=' + streams);
+  ws.onopen  = () => { D.wsDot.classList.remove('off'); D.wsLabel.textContent = 'LIVE'; setMobileStatus(true); };
+  ws.onclose = () => { D.wsDot.classList.add('off'); D.wsLabel.textContent = 'RECONNECTING'; setMobileStatus(false); setTimeout(connectWs, 3000); };
   ws.onerror = () => ws.close();
   ws.onmessage = evt => {
     const msg = JSON.parse(evt.data);
@@ -812,7 +1072,11 @@ function connectWs(){
     if (s === 'xrpusdt@ticker') {
       S.xrpPrev = S.xrpUsd; S.xrpUsd = +d.c; S.xrp24hPct = +d.P;
       D.xrpPrice.textContent = num(S.xrpUsd, 4);
-      if (S.xrpPrev != null && S.xrpPrev !== S.xrpUsd) flashPrice(D.xrpPrice, S.xrpUsd > S.xrpPrev ? 'up' : 'down');
+      if (S.xrpPrev != null && S.xrpPrev !== S.xrpUsd) {
+        const dir = S.xrpUsd > S.xrpPrev ? 'up' : 'down';
+        flashPrice(D.xrpPrice, dir);
+        if (IS_MOBILE) flashMobile(D.mXrpUsdVal, dir);
+      }
       updateXrpChange(S.xrp24hPct);
       D.hi24.textContent = num(+d.h, 4);
       D.lo24.textContent = num(+d.l, 4);
@@ -830,12 +1094,19 @@ function connectWs(){
       drawSpark(D.sparkBtc, S.sparkBtc, '#f7931a');
     }
     else if (s === 'xrpbtc@ticker') {
+      S.xrpBtcPrev = S.xrpBtc;
       S.xrpBtc = +d.c; S.xrpBtc24hPct = +d.P;
       D.xrpBtcPrice.textContent = num(S.xrpBtc, 8);
       updateAsideChange(D.xrpBtcChg, S.xrpBtc24hPct);
       updateMiniPrice(S.xrpBtc24hPct);
       pushSpark(S.sparkXrpBtc, S.xrpBtc);
       drawSpark(D.sparkXrpBtc, S.sparkXrpBtc, '#00e87b');
+      if (IS_MOBILE) {
+        if (S.xrpBtcPrev != null && S.xrpBtcPrev !== S.xrpBtc) {
+          flashMobile(D.mXrpBtcVal, S.xrpBtc > S.xrpBtcPrev ? 'up' : 'down');
+        }
+        renderMobile();
+      }
     }
     else if (s === 'xrpbtc@kline_3m') {
       applyKline('side', {candles: candleSide, volumes: volSide}, d.k, '#f7931a1a', '#ff29521a');
@@ -861,7 +1132,7 @@ window.addEventListener('resize', () => {
 })();
 }
 
-if (window.__chartsReady) startApp();
+if (window.__chartsReady || IS_MOBILE) startApp();
 else window.addEventListener('chartsReady', startApp);
 </script>
 </body>
