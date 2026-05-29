@@ -560,7 +560,7 @@
   <footer class="footbar">
     <span>XRP Terminal — Not financial advice</span>
     <span class="hint">[F] Fullscreen · [Dbl-click chart] Reset zoom</span>
-    <span>Data: Binance · IQAir · Open-Meteo · CoinGecko</span>
+    <span>Data: Binance · Open-Meteo · Stooq · CoinGecko</span>
   </footer>
 
 </div>
@@ -595,8 +595,8 @@ const CFG = {
   MAX_CANDLES: 2000,
   SPARK_POINTS: 80,
   IDLE_MS: 4000,
-  POLL: { fx: 30_000, brent: 120_000, weather: 300_000, aqi: 600_000, meta: 3_600_000 },
-  STALE: { fx: 120_000, brent: 300_000, weather: 900_000, aqi: 1_500_000 },
+  POLL: { fx: 45_000, brent: 120_000, weather: 300_000, aqi: 600_000, meta: 3_600_000 },
+  STALE: { fx: 180_000, brent: 360_000, weather: 900_000, aqi: 1_500_000 },
 };
 
 const D = {};
@@ -624,7 +624,7 @@ const S = {
   btcUsd: null, btc24hPct: null,
   xrpBtc: null, xrpBtcPrev: null, xrpBtc24hPct: null,
   usdJpy: null, usdJpyPrev: null,
-  brentUsd: null, brentUsdPrev: null,
+  brentUsd: null, brentUsdPrev: null, brentPct: null,
   brentJpy: null, brentJpyPrev: null,
   xrpSupply: 60.88e9,
   xrpAth: null,
@@ -660,7 +660,7 @@ async function safeJson(url, timeout){
   if (!r) return null;
   try { return await r.json(); } catch { return null; }
 }
-async function proxyHtml(url, timeout = 12000){
+async function proxyText(url, timeout = 12000){
   const ao = await safeJson(CFG.PROXY_AO + encodeURIComponent(url), timeout);
   if (ao?.contents) return ao.contents;
   const cp = await safeFetch(CFG.PROXY_CP + encodeURIComponent(url), timeout);
@@ -739,6 +739,7 @@ function renderMobile(){
   // XRP / USD
   if (S.xrpUsd != null) {
     D.mXrpUsdVal.innerHTML = '$' + num(S.xrpUsd, 4) + '<span class="unit">USD</span>';
+    D.mXrpUsdSub.textContent = '$' + (S.xrpUsd * 1_000_000).toLocaleString('en-US', {maximumFractionDigits:0}) + ' · 1M XRP';
     if (S.xrp24hPct != null) setCardChg(D.mXrpUsd, D.mXrpUsdChg, S.xrp24hPct);
   }
 
@@ -753,15 +754,14 @@ function renderMobile(){
   // USD / JPY
   if (S.usdJpy != null) {
     D.mUsdJpyVal.innerHTML = '¥' + num(S.usdJpy, 2) + '<span class="unit">JPY</span>';
+    if (S.xrpUsd != null) D.mUsdJpySub.textContent = 'XRP ¥' + num(S.xrpUsd * S.usdJpy, 2);
   }
 
-  // Brent / JPY
-  if (S.brentJpy != null) {
-    D.mBrentJpyVal.innerHTML = '¥' + num(S.brentJpy, 0) + '<span class="unit">JPY</span>';
-    if (S.brentUsd) D.mBrentJpySub.textContent = '$' + num(S.brentUsd, 2) + ' USD';
-  } else if (S.brentUsd != null && S.usdJpy != null) {
+  // Brent / JPY (derived from USD × USD/JPY)
+  if (S.brentUsd != null && S.usdJpy != null) {
     D.mBrentJpyVal.innerHTML = '¥' + num(S.brentUsd * S.usdJpy, 0) + '<span class="unit">JPY</span>';
-    D.mBrentJpySub.textContent = '$' + num(S.brentUsd, 2) + ' USD · derived';
+    D.mBrentJpySub.textContent = '$' + num(S.brentUsd, 2) + ' USD';
+    if (S.brentPct != null) setCardChg(D.mBrentJpy, D.mBrentJpyChg, S.brentPct);
   }
 }
 
@@ -799,9 +799,17 @@ document.addEventListener('keydown', e => {
   }
 });
 
-(async () => {
-  try { if ('wakeLock' in navigator) await navigator.wakeLock.request('screen'); } catch {}
-})();
+// ══════════ WAKE LOCK — re-acquire after screen sleep / tab switch ══════════
+// A one-shot request is dropped whenever the page is hidden (TV screensaver,
+// OS lock, app switch). Re-requesting on visibility keeps a wall display awake.
+let wakeLock = null;
+async function acquireWakeLock(){
+  try { if ('wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); } } catch {}
+}
+acquireWakeLock();
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') acquireWakeLock();
+});
 
 function drawSpark(canvas, values, color){
   if (!canvas || values.length < 2) return;
@@ -833,10 +841,17 @@ function pushSpark(arr, v){ arr.push(v); if (arr.length > CFG.SPARK_POINTS) arr.
 
 async function fetchFx(){
   const rate = await trySources('fx', [
+    // Near-real-time: derive USD/JPY from CoinGecko BTC jpy/usd ratio
     async () => {
       const d = await safeJson('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,jpy', 8000);
       if (!d?.bitcoin?.usd || !d?.bitcoin?.jpy) return null;
       const r = d.bitcoin.jpy / d.bitcoin.usd;
+      return (r > 100 && r < 200) ? r : null;
+    },
+    // Keyless, CORS-enabled (ECB daily reference rate)
+    async () => {
+      const d = await safeJson('https://api.frankfurter.app/latest?from=USD&to=JPY', 6000);
+      const r = d?.rates?.JPY;
       return (r > 100 && r < 200) ? r : null;
     },
     async () => {
@@ -847,33 +862,42 @@ async function fetchFx(){
   if (rate) { S.usdJpy = rate; render(); console.log('✓ USD/JPY', rate.toFixed(2)); }
 }
 
+// Stooq light quote: Symbol,Date,Time,Open,High,Low,Close,Volume
+function parseStooqCsv(txt){
+  if (!txt) return null;
+  const lines = txt.trim().split(/\r?\n/);
+  if (lines.length < 2) return null;
+  const cols = lines[lines.length - 1].split(',');
+  if (cols.length < 7) return null;
+  const open  = parseFloat(cols[3]);
+  const close = parseFloat(cols[6]);
+  if (isNaN(close) || close <= 0) return null;
+  return { open: isNaN(open) ? null : open, close };
+}
+
 async function fetchBrent(){
-  const jpyHtml = await proxyHtml('https://www.exchangerates.org.uk/commodities/live-brent-crude-oil-prices/BRT-JPY.html');
-  if (jpyHtml) {
-    const v = extractPrice(jpyHtml, [
-      /(\d{1,3},\d{3}\.\d{1,4})/,
-      /¥\s*([\d,]+\.\d+)/,
-      /BRT\/JPY[\s\S]{0,200}?([\d,]{4,}\.\d+)/i,
-    ]);
-    if (v && v > 5000 && v < 50000) { S.brentJpy = v; S.lastUpdate.brent = Date.now(); }
-  }
-  const usdHtml = await proxyHtml('https://www.exchangerates.org.uk/commodities/live-brent-crude-oil-prices/BRT-USD.html');
-  if (usdHtml) {
-    const v = extractPrice(usdHtml, [
-      /(\d{2,3}\.\d{1,4})/,
-      /BRT\/USD[\s\S]{0,200}?(\d{2,3}\.\d+)/i,
-    ]);
-    if (v && v > 20 && v < 300) { S.brentUsd = v; S.lastUpdate.brent = Date.now(); }
-  }
-  if (!S.brentUsd) {
-    const g = await proxyHtml('https://www.google.com/finance/quote/BZ:NYMEX');
-    if (g) {
-      const v = extractPrice(g, [/data-last-price="([0-9.]+)"/]);
-      if (v && v > 20 && v < 300) { S.brentUsd = v; S.lastUpdate.brent = Date.now(); }
+  // Primary: Stooq Brent (CB.F) via proxy — clean parseable CSV, far more robust
+  // than regex-scraping a price out of an HTML page.
+  const csv = await proxyText('https://stooq.com/q/l/?s=cb.f&f=sd2t2ohlcv&h&e=csv');
+  const q = parseStooqCsv(csv);
+  if (q && q.close > 20 && q.close < 300) {
+    S.brentUsd = q.close;
+    S.brentPct = (q.open && q.open > 0) ? (q.close - q.open) / q.open * 100 : null;
+    S.lastUpdate.brent = Date.now();
+  } else {
+    // Fallback: exchangerates.org.uk HTML scrape
+    const usdHtml = await proxyText('https://www.exchangerates.org.uk/commodities/live-brent-crude-oil-prices/BRT-USD.html');
+    if (usdHtml) {
+      const v = extractPrice(usdHtml, [
+        /(\d{2,3}\.\d{1,4})/,
+        /BRT\/USD[\s\S]{0,200}?(\d{2,3}\.\d+)/i,
+      ]);
+      if (v && v > 20 && v < 300) { S.brentUsd = v; S.brentPct = null; S.lastUpdate.brent = Date.now(); }
     }
   }
+  // JPY is always derived from USD × USD/JPY — one less fragile scrape.
   render();
-  if (S.brentUsd || S.brentJpy) console.log('✓ Brent USD', S.brentUsd, '| JPY', S.brentJpy);
+  if (S.brentUsd) console.log('✓ Brent USD', S.brentUsd, S.brentPct != null ? '(' + S.brentPct.toFixed(2) + '%)' : '');
 }
 
 const WMO_ICONS = {0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',80:'🌦️',81:'🌧️',82:'⛈️',95:'⛈️',96:'⛈️',99:'⛈️'};
@@ -918,15 +942,26 @@ function aqiStyle(aqi){
 }
 async function fetchAqi(){
   if (IS_MOBILE) return; // skip on mobile
-  const d = await safeJson(`https://api.airvisual.com/v2/nearest_city?lat=${CFG.LAT}&lon=${CFG.LON}&key=${CFG.IQAIR_KEY}`, 10000);
-  if (d?.status === 'success' && d.data?.current?.pollution) {
-    const aqi = d.data.current.pollution.aqius, style = aqiStyle(aqi);
+  const aqi = await trySources('aqi', [
+    // Primary: Open-Meteo air quality — keyless, CORS-enabled, no monthly cap.
+    async () => {
+      const d = await safeJson(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${CFG.LAT}&longitude=${CFG.LON}&current=us_aqi&timezone=Asia%2FBangkok`, 8000);
+      const v = d?.current?.us_aqi;
+      return (v != null && v >= 0) ? Math.round(v) : null;
+    },
+    // Fallback: IQAir (keyed; 10k/mo free tier)
+    async () => {
+      const d = await safeJson(`https://api.airvisual.com/v2/nearest_city?lat=${CFG.LAT}&lon=${CFG.LON}&key=${CFG.IQAIR_KEY}`, 10000);
+      return d?.status === 'success' ? (d.data?.current?.pollution?.aqius ?? null) : null;
+    },
+  ]);
+  if (aqi != null) {
+    const style = aqiStyle(aqi);
     D.aqiVal.textContent = aqi;
     D.aqiDot.style.background = style.dot;
     D.aqiBadge.style.background = style.bg;
     D.aqiBadge.style.color = style.dot;
     D.aqiLevel.textContent = style.label;
-    S.lastUpdate.aqi = Date.now();
     console.log('✓ AQI', aqi, style.label);
   }
 }
