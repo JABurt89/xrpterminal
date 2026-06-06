@@ -99,7 +99,7 @@
   /* Tabular numerals everywhere live numbers update — stops layout jitter as digits change */
   .price-big, .price-unit, .chg-pill, .ath-note, .portfolio-val, .portfolio-pnl,
   .aside-val, .aside-chg, .aside-price-small, .stat-val, .clock-time, .clock-date,
-  .env-val, .aqi-val { font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1; }
+  .env-val, .aqi-val, .range24-cap { font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1; }
 
   /* ══════════ BACKGROUND LAYERS ══════════ */
   .bg-video { position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none; }
@@ -203,6 +203,24 @@
   .ath-note { font-family:'Outfit',sans-serif; font-size:var(--fs-md); color:var(--text-dim); letter-spacing:.5px; }
   .ath-note .val { font-weight:600; color:var(--text); }
 
+  /* 24H range bar — shows where current price sits between today's low and high */
+  .range24 { margin-top:var(--sp-4); max-width:clamp(300px,34vw,520px); }
+  .range24-head { display:flex; align-items:center; justify-content:space-between;
+    font-family:'Outfit',sans-serif; font-size:var(--fs-xs); font-weight:500;
+    letter-spacing:clamp(1.5px,.2vw,3px); color:var(--text-dim); text-transform:uppercase; margin-bottom:var(--sp-2); }
+  .range24-head .pos { color:var(--text); font-weight:600; letter-spacing:1px; }
+  .range24-row { display:flex; align-items:center; gap:var(--sp-3); }
+  .range24-cap { font-family:'Outfit',sans-serif; font-size:var(--fs-sm); font-weight:600; white-space:nowrap; line-height:1; }
+  .range24-cap.lo { color:var(--red-2); min-width:3.4em; text-align:right; }
+  .range24-cap.hi { color:var(--green-2); min-width:3.4em; }
+  .range24-track { position:relative; flex:1; height:7px; border-radius:99px;
+    background:linear-gradient(90deg, rgba(255,41,82,.28) 0%, rgba(240,176,48,.22) 50%, rgba(0,232,123,.30) 100%);
+    box-shadow:inset 0 1px 2px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.03); }
+  .range24-dot { position:absolute; top:50%; left:50%; width:15px; height:15px; border-radius:50%;
+    background:var(--green); transform:translate(-50%,-50%);
+    box-shadow:0 0 12px var(--green-glow), 0 0 0 3px rgba(4,6,11,.85), 0 1px 4px rgba(0,0,0,.8);
+    transition:left var(--t-med); }
+
   .portfolio { margin-top:var(--sp-4); }
   .portfolio-label { font-family:'Outfit',sans-serif; font-size:var(--fs-xs); font-weight:500; letter-spacing:clamp(1.5px,.2vw,3px); color:var(--text-dim); text-transform:uppercase; margin-bottom:var(--sp-1); }
   .portfolio-line { display:flex; align-items:baseline; gap:var(--sp-4); flex-wrap:wrap; }
@@ -220,7 +238,8 @@
   .spark-canvas { display:block; width:100%; height:clamp(28px,3vw,44px); }
 
   .stats { display:flex; align-items:center; padding:var(--sp-3) var(--sp-4); border-top:1px solid var(--border-hi); border-bottom:1px solid var(--border-hi); gap:var(--sp-6); flex-wrap:wrap; overflow:hidden;
-           background:rgba(8,11,20,.55); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); border-radius:var(--r-md); }
+           background:rgba(8,11,20,.55); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); border-radius:var(--r-md);
+           box-shadow:inset 0 1px 0 rgba(255,255,255,.04); }
   .stat-group { display:flex; align-items:center; gap:var(--sp-5); position:relative; }
   .stat-group + .stat-group::before { content:''; position:absolute; left:calc(-1 * var(--sp-6) / 2); top:10%; bottom:10%; width:1px; background:var(--border-hi); }
   .stat { display:flex; flex-direction:column; gap:1px; }
@@ -232,9 +251,9 @@
 
   .charts { display:grid; grid-template-columns:1fr clamp(200px,22vw,340px); gap:var(--sp-3); margin-top:var(--sp-2); min-height:0; }
   .chart-panel { position:relative; border:1px solid var(--border-hi); border-radius:var(--r-lg); overflow:hidden; background:var(--surface); min-height:0; display:flex; flex-direction:column;
-                 box-shadow:0 4px 20px rgba(0,0,0,.4); }
-  .chart-header { display:flex; align-items:center; justify-content:space-between; padding:var(--sp-2) var(--sp-3); border-bottom:1px solid var(--border-hi); background:rgba(4,6,11,.5); }
-  .chart-label  { font-size:var(--fs-micro); letter-spacing:2.5px; color:var(--text-dim); display:flex; align-items:center; gap:6px; text-transform:uppercase; }
+                 box-shadow:0 8px 30px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.04); }
+  .chart-header { display:flex; align-items:center; justify-content:space-between; gap:var(--sp-3); padding:var(--sp-2) var(--sp-3); border-bottom:1px solid var(--border-hi); background:linear-gradient(180deg, rgba(11,16,32,.6), rgba(4,6,11,.45)); }
+  .chart-label  { font-size:var(--fs-micro); letter-spacing:2.5px; color:var(--text-dim); display:flex; align-items:center; gap:6px; text-transform:uppercase; white-space:nowrap; }
   .chart-label .live-dot { width:4px; height:4px; border-radius:50%; background:var(--green); box-shadow:0 0 5px var(--green); animation:blink 1.5s ease-in-out infinite; }
   .chart-label em { font-style:normal; color:var(--btc); }
   .chart-zoom-hint { font-size:var(--fs-micro); letter-spacing:2px; color:var(--text-ghost); opacity:0; transition:opacity var(--t-med); }
@@ -513,6 +532,14 @@
         <span class="pill fl chg-pill" id="xrpChg">—</span>
         <span class="ath-note" id="xrpAth">ATH <span class="val">—</span></span>
       </div>
+      <div class="range24">
+        <div class="range24-head"><span>24H Range</span><span class="pos" id="rangePos">—</span></div>
+        <div class="range24-row">
+          <span class="range24-cap lo" id="rangeLo">—</span>
+          <div class="range24-track"><div class="range24-dot" id="rangeDot"></div></div>
+          <span class="range24-cap hi" id="rangeHi">—</span>
+        </div>
+      </div>
       <div class="portfolio">
         <div class="portfolio-label">1M XRP Portfolio · 24H</div>
         <div class="portfolio-line">
@@ -552,8 +579,6 @@
       <div class="stat"><span class="stat-label">Brent / JPY</span><span class="stat-val oil" id="brentJpy">—</span></div>
     </div>
     <div class="stat-group">
-      <div class="stat"><span class="stat-label">24H High</span><span class="stat-val" id="hi24">—</span></div>
-      <div class="stat"><span class="stat-label">24H Low</span><span class="stat-val" id="lo24">—</span></div>
       <div class="stat"><span class="stat-label">24H Vol</span><span class="stat-val" id="vol24">—</span></div>
       <div class="stat"><span class="stat-label">Mkt Cap</span><span class="stat-val" id="mcap">—</span></div>
     </div>
@@ -563,7 +588,7 @@
     <div class="chart-panel">
       <div class="chart-header">
         <div class="chart-label"><span class="live-dot"></span>XRP / USDT · 3M · Binance</div>
-        <div class="chart-zoom-hint">Dbl-click to reset</div>
+        <div class="aside-price-small" id="xrpUsdtMini">—</div>
       </div>
       <div class="chart-canvas" id="chartMain"></div>
     </div>
@@ -628,8 +653,9 @@ const D = {};
   'btcPrice','btcChg','xrpBtcPrice','xrpBtcChg',
   'sparkBtc','sparkXrpBtc',
   'usdJpy','xrpJpy','brentUsd','brentJpy',
-  'hi24','lo24','vol24','mcap',
-  'chartMain','chartSide','xrpBtcMini',
+  'rangeLo','rangeHi','rangeDot','rangePos',
+  'vol24','mcap',
+  'chartMain','chartSide','xrpBtcMini','xrpUsdtMini',
   // mobile
   'mClk','mDot','mLabel',
   'mXrpUsd','mXrpUsdVal','mXrpUsdChg','mXrpUsdSub',
@@ -643,8 +669,8 @@ const S = {
   btcUsd: null, btc24hPct: null,
   xrpBtc: null, xrpBtcPrev: null, xrpBtc24hPct: null,
   usdJpy: null, usdJpyPrev: null,
-  brentUsd: null, brentUsdPrev: null,
-  brentJpy: null, brentJpyPrev: null,
+  brentUsd: null, brentUsdPrev: null,   // JPY derived from brentUsd × usdJpy for internal consistency
+  xrp24hHi: null, xrp24hLo: null,
   xrpSupply: 60.88e9,
   xrpAth: null,
   sparkBtc: [], sparkXrpBtc: [],
@@ -725,14 +751,25 @@ function render(){
   if (S.usdJpy)                   D.usdJpy.textContent   = '¥' + num(S.usdJpy, 2);
   if (S.usdJpy && S.xrpUsd)       D.xrpJpy.textContent   = '¥' + num(S.xrpUsd * S.usdJpy, 2);
   if (S.brentUsd)                 D.brentUsd.textContent = '$' + num(S.brentUsd, 2);
-  if (S.brentJpy)                 D.brentJpy.textContent = '¥' + num(S.brentJpy, 0);
-  else if (S.brentUsd && S.usdJpy) D.brentJpy.textContent = '¥' + num(S.brentUsd * S.usdJpy, 0);
+  if (S.brentUsd && S.usdJpy)     D.brentJpy.textContent = '¥' + num(S.brentUsd * S.usdJpy, 0);
   if (S.xrpUsd)                   D.mcap.textContent     = '$' + compact(S.xrpUsd * S.xrpSupply);
   if (S.xrpAth && S.xrpUsd) {
     const dist = (S.xrpUsd / S.xrpAth - 1) * 100;
     D.xrpAth.querySelector('.val').textContent = (dist >= 0 ? '+' : '') + dist.toFixed(1) + '%';
   }
+  updateRange();
   renderMobile();
+}
+
+// 24H range bar — marker position between today's low and high
+function updateRange(){
+  if (IS_MOBILE || S.xrp24hHi == null || S.xrp24hLo == null || S.xrpUsd == null) return;
+  D.rangeLo.textContent = num(S.xrp24hLo, 4);
+  D.rangeHi.textContent = num(S.xrp24hHi, 4);
+  const span = S.xrp24hHi - S.xrp24hLo;
+  const pos = span > 0 ? Math.max(0, Math.min(1, (S.xrpUsd - S.xrp24hLo) / span)) : .5;
+  D.rangeDot.style.left = (pos * 100).toFixed(1) + '%';
+  D.rangePos.textContent = Math.round(pos * 100) + '% of range';
 }
 
 // ══════════ FLASH (shared) ══════════
@@ -789,12 +826,11 @@ function renderMobile(){
     setCardTick(D.mUsdJpy, D.mUsdJpyChg, S.usdJpy, S.usdJpyPrev);
   }
 
-  // Brent / JPY — sub: USD per barrel
-  const brentJpy = S.brentJpy != null ? S.brentJpy : (S.brentUsd != null && S.usdJpy != null ? S.brentUsd * S.usdJpy : null);
-  if (brentJpy != null) {
-    D.mBrentJpyVal.innerHTML = '¥' + num(brentJpy, 0) + '<span class="unit">JPY</span>';
-    if (S.brentUsd != null) D.mBrentJpySub.textContent = '$' + num(S.brentUsd, 2) + ' / bbl';
-    setCardTick(D.mBrentJpy, D.mBrentJpyChg, brentJpy, S.brentJpyPrev);
+  // Brent / JPY — derived from USD × FX; sub: USD per barrel
+  if (S.brentUsd != null && S.usdJpy != null) {
+    D.mBrentJpyVal.innerHTML = '¥' + num(S.brentUsd * S.usdJpy, 0) + '<span class="unit">JPY</span>';
+    D.mBrentJpySub.textContent = '$' + num(S.brentUsd, 2) + ' / bbl';
+    setCardTick(D.mBrentJpy, D.mBrentJpyChg, S.brentUsd, S.brentUsdPrev);
   }
 }
 
@@ -824,9 +860,17 @@ document.addEventListener('keydown', e => {
   }
 });
 
-(async () => {
-  try { if ('wakeLock' in navigator) await navigator.wakeLock.request('screen'); } catch {}
-})();
+// Keep the TV awake — re-request the lock whenever it's released or the tab regains focus
+let _wakeLock = null;
+async function acquireWakeLock(){
+  if (!('wakeLock' in navigator) || document.visibilityState !== 'visible') return;
+  try {
+    _wakeLock = await navigator.wakeLock.request('screen');
+    _wakeLock.addEventListener('release', () => { _wakeLock = null; });
+  } catch {}
+}
+acquireWakeLock();
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') acquireWakeLock(); });
 
 function drawSpark(canvas, values, color){
   if (!canvas || values.length < 2) return;
@@ -878,33 +922,38 @@ async function fetchFx(){
 }
 
 async function fetchBrent(){
-  const jpyHtml = await proxyHtml('https://www.exchangerates.org.uk/commodities/live-brent-crude-oil-prices/BRT-JPY.html');
-  if (jpyHtml) {
-    const v = extractPrice(jpyHtml, [
-      /(\d{1,3},\d{3}\.\d{1,4})/,
-      /¥\s*([\d,]+\.\d+)/,
-      /BRT\/JPY[\s\S]{0,200}?([\d,]{4,}\.\d+)/i,
-    ]);
-    if (v && v > 5000 && v < 50000) { S.brentJpyPrev = S.brentJpy; S.brentJpy = v; S.lastUpdate.brent = Date.now(); }
-  }
-  const usdHtml = await proxyHtml('https://www.exchangerates.org.uk/commodities/live-brent-crude-oil-prices/BRT-USD.html');
-  if (usdHtml) {
-    const v = extractPrice(usdHtml, [
-      /(\d{2,3}\.\d{1,4})/,
-      /BRT\/USD[\s\S]{0,200}?(\d{2,3}\.\d+)/i,
-    ]);
-    if (v && v > 20 && v < 300) { S.brentUsd = v; S.lastUpdate.brent = Date.now(); }
-  }
-  if (!S.brentUsd) {
-    const g = await proxyHtml('https://www.google.com/finance/quote/BZ:NYMEX');
-    if (g) {
+  // Source of truth is Brent/USD; JPY is derived (USD × FX) so both always agree.
+  const usd = await trySources('brent', [
+    // Yahoo Finance JSON via proxy — most reliable, no HTML scraping
+    async () => {
+      const raw = await proxyHtml('https://query1.finance.yahoo.com/v8/finance/chart/BZ=F?interval=5m&range=1d', 9000);
+      if (!raw) return null;
+      let j; try { j = JSON.parse(raw); } catch { return null; }
+      const p = j?.chart?.result?.[0]?.meta?.regularMarketPrice;
+      return (p > 20 && p < 300) ? p : null;
+    },
+    // exchangerates.org.uk HTML scrape
+    async () => {
+      const html = await proxyHtml('https://www.exchangerates.org.uk/commodities/live-brent-crude-oil-prices/BRT-USD.html');
+      if (!html) return null;
+      const v = extractPrice(html, [/(\d{2,3}\.\d{1,4})/, /BRT\/USD[\s\S]{0,200}?(\d{2,3}\.\d+)/i]);
+      return (v > 20 && v < 300) ? v : null;
+    },
+    // Google Finance
+    async () => {
+      const g = await proxyHtml('https://www.google.com/finance/quote/BZ:NYMEX');
+      if (!g) return null;
       const v = extractPrice(g, [/data-last-price="([0-9.]+)"/]);
-      if (v && v > 20 && v < 300) { S.brentUsd = v; S.lastUpdate.brent = Date.now(); }
-    }
+      return (v > 20 && v < 300) ? v : null;
+    },
+  ]);
+  if (usd != null) {
+    const changed = S.brentUsd != null && S.brentUsd !== usd;
+    S.brentUsdPrev = S.brentUsd; S.brentUsd = usd;
+    render();
+    if (IS_MOBILE && changed) flash(D.mBrentJpyVal, usd > S.brentUsdPrev ? 'up' : 'down');
+    console.log('✓ Brent USD', usd.toFixed(2), '| JPY', S.usdJpy ? (usd * S.usdJpy).toFixed(0) : '—');
   }
-  render();
-  if (IS_MOBILE && S.brentJpyPrev != null && S.brentJpy != null && S.brentJpyPrev !== S.brentJpy) flash(D.mBrentJpyVal, S.brentJpy > S.brentJpyPrev ? 'up' : 'down');
-  if (S.brentUsd || S.brentJpy) console.log('✓ Brent USD', S.brentUsd, '| JPY', S.brentJpy);
 }
 
 const WMO_ICONS = {0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',80:'🌦️',81:'🌧️',82:'⛈️',95:'⛈️',96:'⛈️',99:'⛈️'};
@@ -978,11 +1027,13 @@ const data = { main: { candles: [], volumes: [] }, side: { candles: [], volumes:
 
 function createChart(el, opts = {}){
   const c = LightweightCharts.createChart(el, {
-    layout: { background: {type:'solid', color:'#080b14'}, textColor:'#98a3c0', fontFamily:'Azeret Mono,monospace', fontSize: opts.fs || 11 },
-    grid: { vertLines: {color: '#0f1520' + (opts.ga || '18')}, horzLines: {color: '#0f1520' + (opts.ga || '38')} },
-    crosshair: { mode: LightweightCharts.CrosshairMode.Normal, vertLine:{color:'#5a648240', width:1, style:2, labelBackgroundColor:'#1a2238'}, horzLine:{color:'#5a648240', width:1, style:2, labelBackgroundColor:'#1a2238'} },
-    rightPriceScale: { borderColor:'#0f1520', scaleMargins:{top:.05, bottom:.05} },
-    timeScale: { borderColor:'#0f1520', timeVisible:true, secondsVisible:false, tickMarkFormatter: t => fmtTime(t - TZ_OFFSET) },
+    layout: { background: {type:'solid', color:'#070a12'}, textColor:'#8a96b4', fontFamily:'Azeret Mono,monospace', fontSize: opts.fs || 11 },
+    grid: { vertLines: {color: 'rgba(26,34,56,.35)'}, horzLines: {color: 'rgba(26,34,56,.55)'} },
+    crosshair: { mode: LightweightCharts.CrosshairMode.Normal,
+      vertLine:{color:'rgba(94,200,255,.35)', width:1, style:3, labelBackgroundColor:'#1a2238'},
+      horzLine:{color:'rgba(94,200,255,.35)', width:1, style:3, labelBackgroundColor:'#1a2238'} },
+    rightPriceScale: { borderColor:'rgba(26,34,56,.6)', scaleMargins:{top:.08, bottom:.04} },
+    timeScale: { borderColor:'rgba(26,34,56,.6)', timeVisible:true, secondsVisible:false, rightOffset:3, tickMarkFormatter: t => fmtTime(t - TZ_OFFSET) },
     localization: { timeFormatter: t => fmtFull(t - TZ_OFFSET) },
     handleScroll: true, handleScale: true,
   });
@@ -992,14 +1043,16 @@ function createChart(el, opts = {}){
   return c;
 }
 
+const CANDLE = { upColor:'#00e87b', downColor:'#ff2952', borderUpColor:'#00e87b', borderDownColor:'#ff2952', wickUpColor:'rgba(0,232,123,.55)', wickDownColor:'rgba(255,41,82,.55)', priceLineColor:'rgba(255,255,255,.25)', priceLineWidth:1, priceLineStyle:2, lastValueVisible:true };
+
 if (!IS_MOBILE) {
   chartMain = createChart(D.chartMain);
-  candleMain = chartMain.addCandlestickSeries({upColor:'#00e87b', downColor:'#ff2952', borderUpColor:'#00e87b', borderDownColor:'#ff2952', wickUpColor:'#00e87b70', wickDownColor:'#ff295270'});
-  volMain    = chartMain.addHistogramSeries({priceFormat:{type:'volume'}, priceScaleId:'vol', scaleMargins:{top:.88, bottom:0}});
+  candleMain = chartMain.addCandlestickSeries(CANDLE);
+  volMain    = chartMain.addHistogramSeries({priceFormat:{type:'volume'}, priceScaleId:'vol', scaleMargins:{top:.86, bottom:0}, lastValueVisible:false});
 
-  chartSide = createChart(D.chartSide, {fs:10, ga:'10'});
-  candleSide = chartSide.addCandlestickSeries({upColor:'#f7931a', downColor:'#ff2952', borderUpColor:'#f7931a', borderDownColor:'#ff2952', wickUpColor:'#f7931a60', wickDownColor:'#ff295260'});
-  volSide    = chartSide.addHistogramSeries({priceFormat:{type:'volume'}, priceScaleId:'vol2', scaleMargins:{top:.9, bottom:0}});
+  chartSide = createChart(D.chartSide, {fs:10});
+  candleSide = chartSide.addCandlestickSeries(CANDLE);
+  volSide    = chartSide.addHistogramSeries({priceFormat:{type:'volume'}, priceScaleId:'vol2', scaleMargins:{top:.9, bottom:0}, lastValueVisible:false});
 }
 
 function trimChart(kind, series){
@@ -1024,8 +1077,25 @@ async function loadKlines(symbol, kind, series, upColor, dnColor){
   series.chart.timeScale().fitContent();
 }
 if (!IS_MOBILE) {
-  loadKlines('XRPUSDT', 'main', {candles: candleMain, volumes: volMain, chart: chartMain}, '#00e87b1a', '#ff29521a');
-  loadKlines('XRPBTC',  'side', {candles: candleSide, volumes: volSide, chart: chartSide}, '#f7931a1a', '#ff29521a');
+  loadKlines('XRPUSDT', 'main', {candles: candleMain, volumes: volMain, chart: chartMain}, 'rgba(0,232,123,.16)', 'rgba(255,41,82,.16)');
+  loadKlines('XRPBTC',  'side', {candles: candleSide, volumes: volSide, chart: chartSide}, 'rgba(0,232,123,.16)', 'rgba(255,41,82,.16)')
+    .then(seedSparks);
+}
+
+// Downsample a long series to ~n evenly spaced points
+function downsample(arr, n){
+  if (arr.length <= n) return arr.slice();
+  const out = [], step = arr.length / n;
+  for (let i = 0; i < n; i++) out.push(arr[Math.floor(i * step)]);
+  return out;
+}
+// Seed sparklines from kline history so they're populated on first paint (not blank until ticks arrive)
+async function seedSparks(){
+  if (IS_MOBILE) return;
+  const sideCloses = data.side.candles.map(c => c.close);
+  if (sideCloses.length) { S.sparkXrpBtc = downsample(sideCloses, CFG.SPARK_POINTS); drawSpark(D.sparkXrpBtc, S.sparkXrpBtc, '#00e87b'); }
+  const d = await safeJson('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=3m&limit=240');
+  if (Array.isArray(d)) { S.sparkBtc = downsample(d.map(k => +k[4]), CFG.SPARK_POINTS); drawSpark(D.sparkBtc, S.sparkBtc, '#f7931a'); }
 }
 
 function updateXrpChange(pct){
@@ -1056,10 +1126,17 @@ function updateAsideChange(el, pct){
   el.textContent = sign + pct.toFixed(2) + '%';
 }
 function updateMiniPrice(pct){
-  const cls = 's-' + stateClass(pct);
-  const sign = pct >= 0 ? '+' : '';
+  if (IS_MOBILE) return;
+  const cls = 's-' + stateClass(pct), sign = pct >= 0 ? '+' : '';
   D.xrpBtcMini.innerHTML = num(S.xrpBtc, 8)
     + '<span class="unit">BTC</span>'
+    + '<span class="chg ' + cls + '">' + sign + pct.toFixed(2) + '%</span>';
+}
+function updateMainMini(pct){
+  if (IS_MOBILE) return;
+  const cls = 's-' + stateClass(pct), sign = pct >= 0 ? '+' : '';
+  D.xrpUsdtMini.innerHTML = num(S.xrpUsd, 4)
+    + '<span class="unit">USDT</span>'
     + '<span class="chg ' + cls + '">' + sign + pct.toFixed(2) + '%</span>';
 }
 
@@ -1081,68 +1158,82 @@ function applyKline(kind, series, k, upColor, dnColor){
   series.volumes.update(volume);
 }
 
-function setMobileStatus(live){
-  if (!D.mDot) return;
-  D.mDot.classList.toggle('off', !live);
-  D.mLabel.textContent = live ? 'LIVE' : 'RECONNECTING';
+function setConn(live){
+  D.wsDot.classList.toggle('off', !live);
+  D.wsLabel.textContent = live ? 'LIVE' : 'RECONNECTING';
+  if (D.mDot) { D.mDot.classList.toggle('off', !live); D.mLabel.textContent = live ? 'LIVE' : 'RECONNECTING'; }
 }
 
-function connectWs(){
-  // Mobile drops chart streams; only ticker streams needed
-  const streams = IS_MOBILE
-    ? 'xrpusdt@ticker/btcusdt@ticker/xrpbtc@ticker'
-    : 'xrpusdt@ticker/xrpusdt@kline_3m/btcusdt@ticker/xrpbtc@ticker/xrpbtc@kline_3m';
-  const ws = new WebSocket('wss://stream.binance.com:9443/stream?streams=' + streams);
-  ws.onopen  = () => { D.wsDot.classList.remove('off'); D.wsLabel.textContent = 'LIVE'; setMobileStatus(true); };
-  ws.onclose = () => { D.wsDot.classList.add('off'); D.wsLabel.textContent = 'RECONNECTING'; setMobileStatus(false); setTimeout(connectWs, 3000); };
-  ws.onerror = () => ws.close();
-  ws.onmessage = evt => {
-    const msg = JSON.parse(evt.data);
-    const d = msg.data, s = msg.stream;
+function handleWsMessage(evt){
+  let msg; try { msg = JSON.parse(evt.data); } catch { return; }
+  const d = msg.data, s = msg.stream;
 
-    if (s === 'xrpusdt@ticker') {
-      S.xrpPrev = S.xrpUsd; S.xrpUsd = +d.c; S.xrp24hPct = +d.P;
-      D.xrpPrice.textContent = num(S.xrpUsd, 4);
-      if (S.xrpPrev != null && S.xrpPrev !== S.xrpUsd) {
-        const dir = S.xrpUsd > S.xrpPrev ? 'up' : 'down';
-        flash(D.xrpPrice, dir);
-        if (IS_MOBILE) flash(D.mXrpUsdVal, dir);
-      }
-      updateXrpChange(S.xrp24hPct);
-      D.hi24.textContent = num(+d.h, 4);
-      D.lo24.textContent = num(+d.l, 4);
-      D.vol24.textContent = '$' + compact(+d.q);
-      render();
+  if (s === 'xrpusdt@ticker') {
+    S.xrpPrev = S.xrpUsd; S.xrpUsd = +d.c; S.xrp24hPct = +d.P;
+    S.xrp24hHi = +d.h; S.xrp24hLo = +d.l;
+    D.xrpPrice.textContent = num(S.xrpUsd, 4);
+    if (S.xrpPrev != null && S.xrpPrev !== S.xrpUsd) {
+      const dir = S.xrpUsd > S.xrpPrev ? 'up' : 'down';
+      flash(D.xrpPrice, dir);
+      if (IS_MOBILE) flash(D.mXrpUsdVal, dir);
     }
-    else if (s === 'xrpusdt@kline_3m') {
-      applyKline('main', {candles: candleMain, volumes: volMain}, d.k, '#00e87b1a', '#ff29521a');
+    updateXrpChange(S.xrp24hPct);
+    updateMainMini(S.xrp24hPct);
+    D.vol24.textContent = '$' + compact(+d.q);
+    render();
+  }
+  else if (s === 'xrpusdt@kline_3m') {
+    applyKline('main', {candles: candleMain, volumes: volMain}, d.k, 'rgba(0,232,123,.16)', 'rgba(255,41,82,.16)');
+  }
+  else if (s === 'btcusdt@ticker') {
+    S.btcUsd = +d.c; S.btc24hPct = +d.P;
+    D.btcPrice.textContent = '$' + num(S.btcUsd, 0);
+    updateAsideChange(D.btcChg, S.btc24hPct);
+    if (!IS_MOBILE) { pushSpark(S.sparkBtc, S.btcUsd); drawSpark(D.sparkBtc, S.sparkBtc, '#f7931a'); }
+    else renderMobile();   // mobile XRP/BTC card shows BTC/USD in its sub
+  }
+  else if (s === 'xrpbtc@ticker') {
+    S.xrpBtcPrev = S.xrpBtc; S.xrpBtc = +d.c; S.xrpBtc24hPct = +d.P;
+    D.xrpBtcPrice.textContent = num(S.xrpBtc, 8);
+    updateAsideChange(D.xrpBtcChg, S.xrpBtc24hPct);
+    updateMiniPrice(S.xrpBtc24hPct);
+    if (!IS_MOBILE) { pushSpark(S.sparkXrpBtc, S.xrpBtc); drawSpark(D.sparkXrpBtc, S.sparkXrpBtc, '#00e87b'); }
+    else {
+      if (S.xrpBtcPrev != null && S.xrpBtcPrev !== S.xrpBtc) flash(D.mXrpBtcVal, S.xrpBtc > S.xrpBtcPrev ? 'up' : 'down');
+      renderMobile();
     }
-    else if (s === 'btcusdt@ticker') {
-      S.btcUsd = +d.c; S.btc24hPct = +d.P;
-      D.btcPrice.textContent = '$' + num(S.btcUsd, 0);
-      updateAsideChange(D.btcChg, S.btc24hPct);
-      pushSpark(S.sparkBtc, S.btcUsd);
-      drawSpark(D.sparkBtc, S.sparkBtc, '#f7931a');
-    }
-    else if (s === 'xrpbtc@ticker') {
-      S.xrpBtcPrev = S.xrpBtc;
-      S.xrpBtc = +d.c; S.xrpBtc24hPct = +d.P;
-      D.xrpBtcPrice.textContent = num(S.xrpBtc, 8);
-      updateAsideChange(D.xrpBtcChg, S.xrpBtc24hPct);
-      updateMiniPrice(S.xrpBtc24hPct);
-      pushSpark(S.sparkXrpBtc, S.xrpBtc);
-      drawSpark(D.sparkXrpBtc, S.sparkXrpBtc, '#00e87b');
-      if (IS_MOBILE) {
-        if (S.xrpBtcPrev != null && S.xrpBtcPrev !== S.xrpBtc) {
-          flash(D.mXrpBtcVal, S.xrpBtc > S.xrpBtcPrev ? 'up' : 'down');
-        }
-        renderMobile();
-      }
-    }
-    else if (s === 'xrpbtc@kline_3m') {
-      applyKline('side', {candles: candleSide, volumes: volSide}, d.k, '#f7931a1a', '#ff29521a');
-    }
-  };
+  }
+  else if (s === 'xrpbtc@kline_3m') {
+    applyKline('side', {candles: candleSide, volumes: volSide}, d.k, 'rgba(0,232,123,.16)', 'rgba(255,41,82,.16)');
+  }
+}
+
+// Resilient socket: exponential backoff on drop + watchdog that forces a reconnect if the
+// stream goes silent (Binance occasionally stalls a connection without closing it).
+let wsBackoff = 2000, wsWatchdog = null, lastWsMsg = 0, currentWs = null;
+const WS_STREAMS = IS_MOBILE
+  ? 'xrpusdt@ticker/btcusdt@ticker/xrpbtc@ticker'
+  : 'xrpusdt@ticker/xrpusdt@kline_3m/btcusdt@ticker/xrpbtc@ticker/xrpbtc@kline_3m';
+
+function connectWs(){
+  let ws;
+  try { ws = new WebSocket('wss://stream.binance.com:9443/stream?streams=' + WS_STREAMS); }
+  catch { scheduleReconnect(); return; }
+  currentWs = ws;
+
+  ws.onopen = () => { wsBackoff = 2000; lastWsMsg = Date.now(); setConn(true); };
+  ws.onclose = () => { setConn(false); clearInterval(wsWatchdog); scheduleReconnect(); };
+  ws.onerror = () => { try { ws.close(); } catch {} };
+  ws.onmessage = evt => { lastWsMsg = Date.now(); handleWsMessage(evt); };
+
+  clearInterval(wsWatchdog);
+  wsWatchdog = setInterval(() => {
+    if (lastWsMsg && Date.now() - lastWsMsg > 20000) { try { ws.close(); } catch {} }
+  }, 5000);
+}
+function scheduleReconnect(){
+  setTimeout(connectWs, wsBackoff);
+  wsBackoff = Math.min(Math.round(wsBackoff * 1.8), 30000);
 }
 connectWs();
 
@@ -1156,6 +1247,7 @@ const jobs = [
 jobs.forEach(([fn, interval]) => { fn(); setInterval(fn, interval); });
 
 window.addEventListener('resize', () => {
+  if (IS_MOBILE) return;
   drawSpark(D.sparkBtc,    S.sparkBtc,    '#f7931a');
   drawSpark(D.sparkXrpBtc, S.sparkXrpBtc, '#00e87b');
 });
