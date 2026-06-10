@@ -130,7 +130,7 @@
     background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     background-size:128px; }
 
-  .dash { position:relative; z-index:3; display:grid; grid-template-rows:auto auto auto auto 1fr auto; height:100vh; padding:var(--sp-3) var(--sp-5) var(--sp-2); gap:0; }
+  .dash { position:relative; z-index:3; display:grid; grid-template-rows:auto auto auto 1fr auto; height:100vh; padding:var(--sp-3) var(--sp-5) var(--sp-2); gap:0; }
 
   .dash > * { opacity:0; animation:fade-in .5s ease forwards; }
   .dash > :nth-child(1) { animation-delay:0ms; }
@@ -138,7 +138,6 @@
   .dash > :nth-child(3) { animation-delay:120ms; }
   .dash > :nth-child(4) { animation-delay:180ms; }
   .dash > :nth-child(5) { animation-delay:240ms; }
-  .dash > :nth-child(6) { animation-delay:300ms; }
   @keyframes fade-in { to { opacity:1; } }
 
   .topbar { display:flex; align-items:flex-start; justify-content:space-between; gap:var(--sp-4); padding-bottom:var(--sp-3); border-bottom:1px solid var(--border-hi);
@@ -228,8 +227,9 @@
   .portfolio-val  { font-family:'Outfit',sans-serif; font-size:var(--fs-xl); font-weight:700; letter-spacing:-.5px; line-height:1; }
   .portfolio-pnl  { font-family:'Outfit',sans-serif; font-size:clamp(14px,1.8vw,26px); }
 
-  .hero-aside { display:flex; align-items:stretch; gap:var(--sp-5); flex-wrap:wrap; }
-  .aside-metric { display:flex; flex-direction:column; gap:var(--sp-2); min-width:clamp(140px,14vw,220px); }
+  .hero-aside { display:flex; flex-direction:column; align-items:stretch; gap:var(--sp-3); }
+  .aside-row  { display:flex; align-items:stretch; gap:var(--sp-5); flex-wrap:wrap; }
+  .aside-metric { display:flex; flex-direction:column; gap:var(--sp-2); min-width:clamp(140px,14vw,220px); flex:1; }
   .aside-label  { font-family:'Outfit',sans-serif; font-size:var(--fs-micro); font-weight:500; letter-spacing:2px; color:var(--text-dim); text-transform:uppercase; }
   .aside-line   { display:flex; align-items:baseline; gap:var(--sp-3); flex-wrap:wrap; }
   .aside-val    { font-family:'Outfit',sans-serif; font-size:var(--fs-xl); font-weight:700; letter-spacing:-.5px; line-height:1; white-space:nowrap; }
@@ -250,51 +250,43 @@
   .stat-val.xrp { color:var(--green); }
   .stat-val.oil { color:var(--amber); }
 
-  /* ══════════ DOMINO TRACKER ══════════
-     The Claver chain: oil → Japan → carry unwind → liquidity → XRP settlement.
-     Fallen tiles lie flat (green), tilting tiles lean + teeter (amber),
-     standing tiles wait upright (ghost). Live-wired tiles fall on real data. */
-  .dominoes { --d-slot-h: clamp(28px, 2.6vw, 42px);
-    display:flex; align-items:center; gap:var(--sp-5); margin-top:var(--sp-2);
-    padding:var(--sp-2) var(--sp-4) var(--sp-3);
+  /* ══════════ DOMINO TRACKER (corner cluster) ══════════
+     Lives in the hero's top-right, above BTC/USD · XRP/BTC.
+     Fallen tiles lie flat (green), tilting lean + teeter (amber),
+     standing wait upright (ghost). Live tiles fall on real data.
+     One-word labels read as the chain: OIL BOJ YEN REG ETF BANK RLUSD FED ATH. */
+  .dominoes { --d-slot-h: clamp(20px, 1.9vw, 30px);
+    display:flex; flex-direction:column; gap:var(--sp-2);
+    padding:var(--sp-2) var(--sp-3);
     border:1px solid var(--border-hi); border-radius:var(--r-md);
-    background:rgba(8,11,20,.55); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+    background:rgba(8,11,20,.45); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.04); }
-  .domino-head { display:flex; flex-direction:column; gap:3px; flex-shrink:0; }
-  .domino-title { font-family:'Outfit',sans-serif; font-size:var(--fs-xs); font-weight:700; letter-spacing:3px; text-transform:uppercase; }
+  .domino-top { display:flex; align-items:baseline; justify-content:space-between; gap:var(--sp-3); }
+  .domino-title { font-family:'Outfit',sans-serif; font-size:var(--fs-micro); font-weight:700; letter-spacing:2.5px; text-transform:uppercase; color:var(--text-dim); white-space:nowrap; }
   .domino-title em { font-style:normal; color:var(--green); }
-  .domino-chain { font-size:var(--fs-micro); color:var(--text-ghost); letter-spacing:1.5px; text-transform:uppercase; white-space:nowrap; }
-  .domino-row { position:relative; display:flex; flex:1; justify-content:space-between; gap:var(--sp-2); min-width:0; }
-  .domino-track { position:absolute; left:2%; right:2%; top:var(--d-slot-h); height:2px; border-radius:2px; background:var(--border-hi); overflow:hidden; }
+  .domino-count { font-family:'Outfit',sans-serif; font-size:var(--fs-xs); font-weight:700; color:var(--green); font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .domino-count .dc-label { font-size:.72em; font-weight:500; color:var(--text-dim); letter-spacing:1.5px; margin-left:4px; text-transform:uppercase; }
+  .domino-row { position:relative; display:flex; justify-content:space-between; gap:var(--sp-1); min-width:0; }
+  .domino-track { position:absolute; left:1%; right:1%; top:var(--d-slot-h); height:2px; border-radius:2px; background:var(--border-hi); overflow:hidden; }
   .domino-fill  { height:100%; width:0; border-radius:2px; background:linear-gradient(90deg, var(--green), var(--green-2)); box-shadow:0 0 8px var(--green-glow); transition:width .8s ease; }
-  .domino { display:flex; flex-direction:column; align-items:center; gap:4px; flex:1; min-width:0; }
+  .domino { display:flex; flex-direction:column; align-items:center; gap:3px; flex:1; min-width:0; }
   .d-slot { height:var(--d-slot-h); display:flex; align-items:flex-end; justify-content:center; }
-  .d-tile { position:relative; width:clamp(13px,1.15vw,19px); height:var(--d-slot-h); border-radius:3px;
+  .d-tile { position:relative; width:clamp(10px,.9vw,15px); height:var(--d-slot-h); border-radius:2.5px;
     border:1.5px solid var(--text-ghost); color:var(--text-ghost); background:rgba(255,255,255,.02);
     transform-origin:bottom center;
     transition:transform .9s cubic-bezier(.34,1.56,.64,1), background .4s ease, border-color .4s ease, box-shadow .4s ease, color .4s ease; }
   .d-tile::after { content:''; position:absolute; left:18%; right:18%; top:50%; height:1px; background:currentColor; opacity:.55; }
   .domino.fallen  .d-tile { background:var(--green); border-color:var(--green); color:rgba(4,6,11,.75);
-                            transform:rotate(76deg); box-shadow:0 0 14px var(--green-glow), 0 1px 4px rgba(0,0,0,.7); }
+                            transform:rotate(76deg); box-shadow:0 0 12px var(--green-glow), 0 1px 3px rgba(0,0,0,.7); }
   .domino.tilting .d-tile { border-color:var(--amber); color:var(--amber); background:rgba(240,176,48,.07);
-                            transform:rotate(14deg); box-shadow:0 0 10px rgba(240,176,48,.18);
+                            transform:rotate(14deg); box-shadow:0 0 9px rgba(240,176,48,.18);
                             animation:domino-teeter 3.2s ease-in-out infinite; }
   .domino.standing .d-tile { opacity:.75; }
   @keyframes domino-teeter { 0%,100% { transform:rotate(11deg); } 50% { transform:rotate(17deg); } }
-  .d-label { font-family:'Outfit',sans-serif; font-size:var(--fs-micro); font-weight:600; letter-spacing:1px;
-             text-transform:uppercase; text-align:center; line-height:1.25; color:var(--text-ghost); white-space:nowrap; }
-  .domino.fallen  .d-label { color:var(--green);  opacity:.9; }
-  .domino.tilting .d-label { color:var(--amber);  opacity:.9; }
-  .d-sub { font-size:var(--fs-micro); color:var(--text-ghost); letter-spacing:.5px; text-align:center;
-           white-space:nowrap; opacity:.85; font-variant-numeric:tabular-nums; }
-  .domino-count { display:flex; flex-direction:column; align-items:center; gap:1px; flex-shrink:0; padding-left:var(--sp-3); border-left:1px solid var(--border-hi); }
-  .domino-count .dc-val { font-family:'Outfit',sans-serif; font-size:var(--fs-lg); font-weight:700; letter-spacing:-.5px; line-height:1; color:var(--green); font-variant-numeric:tabular-nums; }
-  .domino-count .dc-label { font-size:var(--fs-micro); letter-spacing:2px; color:var(--text-dim); text-transform:uppercase; }
-  @media (max-width:900px) {
-    .dominoes { overflow-x:auto; }
-    .domino { min-width:70px; }
-    .domino-chain { display:none; }
-  }
+  .d-label { font-family:'Outfit',sans-serif; font-size:clamp(6px,.55vw,9px); font-weight:600; letter-spacing:.8px;
+             text-transform:uppercase; text-align:center; line-height:1.1; color:var(--text-ghost); white-space:nowrap; }
+  .domino.fallen  .d-label { color:var(--green); opacity:.9; }
+  .domino.tilting .d-label { color:var(--amber); opacity:.9; }
   @media (prefers-reduced-motion: reduce) {
     .d-tile, .domino-fill { transition:none; }
     .domino.tilting .d-tile, .bg-orbs .orb, .brand-icon, .status-dot, .chart-label .live-dot { animation:none; }
@@ -601,21 +593,32 @@
     </div>
 
     <div class="hero-aside">
-      <div class="aside-metric">
-        <div class="aside-label">BTC / USD</div>
-        <div class="aside-line">
-          <span class="aside-val btc" id="btcPrice">—</span>
-          <span class="aside-chg s-fl" id="btcChg">—</span>
+      <div class="dominoes" title="Claver domino chain — live tiles fall on real data">
+        <div class="domino-top">
+          <span class="domino-title"><em>Domino</em> Tracker</span>
+          <span class="domino-count"><span id="dominoCount">—</span><span class="dc-label">Down</span></span>
         </div>
-        <canvas class="spark-canvas" id="sparkBtc"></canvas>
+        <div class="domino-row" id="dominoRow">
+          <div class="domino-track"><div class="domino-fill" id="dominoFill"></div></div>
+        </div>
       </div>
-      <div class="aside-metric">
-        <div class="aside-label">XRP / BTC</div>
-        <div class="aside-line">
-          <span class="aside-val xrp" id="xrpBtcPrice">—</span>
-          <span class="aside-chg s-fl" id="xrpBtcChg">—</span>
+      <div class="aside-row">
+        <div class="aside-metric">
+          <div class="aside-label">BTC / USD</div>
+          <div class="aside-line">
+            <span class="aside-val btc" id="btcPrice">—</span>
+            <span class="aside-chg s-fl" id="btcChg">—</span>
+          </div>
+          <canvas class="spark-canvas" id="sparkBtc"></canvas>
         </div>
-        <canvas class="spark-canvas" id="sparkXrpBtc"></canvas>
+        <div class="aside-metric">
+          <div class="aside-label">XRP / BTC</div>
+          <div class="aside-line">
+            <span class="aside-val xrp" id="xrpBtcPrice">—</span>
+            <span class="aside-chg s-fl" id="xrpBtcChg">—</span>
+          </div>
+          <canvas class="spark-canvas" id="sparkXrpBtc"></canvas>
+        </div>
       </div>
     </div>
   </section>
@@ -636,20 +639,6 @@
     <div class="stat-group">
       <div class="stat"><span class="stat-label">RLUSD Cap</span><span class="stat-val xrp" id="rlusdCap">—</span></div>
       <div class="stat"><span class="stat-label">XRP / Sats</span><span class="stat-val" id="xrpSats">—</span></div>
-    </div>
-  </section>
-
-  <section class="dominoes" title="Claver domino chain — live tiles fall on real data">
-    <div class="domino-head">
-      <div class="domino-title"><em>Domino</em> Tracker</div>
-      <div class="domino-chain">Oil → Yen → Liquidity → XRP</div>
-    </div>
-    <div class="domino-row" id="dominoRow">
-      <div class="domino-track"><div class="domino-fill" id="dominoFill"></div></div>
-    </div>
-    <div class="domino-count">
-      <span class="dc-val" id="dominoCount">—</span>
-      <span class="dc-label">Down</span>
     </div>
   </section>
 
@@ -852,30 +841,31 @@ function updateRange(){
 //   • hand-set  — edit `state` ('fallen'|'tilting'|'standing') + `sub` when news lands
 //   • live      — `live(S)` derives state from streaming data; these fall on their own
 // Thresholds are editable judgement calls, not gospel.
+// `short` is the on-screen label; `label`/`note`/`sub` feed the hover title.
 const DOMINOES = [
-  { id:'oil',   label:'Oil Shock', note:'Hormuz / supply shock pushes Brent into crisis territory',
+  { id:'oil',   short:'Oil',   label:'Oil Shock', note:'Hormuz / supply shock pushes Brent into crisis territory',
     live: S => S.brentUsd == null ? null
       : { state: S.brentUsd >= 95 ? 'fallen' : S.brentUsd >= 80 ? 'tilting' : 'standing',
           sub: '$' + S.brentUsd.toFixed(0) + ' / bbl' } },
-  { id:'boj',   label:'BoJ Hikes', state:'tilting', sub:'0.75% · 30y high',
+  { id:'boj',   short:'BoJ',   label:'BoJ Hikes', state:'tilting', sub:'0.75% · 30y high',
     note:'BoJ at 0.75% (Dec 2025), highest in ~30 years; board members pushing for more' },
-  { id:'carry', label:'Carry Unwind', note:'Yen repatriation — sharp USD/JPY drop drains global liquidity',
+  { id:'carry', short:'Yen',   label:'Carry Unwind', note:'Yen repatriation — sharp USD/JPY drop drains global liquidity',
     live: S => S.usdJpy == null ? null
       : { state: S.usdJpy <= 142 ? 'fallen' : S.usdJpy <= 150 ? 'tilting' : 'standing',
           sub: '¥' + S.usdJpy.toFixed(1) } },
-  { id:'reg',   label:'Reg Clarity', state:'fallen', sub:'Commodity · Mar 26',
+  { id:'reg',   short:'Reg',   label:'Reg Clarity', state:'fallen', sub:'Commodity · Mar 26',
     note:'SEC case closed Aug 2025; SEC/CFTC classified XRP a digital commodity Mar 2026' },
-  { id:'etf',   label:'Spot ETFs', state:'fallen', sub:'Live · Nov 25',
+  { id:'etf',   short:'ETF',   label:'Spot ETFs', state:'fallen', sub:'Live · Nov 25',
     note:'US spot XRP ETFs trading since Nov 2025' },
-  { id:'bank',  label:'Bank Charter', state:'tilting', sub:'OCC cond. · Dec 25',
+  { id:'bank',  short:'Bank',  label:'Bank Charter', state:'tilting', sub:'OCC cond. · Dec 25',
     note:'OCC conditional approval Dec 2025; final trust-bank rule live Apr 1 2026; pre-opening conditions pending' },
-  { id:'rlusd', label:'RLUSD $1B', note:'Regulated settlement dollar at institutional scale',
+  { id:'rlusd', short:'RLUSD', label:'RLUSD $1B', note:'Regulated settlement dollar at institutional scale',
     live: S => S.rlusdMcap == null ? null
       : { state: S.rlusdMcap >= 1e9 ? 'fallen' : S.rlusdMcap >= 5e8 ? 'tilting' : 'standing',
           sub: '$' + compact(S.rlusdMcap) + ' cap' } },
-  { id:'fed',   label:'Fed Master Acct', state:'standing', sub:'Applied',
+  { id:'fed',   short:'Fed',   label:'Fed Master Acct', state:'standing', sub:'Applied',
     note:'Direct Fed payment-rail access — application pending' },
-  { id:'ath',   label:'Repricing', note:'XRP breaks all-time high — the last domino',
+  { id:'ath',   short:'ATH',   label:'Repricing', note:'XRP breaks all-time high — the last domino',
     live: S => (S.xrpUsd == null || S.xrpAth == null) ? null
       : (r => ({ state: r >= 1 ? 'fallen' : r >= .75 ? 'tilting' : 'standing',
                  sub: Math.round(r * 100) + '% of ATH' }))(S.xrpUsd / S.xrpAth) },
@@ -889,10 +879,9 @@ function buildDominoes(){
     el.className = 'domino standing';
     el.title = d.label + ' — ' + d.note;
     el.innerHTML = '<div class="d-slot"><div class="d-tile"></div></div>'
-      + '<div class="d-label">' + d.label + '</div>'
-      + '<div class="d-sub">' + (d.sub || '—') + '</div>';
+      + '<div class="d-label">' + d.short + '</div>';
     D.dominoRow.appendChild(el);
-    dominoEls.push({ el, sub: el.querySelector('.d-sub'), cache: '' });
+    dominoEls.push({ el, cache: '' });
   });
   renderDominoes();
 }
@@ -902,14 +891,14 @@ function renderDominoes(){
   DOMINOES.forEach((d, i) => {
     const liveVal = d.live ? d.live(S) : null;
     const state = liveVal?.state ?? d.state ?? 'standing';
-    const sub   = liveVal?.sub   ?? d.sub   ?? '—';
+    const sub   = liveVal?.sub   ?? d.sub   ?? '';
     if (state === 'fallen') fallen++;
     const key = state + '|' + sub;
     const slot = dominoEls[i];
     if (slot.cache === key) return;          // skip untouched DOM
     slot.cache = key;
     slot.el.className = 'domino ' + state;
-    slot.sub.textContent = sub;
+    slot.el.title = d.label + (sub ? ' · ' + sub : '') + ' — ' + d.note;
   });
   D.dominoCount.textContent = fallen + '/' + DOMINOES.length;
   D.dominoFill.style.width = (fallen / DOMINOES.length * 100).toFixed(0) + '%';
