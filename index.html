@@ -130,7 +130,7 @@
     background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     background-size:128px; }
 
-  .dash { position:relative; z-index:3; display:grid; grid-template-rows:auto 1fr auto 1fr auto; height:100vh; padding:var(--sp-3) var(--sp-5) var(--sp-2); gap:0; }
+  .dash { position:relative; z-index:3; display:grid; grid-template-rows:auto auto auto 1fr auto; height:100vh; padding:var(--sp-3) var(--sp-5) var(--sp-2); gap:0; min-height:0; }
 
   .dash > * { opacity:0; animation:fade-in .5s ease forwards; }
   .dash > :nth-child(1) { animation-delay:0ms; }
@@ -180,7 +180,7 @@
 
   .hero { display:flex; align-items:stretch; justify-content:space-between; gap:var(--sp-6); padding:var(--sp-4) 0; flex-wrap:wrap; min-height:0; }
 
-  .hero-main { flex:1 1 360px; min-width:0; display:flex; flex-direction:column; justify-content:flex-end; }
+  .hero-main { flex:1 1 360px; min-width:0; display:flex; flex-direction:column; justify-content:flex-start; }
   .price-label { font-family:'Outfit',sans-serif; font-size:var(--fs-sm); font-weight:500; letter-spacing:clamp(2px,.35vw,4px); color:var(--text-dim); text-transform:uppercase; margin-bottom:var(--sp-2); }
   .price-line { display:flex; align-items:baseline; gap:var(--sp-4); }
   .price-big  { font-family:'Outfit',sans-serif; font-size:var(--fs-price); font-weight:800; line-height:.88; letter-spacing:-3px; color:var(--green);
@@ -256,46 +256,8 @@
   .stat-val.xrp { color:var(--green); }
   .stat-val.oil { color:var(--amber); }
 
-  /* ══════════ DOMINO TRACKER (corner cluster) ══════════
-     Lives in the hero's top-right, above BTC/USD · XRP/BTC.
-     Fallen tiles lie flat (green), tilting lean + teeter (amber),
-     standing wait upright (ghost). Live tiles fall on real data.
-     One-word labels read as the chain: OIL BOJ YEN REG ETF BANK RLUSD FED ATH. */
-  .dominoes { --d-slot-h: clamp(20px, 1.9vw, 30px);
-    display:flex; flex-direction:column; gap:var(--sp-2);
-    padding:var(--sp-2) var(--sp-3);
-    border:1px solid var(--border-hi); border-radius:var(--r-md);
-    background:rgba(8,11,20,.45); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.04); }
-  .domino-top { display:flex; align-items:baseline; justify-content:space-between; gap:var(--sp-3); }
-  .domino-title { font-family:'Outfit',sans-serif; font-size:var(--fs-micro); font-weight:700; letter-spacing:2.5px; text-transform:uppercase; color:var(--text-dim); white-space:nowrap; }
-  .domino-title em { font-style:normal; color:var(--green); }
-  .domino-count { font-family:'Outfit',sans-serif; font-size:var(--fs-xs); font-weight:700; color:var(--green); font-variant-numeric:tabular-nums; white-space:nowrap; }
-  .domino-count .dc-label { font-size:.72em; font-weight:500; color:var(--text-dim); letter-spacing:1.5px; margin-left:4px; text-transform:uppercase; }
-  .domino-row { position:relative; display:flex; justify-content:space-between; gap:var(--sp-1); min-width:0; }
-  .domino-track { position:absolute; left:1%; right:1%; top:var(--d-slot-h); height:2px; border-radius:2px; background:var(--border-hi); overflow:hidden; }
-  .domino-fill  { height:100%; width:0; border-radius:2px; background:linear-gradient(90deg, var(--green), var(--green-2)); box-shadow:0 0 8px var(--green-glow); transition:width .8s ease; }
-  .domino { display:flex; flex-direction:column; align-items:center; gap:3px; flex:1; min-width:0; }
-  .d-slot { height:var(--d-slot-h); display:flex; align-items:flex-end; justify-content:center; }
-  .d-tile { position:relative; width:clamp(10px,.9vw,15px); height:var(--d-slot-h); border-radius:2.5px;
-    border:1.5px solid var(--text-ghost); color:var(--text-ghost); background:rgba(255,255,255,.02);
-    transform-origin:bottom center;
-    transition:transform .9s cubic-bezier(.34,1.56,.64,1), background .4s ease, border-color .4s ease, box-shadow .4s ease, color .4s ease; }
-  .d-tile::after { content:''; position:absolute; left:18%; right:18%; top:50%; height:1px; background:currentColor; opacity:.55; }
-  .domino.fallen  .d-tile { background:var(--green); border-color:var(--green); color:rgba(4,6,11,.75);
-                            transform:rotate(76deg); box-shadow:0 0 12px var(--green-glow), 0 1px 3px rgba(0,0,0,.7); }
-  .domino.tilting .d-tile { border-color:var(--amber); color:var(--amber); background:rgba(240,176,48,.07);
-                            transform:rotate(14deg); box-shadow:0 0 9px rgba(240,176,48,.18);
-                            animation:domino-teeter 3.2s ease-in-out infinite; }
-  .domino.standing .d-tile { opacity:.75; }
-  @keyframes domino-teeter { 0%,100% { transform:rotate(11deg); } 50% { transform:rotate(17deg); } }
-  .d-label { font-family:'Outfit',sans-serif; font-size:clamp(6px,.55vw,9px); font-weight:600; letter-spacing:.8px;
-             text-transform:uppercase; text-align:center; line-height:1.1; color:var(--text-ghost); white-space:nowrap; }
-  .domino.fallen  .d-label { color:var(--green); opacity:.9; }
-  .domino.tilting .d-label { color:var(--amber); opacity:.9; }
   @media (prefers-reduced-motion: reduce) {
-    .d-tile, .domino-fill { transition:none; }
-    .domino.tilting .d-tile, .bg-orbs .orb, .brand-icon, .status-dot, .chart-label .live-dot { animation:none; }
+    .bg-orbs .orb, .brand-icon, .status-dot, .chart-label .live-dot { animation:none; }
   }
 
   .charts { display:grid; grid-template-columns:1fr; gap:var(--sp-3); margin-top:var(--sp-2); min-height:0; }
@@ -600,15 +562,6 @@
     </div>
 
     <div class="hero-aside">
-      <div class="dominoes" title="Claver domino chain — live tiles fall on real data">
-        <div class="domino-top">
-          <span class="domino-title"><em>Domino</em> Tracker</span>
-          <span class="domino-count"><span id="dominoCount">—</span><span class="dc-label">Down</span></span>
-        </div>
-        <div class="domino-row" id="dominoRow">
-          <div class="domino-track"><div class="domino-fill" id="dominoFill"></div></div>
-        </div>
-      </div>
       <div class="aside-row">
         <div class="aside-metric">
           <div class="aside-label">BTC / USD</div>
@@ -717,7 +670,6 @@ const D = {};
   'usdJpy','xrpJpy','brentUsd','brentJpy',
   'rangeLo','rangeHi','rangeDot','rangePos',
   'vol24','mcap','rlusdCap','xrpSats',
-  'dominoRow','dominoFill','dominoCount',
   'chartMain','chartJpy','jpyMini','xrpUsdtMini',
   // mobile
   'mClk','mDot','mLabel',
@@ -825,7 +777,6 @@ function render(){
     D.xrpAth.querySelector('.val').textContent = (dist >= 0 ? '+' : '') + dist.toFixed(1) + '%';
   }
   updateRange();
-  renderDominoes();
   renderMobile();
 }
 
@@ -840,77 +791,9 @@ function updateRange(){
   D.rangePos.textContent = Math.round(pos * 100) + '% of range';
 }
 
-// ══════════ DOMINO TRACKER ══════════
-// Claver chain in causal order. Two kinds of tiles:
-//   • hand-set  — edit `state` ('fallen'|'tilting'|'standing') + `sub` when news lands
-//   • live      — `live(S)` derives state from streaming data; these fall on their own
-// Thresholds are editable judgement calls, not gospel.
-// `short` is the on-screen label; `label`/`note`/`sub` feed the hover title.
-const DOMINOES = [
-  { id:'oil',   short:'Oil',   label:'Oil Shock', note:'Hormuz / supply shock pushes Brent into crisis territory',
-    live: S => S.brentUsd == null ? null
-      : { state: S.brentUsd >= 95 ? 'fallen' : S.brentUsd >= 80 ? 'tilting' : 'standing',
-          sub: '$' + S.brentUsd.toFixed(0) + ' / bbl' } },
-  { id:'boj',   short:'BoJ',   label:'BoJ Hikes', state:'tilting', sub:'0.75% · 30y high',
-    note:'BoJ at 0.75% (Dec 2025), highest in ~30 years; board members pushing for more' },
-  { id:'carry', short:'Yen',   label:'Carry Unwind', note:'Yen repatriation — sharp USD/JPY drop drains global liquidity',
-    live: S => S.usdJpy == null ? null
-      : { state: S.usdJpy <= 142 ? 'fallen' : S.usdJpy <= 150 ? 'tilting' : 'standing',
-          sub: '¥' + S.usdJpy.toFixed(1) } },
-  { id:'reg',   short:'Reg',   label:'Reg Clarity', state:'fallen', sub:'Commodity · Mar 26',
-    note:'SEC case closed Aug 2025; SEC/CFTC classified XRP a digital commodity Mar 2026' },
-  { id:'etf',   short:'ETF',   label:'Spot ETFs', state:'fallen', sub:'Live · Nov 25',
-    note:'US spot XRP ETFs trading since Nov 2025' },
-  { id:'bank',  short:'Bank',  label:'Bank Charter', state:'tilting', sub:'OCC cond. · Dec 25',
-    note:'OCC conditional approval Dec 2025; final trust-bank rule live Apr 1 2026; pre-opening conditions pending' },
-  { id:'rlusd', short:'RLUSD', label:'RLUSD $1B', note:'Regulated settlement dollar at institutional scale',
-    live: S => S.rlusdMcap == null ? null
-      : { state: S.rlusdMcap >= 1e9 ? 'fallen' : S.rlusdMcap >= 5e8 ? 'tilting' : 'standing',
-          sub: '$' + compact(S.rlusdMcap) + ' cap' } },
-  { id:'fed',   short:'Fed',   label:'Fed Master Acct', state:'standing', sub:'Applied',
-    note:'Direct Fed payment-rail access — application pending' },
-  { id:'ath',   short:'ATH',   label:'Repricing', note:'XRP breaks all-time high — the last domino',
-    live: S => (S.xrpUsd == null || S.xrpAth == null) ? null
-      : (r => ({ state: r >= 1 ? 'fallen' : r >= .75 ? 'tilting' : 'standing',
-                 sub: Math.round(r * 100) + '% of ATH' }))(S.xrpUsd / S.xrpAth) },
-];
-
-const dominoEls = [];
-function buildDominoes(){
-  if (IS_MOBILE || !D.dominoRow) return;
-  DOMINOES.forEach(d => {
-    const el = document.createElement('div');
-    el.className = 'domino standing';
-    el.title = d.label + ' — ' + d.note;
-    el.innerHTML = '<div class="d-slot"><div class="d-tile"></div></div>'
-      + '<div class="d-label">' + d.short + '</div>';
-    D.dominoRow.appendChild(el);
-    dominoEls.push({ el, cache: '' });
-  });
-  renderDominoes();
-}
-function renderDominoes(){
-  if (IS_MOBILE || !dominoEls.length) return;
-  let fallen = 0;
-  DOMINOES.forEach((d, i) => {
-    const liveVal = d.live ? d.live(S) : null;
-    const state = liveVal?.state ?? d.state ?? 'standing';
-    const sub   = liveVal?.sub   ?? d.sub   ?? '';
-    if (state === 'fallen') fallen++;
-    const key = state + '|' + sub;
-    const slot = dominoEls[i];
-    if (slot.cache === key) return;          // skip untouched DOM
-    slot.cache = key;
-    slot.el.className = 'domino ' + state;
-    slot.el.title = d.label + (sub ? ' · ' + sub : '') + ' — ' + d.note;
-  });
-  D.dominoCount.textContent = fallen + '/' + DOMINOES.length;
-  D.dominoFill.style.width = (fallen / DOMINOES.length * 100).toFixed(0) + '%';
-}
-buildDominoes();
-
+// ══════════ RLUSD MARKET CAP (stats bar) ══════════
 async function fetchRlusd(){
-  if (IS_MOBILE) return; // stats bar + dominoes are desktop-only
+  if (IS_MOBILE) return; // stats bar is desktop-only
   const d = await safeJson('https://api.coingecko.com/api/v3/simple/price?ids=ripple-usd&vs_currencies=usd&include_market_cap=true', 8000);
   const cap = d?.['ripple-usd']?.usd_market_cap;
   if (cap > 0) {
@@ -1019,7 +902,17 @@ async function acquireWakeLock(){
   } catch {}
 }
 acquireWakeLock();
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') acquireWakeLock(); });
+
+// On returning to the tab/app: re-arm the wake lock AND kick the socket awake.
+// Mobile suspends JS when backgrounded, so the WebSocket is usually dead-but-silent on
+// resume; without this we'd wait out the backoff timer — which is why it felt slower than
+// a manual refresh. `onResume` is wired up after the socket helpers are defined below.
+let onResume = () => acquireWakeLock();
+const fireResume = () => { if (document.visibilityState === 'visible') onResume(); };
+document.addEventListener('visibilitychange', fireResume);
+window.addEventListener('focus', fireResume);
+window.addEventListener('pageshow', fireResume);   // bfcache / app resume
+
 
 // ══════════ JPY / USD CARRY CHART — desktop only ══════════
 // History seeded from Yahoo Finance (JPY=X 5m); thereafter extended live from the
@@ -1354,32 +1247,56 @@ function handleWsMessage(evt){
 
 // Resilient socket: exponential backoff on drop + watchdog that forces a reconnect if the
 // stream goes silent (Binance occasionally stalls a connection without closing it).
-let wsBackoff = 2000, wsWatchdog = null, lastWsMsg = 0, currentWs = null;
+let wsBackoff = 1000, wsWatchdog = null, lastWsMsg = 0, currentWs = null, wsReconnectTimer = null;
+const WS_BACKOFF_MIN = 1000;
+const WS_BACKOFF_MAX = IS_MOBILE ? 8000 : 15000;
+const WS_SILENT_MS   = IS_MOBILE ? 10000 : 20000;   // phones stall faster; reconnect sooner
 const WS_STREAMS = IS_MOBILE
   ? 'xrpusdt@ticker/btcusdt@ticker/xrpbtc@ticker'
   : 'xrpusdt@ticker/xrpusdt@kline_3m/btcusdt@ticker/xrpbtc@ticker';
 
 function connectWs(){
+  clearTimeout(wsReconnectTimer);
   let ws;
   try { ws = new WebSocket('wss://stream.binance.com:9443/stream?streams=' + WS_STREAMS); }
   catch { scheduleReconnect(); return; }
   currentWs = ws;
 
-  ws.onopen = () => { wsBackoff = 2000; lastWsMsg = Date.now(); setConn(true); };
+  ws.onopen = () => { wsBackoff = WS_BACKOFF_MIN; lastWsMsg = Date.now(); setConn(true); };
   ws.onclose = () => { setConn(false); clearInterval(wsWatchdog); scheduleReconnect(); };
   ws.onerror = () => { try { ws.close(); } catch {} };
   ws.onmessage = evt => { lastWsMsg = Date.now(); handleWsMessage(evt); };
 
   clearInterval(wsWatchdog);
   wsWatchdog = setInterval(() => {
-    if (lastWsMsg && Date.now() - lastWsMsg > 20000) { try { ws.close(); } catch {} }
-  }, 5000);
+    if (lastWsMsg && Date.now() - lastWsMsg > WS_SILENT_MS) { try { ws.close(); } catch {} }
+  }, 3000);
 }
 function scheduleReconnect(){
-  setTimeout(connectWs, wsBackoff);
-  wsBackoff = Math.min(Math.round(wsBackoff * 1.8), 30000);
+  clearTimeout(wsReconnectTimer);
+  wsReconnectTimer = setTimeout(connectWs, wsBackoff);
+  wsBackoff = Math.min(Math.round(wsBackoff * 1.8), WS_BACKOFF_MAX);
+}
+// Tear down the current socket (without letting its onclose schedule a delayed retry) and
+// reconnect immediately. Used on app/tab resume so data returns as fast as a manual refresh.
+function forceReconnect(){
+  clearTimeout(wsReconnectTimer);
+  clearInterval(wsWatchdog);
+  wsBackoff = WS_BACKOFF_MIN;
+  if (currentWs) { try { currentWs.onclose = null; currentWs.onerror = null; currentWs.close(); } catch {} }
+  currentWs = null;
+  connectWs();
 }
 connectWs();
+
+// Now that the socket helpers exist, make resume actually reconnect. If the socket isn't
+// OPEN, or hasn't received a tick in the last few seconds (dead-but-silent after suspend),
+// reconnect right away instead of waiting out the backoff.
+onResume = () => {
+  acquireWakeLock();
+  const stale = !lastWsMsg || (Date.now() - lastWsMsg > 3000);
+  if (!currentWs || currentWs.readyState !== 1 || stale) forceReconnect();
+};
 
 const jobs = [
   [fetchFx,       CFG.POLL.fx],
