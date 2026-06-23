@@ -172,6 +172,19 @@
   .env-forecast { font-size:var(--fs-xs); color:var(--text-dim); font-weight:500; letter-spacing:.3px; }
   .env-forecast.rain { color:var(--amber); }
 
+  /* Hour-by-hour strip — next 8 hours, right-aligned under the temp/AQI row */
+  .hourly { display:flex; gap:var(--sp-2); justify-content:flex-end; flex-wrap:nowrap; margin-top:var(--sp-2); }
+  .hr-cell { display:flex; flex-direction:column; align-items:center; gap:2px;
+    min-width:clamp(42px,3.4vw,58px); padding:var(--sp-1) var(--sp-2); border-radius:var(--r-sm);
+    background:rgba(0,0,0,.30); border:1px solid rgba(255,255,255,.05);
+    backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); }
+  .hr-time { font-family:'Outfit',sans-serif; font-size:var(--fs-micro); font-weight:600; letter-spacing:.5px; color:var(--text-dim); font-variant-numeric:tabular-nums; }
+  .hr-icon { font-size:var(--fs-md); line-height:1; text-shadow:0 1px 2px rgba(0,0,0,.85); }
+  .hr-temp { font-family:'Outfit',sans-serif; font-size:var(--fs-sm); font-weight:700; letter-spacing:-.3px; color:var(--text); font-variant-numeric:tabular-nums; line-height:1; }
+  .hr-pop  { font-family:'Outfit',sans-serif; font-size:var(--fs-micro); font-weight:600; color:var(--text-ghost); font-variant-numeric:tabular-nums; line-height:1; }
+  .hr-pop.wet { color:var(--cyan); }
+  @media (max-width:900px) { .hourly { flex-wrap:wrap; justify-content:flex-start; } }
+
   .aqi { padding:var(--sp-1) var(--sp-3); border-radius:var(--r-md); display:inline-flex; align-items:center; gap:var(--sp-2); font-weight:700;
          border:1px solid rgba(255,255,255,.06); background-color:rgba(0,0,0,.35); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); }
   .aqi-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; box-shadow:0 0 0 1px rgba(0,0,0,.5); }
@@ -527,9 +540,8 @@
             <span class="aqi-level" id="aqiLevel">AQI</span>
           </div>
         </div>
-        <div class="env-sep"></div>
-        <div class="env-forecast" id="wxForecast">Loading…</div>
       </div>
+      <div class="hourly" id="hourly"></div>
     </div>
   </header>
 
@@ -662,7 +674,7 @@ const CFG = {
 const D = {};
 [
   'wsDot','wsLabel','clk','clkDate',
-  'wxIcon','wxTemp','wxHiLo','wxHum','wxForecast',
+  'wxIcon','wxTemp','wxHiLo','wxHum','hourly',
   'aqiBadge','aqiDot','aqiVal','aqiLevel',
   'xrpPrice','xrpChg','xrpAth',
   'portfolioVal','portfolioPnl',
@@ -751,7 +763,7 @@ async function trySources(key, sources){
 const STALE_MAP = {
   fx:      ['usdJpy','xrpJpy','mUsdJpy'],
   brent:   ['brentUsd','brentJpy','mBrentJpy'],
-  weather: ['wxIcon','wxTemp','wxHiLo','wxHum','wxForecast'],
+  weather: ['wxIcon','wxTemp','wxHiLo','wxHum','hourly'],
   aqi:     ['aqiBadge'],
   rlusd:   ['rlusdCap'],
 };
@@ -921,7 +933,7 @@ window.addEventListener('pageshow', fireResume);   // bfcache / app resume
 // the TV). Each refresh redraws from real intraday FX, so the line actually moves.
 async function refreshJpy(initial){
   if (IS_MOBILE || !window.areaJpy) return;
-  const url = 'https://query1.finance.yahoo.com/v8/finance/chart/JPY=X?interval=2m&range=1d&_=' + Date.now();
+  const url = 'https://query1.finance.yahoo.com/v8/finance/chart/JPY=X?interval=5m&range=1d&_=' + Date.now();
   const raw = await proxyHtml(url, 9000);
   if (!raw) return;
   let j; try { j = JSON.parse(raw); } catch { return; }
@@ -936,7 +948,9 @@ async function refreshJpy(initial){
   }
   if (pts.length < 2) return;
   window.areaJpy.setData(pts);
-  window.chartJpy.timeScale().fitContent();     // ambient panel — always frame the latest
+  // Frame the last ~6 hours (5m bars → 72 bars) pinned to the latest, with a little right pad.
+  const bars = pts.length, WANT = 72;
+  window.chartJpy.timeScale().setVisibleLogicalRange({ from: Math.max(0, bars - WANT), to: bars + 1 });
 
   const last = pts[pts.length - 1].value, base = pts[0].value;
   S.usdJpyPrev = S.usdJpy; S.usdJpy = last;      // Yahoo is the real-FX source of truth on desktop
@@ -1018,31 +1032,39 @@ const WMO_DESC  = {0:'Clear sky',1:'Mainly clear',2:'Partly cloudy',3:'Overcast'
 
 async function fetchWeather(){
   if (IS_MOBILE) return; // skip on mobile
-  const d = await safeJson(`https://api.open-meteo.com/v1/forecast?latitude=${CFG.LAT}&longitude=${CFG.LON}&current=temperature_2m,weather_code,relative_humidity_2m&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max&hourly=precipitation_probability,weather_code&timezone=Asia%2FBangkok&forecast_days=1`);
+  const d = await safeJson(`https://api.open-meteo.com/v1/forecast?latitude=${CFG.LAT}&longitude=${CFG.LON}&current=temperature_2m,weather_code,relative_humidity_2m&daily=temperature_2m_max,temperature_2m_min,weather_code&hourly=temperature_2m,precipitation_probability,weather_code&timezone=Asia%2FBangkok&forecast_days=2`);
   if (!d) return;
   const temp = Math.round(d.current.temperature_2m), code = d.current.weather_code;
   D.wxIcon.textContent = WMO_ICONS[code] || '🌡️';
   D.wxTemp.textContent = temp + '°C';
   if (d.current.relative_humidity_2m != null) D.wxHum.textContent = Math.round(d.current.relative_humidity_2m) + '%';
   if (d.daily) D.wxHiLo.textContent = 'H ' + Math.round(d.daily.temperature_2m_max[0]) + '° L ' + Math.round(d.daily.temperature_2m_min[0]) + '°';
-  if (d.hourly) {
-    const nowH = parseInt(new Date().toLocaleString('en-US', {hour:'numeric', hour12:false, timeZone: CFG.TZ}));
-    let rain = null;
-    for (let i = nowH; i < d.hourly.time.length; i++) {
-      if (d.hourly.precipitation_probability[i] > 40) {
-        rain = { time: d.hourly.time[i].split('T')[1], prob: d.hourly.precipitation_probability[i], desc: WMO_DESC[d.hourly.weather_code[i]] || 'Rain' };
-        break;
-      }
-    }
-    D.wxForecast.classList.toggle('rain', !!rain);
-    if (rain) D.wxForecast.textContent = '🌧️ ' + rain.desc + ' ~' + rain.time + ' (' + rain.prob + '%)';
-    else {
-      const desc = WMO_DESC[code] || '';
-      const rainMax = d.daily?.precipitation_probability_max?.[0];
-      D.wxForecast.textContent = desc + (rainMax > 20 ? ' · ' + rainMax + '% rain chance' : '');
-    }
-  }
+  if (d.hourly?.time) buildHourly(d.hourly);
   S.lastUpdate.weather = Date.now();
+}
+
+// Next 8 hours, hour-by-hour. Indexed off the current Bangkok hour so it's correct
+// regardless of the TV's own timezone (hourly[] starts at 00:00 ICT today; forecast_days=2
+// guarantees the window has data even late at night when it crosses midnight).
+function buildHourly(h){
+  if (IS_MOBILE || !D.hourly || !Array.isArray(h.time)) return;
+  const nowH = parseInt(new Date().toLocaleString('en-US', {hour:'numeric', hour12:false, timeZone: CFG.TZ})) % 24;
+  const start = nowH + 1;
+  let html = '';
+  for (let i = start; i < start + 8 && i < h.time.length; i++) {
+    const hh   = h.time[i].split('T')[1].slice(0, 5);
+    const icon = WMO_ICONS[h.weather_code[i]] || '🌡️';
+    const temp = Math.round(h.temperature_2m[i]);
+    const pop  = h.precipitation_probability?.[i] ?? 0;
+    const wet  = pop >= 40 ? ' wet' : '';
+    html += `<div class="hr-cell" title="${WMO_DESC[h.weather_code[i]] || ''}">`
+          +   `<div class="hr-time">${hh}</div>`
+          +   `<div class="hr-icon">${icon}</div>`
+          +   `<div class="hr-temp">${temp}°</div>`
+          +   `<div class="hr-pop${wet}">💧${pop}%</div>`
+          + `</div>`;
+  }
+  D.hourly.innerHTML = html;
 }
 
 function aqiStyle(aqi){
