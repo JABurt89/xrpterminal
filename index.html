@@ -402,18 +402,27 @@
     font-size:.30em; font-weight:500; color:var(--text-dim); letter-spacing:1.5px; margin-left:6px; vertical-align:.22em;
   }
 
-  .m-sub {
-    font-family:'Azeret Mono',monospace; font-variant-numeric:tabular-nums;
-    font-size:10px; letter-spacing:1.2px; color:var(--text-ghost); text-transform:uppercase;
-    min-height:13px;
+  /* compact 24H range bar under each price — mirrors the desktop range24 */
+  .m-range { display:flex; align-items:center; gap:8px; }
+  .m-range-cap {
+    font-family:'Outfit',sans-serif; font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1;
+    font-size:10px; font-weight:600; line-height:1; white-space:nowrap;
   }
-  .m-sub:empty { display:none; }
+  .m-range-cap.lo { color:var(--red-2); }
+  .m-range-cap.hi { color:var(--green-2); }
+  .m-range-track { position:relative; flex:1; height:5px; border-radius:99px;
+    background:linear-gradient(90deg, rgba(255,41,82,.28) 0%, rgba(240,176,48,.22) 50%, rgba(0,232,123,.30) 100%);
+    box-shadow:inset 0 1px 2px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.03); }
+  .m-range-dot { position:absolute; top:50%; left:50%; width:11px; height:11px; border-radius:50%;
+    background:var(--accent, var(--green)); transform:translate(-50%,-50%);
+    box-shadow:0 0 8px var(--accent-glow, transparent), 0 0 0 2px rgba(4,6,11,.85), 0 1px 3px rgba(0,0,0,.7);
+    transition:left var(--t-med); }
 
   /* per-card accents */
   #mXrpUsd  { --accent:var(--green); --accent-glow:var(--green-glow); }
   #mXrpBtc  { --accent:var(--green); --accent-glow:var(--green-glow); }
   #mUsdJpy  { --accent:var(--cyan);  --accent-glow:rgba(94,200,255,.20); }
-  #mBrentJpy{ --accent:var(--amber); --accent-glow:rgba(240,176,48,.20); }
+  #mBtcUsd  { --accent:var(--btc);   --accent-glow:rgba(255,165,48,.20); }
 
   /* tiny portrait fallback — still 2x2, just shorter */
   @media (orientation:portrait) {
@@ -429,6 +438,7 @@
     body.mobile .m-card { padding:10px 12px; border-radius:11px; }
     body.mobile .m-label { font-size:10px; }
     body.mobile .m-price { font-size:clamp(30px, 8.5vw, 64px); }
+    body.mobile .m-range-cap { font-size:9px; }
   }
 </style>
 </head>
@@ -472,7 +482,11 @@
       <div class="m-chg" id="mXrpUsdChg">·</div>
     </div>
     <div class="m-price" id="mXrpUsdVal">—<span class="unit">USD</span></div>
-    <div class="m-sub" id="mXrpUsdSub"></div>
+    <div class="m-range" id="mXrpUsdRange">
+      <span class="m-range-cap lo">—</span>
+      <div class="m-range-track"><div class="m-range-dot"></div></div>
+      <span class="m-range-cap hi">—</span>
+    </div>
   </div>
 
   <div class="m-card fl" id="mXrpBtc">
@@ -481,7 +495,11 @@
       <div class="m-chg" id="mXrpBtcChg">·</div>
     </div>
     <div class="m-price" id="mXrpBtcVal">—<span class="unit">SAT</span></div>
-    <div class="m-sub" id="mXrpBtcSub"></div>
+    <div class="m-range" id="mXrpBtcRange">
+      <span class="m-range-cap lo">—</span>
+      <div class="m-range-track"><div class="m-range-dot"></div></div>
+      <span class="m-range-cap hi">—</span>
+    </div>
   </div>
 
   <div class="m-card fl" id="mUsdJpy">
@@ -490,16 +508,24 @@
       <div class="m-chg" id="mUsdJpyChg">·</div>
     </div>
     <div class="m-price" id="mUsdJpyVal">—<span class="unit">JPY</span></div>
-    <div class="m-sub" id="mUsdJpySub"></div>
+    <div class="m-range" id="mUsdJpyRange">
+      <span class="m-range-cap lo">—</span>
+      <div class="m-range-track"><div class="m-range-dot"></div></div>
+      <span class="m-range-cap hi">—</span>
+    </div>
   </div>
 
-  <div class="m-card fl" id="mBrentJpy">
+  <div class="m-card fl" id="mBtcUsd">
     <div class="m-card-head">
-      <div class="m-label"><span class="dot"></span><span class="ticker">BRENT</span><span class="pair">/ JPY</span></div>
-      <div class="m-chg" id="mBrentJpyChg">·</div>
+      <div class="m-label"><span class="dot"></span><span class="ticker">BTC</span><span class="pair">/ USD</span></div>
+      <div class="m-chg" id="mBtcUsdChg">·</div>
     </div>
-    <div class="m-price" id="mBrentJpyVal">—<span class="unit">JPY</span></div>
-    <div class="m-sub" id="mBrentJpySub"></div>
+    <div class="m-price" id="mBtcUsdVal">—<span class="unit">USD</span></div>
+    <div class="m-range" id="mBtcUsdRange">
+      <span class="m-range-cap lo">—</span>
+      <div class="m-range-track"><div class="m-range-dot"></div></div>
+      <span class="m-range-cap hi">—</span>
+    </div>
   </div>
 </div>
 
@@ -686,17 +712,17 @@ const D = {};
   'chartMain','chartJpy','jpyMini','xrpUsdtMini',
   // mobile
   'mClk','mDot','mLabel',
-  'mXrpUsd','mXrpUsdVal','mXrpUsdChg','mXrpUsdSub',
-  'mXrpBtc','mXrpBtcVal','mXrpBtcChg','mXrpBtcSub',
-  'mUsdJpy','mUsdJpyVal','mUsdJpyChg','mUsdJpySub',
-  'mBrentJpy','mBrentJpyVal','mBrentJpyChg','mBrentJpySub',
+  'mXrpUsd','mXrpUsdVal','mXrpUsdChg','mXrpUsdRange',
+  'mXrpBtc','mXrpBtcVal','mXrpBtcChg','mXrpBtcRange',
+  'mUsdJpy','mUsdJpyVal','mUsdJpyChg','mUsdJpyRange',
+  'mBtcUsd','mBtcUsdVal','mBtcUsdChg','mBtcUsdRange',
 ].forEach(id => D[id] = document.getElementById(id));
 
 const S = {
   xrpUsd: null, xrpPrev: null, xrp24hPct: null,
-  btcUsd: null, btc24hPct: null,
-  xrpBtc: null, xrpBtcPrev: null, xrpBtc24hPct: null,
-  usdJpy: null, usdJpyPrev: null,
+  btcUsd: null, btcPrev: null, btc24hPct: null, btc24hHi: null, btc24hLo: null,
+  xrpBtc: null, xrpBtcPrev: null, xrpBtc24hPct: null, xrpBtc24hHi: null, xrpBtc24hLo: null,
+  usdJpy: null, usdJpyPrev: null, jpy24hHi: null, jpy24hLo: null,
   brentUsd: null, brentUsdPrev: null,   // JPY derived from brentUsd × usdJpy for internal consistency
   xrp24hHi: null, xrp24hLo: null,
   xrpSupply: 60.88e9,
@@ -763,7 +789,7 @@ async function trySources(key, sources){
 
 const STALE_MAP = {
   fx:      ['usdJpy','xrpJpy','mUsdJpy'],
-  brent:   ['brentUsd','brentJpy','mBrentJpy'],
+  brent:   ['brentUsd','brentJpy'],
   weather: ['wxIcon','wxTemp','wxHiLo','wxHum','hourly'],
   aqi:     ['aqiBadge'],
   rlusd:   ['rlusdCap'],
@@ -837,7 +863,7 @@ function setCardPct(card, chg, pct){            // crypto cards — 24h %
   const arrow = pct > 0 ? '▲' : pct < 0 ? '▼' : '·';
   chg.textContent = arrow + ' ' + (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
 }
-function setCardTick(card, chg, cur, prev){     // fx/commodity — direction since last refresh
+function setCardTick(card, chg, cur, prev){     // fx — direction since last refresh
   if (prev == null || cur === prev) {
     if (prev == null) { setCardState(card, chg, 'fl'); chg.textContent = '·'; }
     return;
@@ -846,35 +872,45 @@ function setCardTick(card, chg, cur, prev){     // fx/commodity — direction si
   setCardState(card, chg, cls);
   chg.textContent = cur > prev ? '▲' : '▼';
 }
+// Compact 24H range bar: caption low / accent dot / caption high
+function setRange(wrap, lo, hi, cur, dec){
+  if (!wrap || lo == null || hi == null || cur == null) return;
+  wrap.querySelector('.lo').textContent = num(lo, dec);
+  wrap.querySelector('.hi').textContent = num(hi, dec);
+  const span = hi - lo;
+  const pos = span > 0 ? Math.max(0, Math.min(1, (cur - lo) / span)) : .5;
+  wrap.querySelector('.m-range-dot').style.left = (pos * 100).toFixed(1) + '%';
+}
 function renderMobile(){
   if (!IS_MOBILE) return;
 
-  // XRP / USD — sub: 1M-token portfolio value (ambient)
+  // XRP / USD — range from Binance 24h ticker
   if (S.xrpUsd != null) {
     D.mXrpUsdVal.innerHTML = '$' + num(S.xrpUsd, 4) + '<span class="unit">USD</span>';
-    D.mXrpUsdSub.textContent = '1M XRP ≈ $' + compact(S.xrpUsd * 1e6);
     if (S.xrp24hPct != null) setCardPct(D.mXrpUsd, D.mXrpUsdChg, S.xrp24hPct);
+    setRange(D.mXrpUsdRange, S.xrp24hLo, S.xrp24hHi, S.xrpUsd, 4);
   }
 
-  // XRP / BTC — big = sats, sub = current BTC price in USD
+  // XRP / BTC — big = sats, range in sats
   if (S.xrpBtc != null) {
     D.mXrpBtcVal.innerHTML = Math.round(S.xrpBtc * 1e8).toLocaleString('en-US') + '<span class="unit">SAT</span>';
-    if (S.btcUsd != null) D.mXrpBtcSub.textContent = 'BTC $' + num(S.btcUsd, 0);
     if (S.xrpBtc24hPct != null) setCardPct(D.mXrpBtc, D.mXrpBtcChg, S.xrpBtc24hPct);
+    if (S.xrpBtc24hLo != null && S.xrpBtc24hHi != null)
+      setRange(D.mXrpBtcRange, S.xrpBtc24hLo * 1e8, S.xrpBtc24hHi * 1e8, S.xrpBtc * 1e8, 0);
   }
 
-  // USD / JPY — sub: inverse rate
+  // USD / JPY — range from Yahoo intraday (today's session)
   if (S.usdJpy != null) {
     D.mUsdJpyVal.innerHTML = '¥' + num(S.usdJpy, 2) + '<span class="unit">JPY</span>';
-    D.mUsdJpySub.textContent = '100¥ = $' + (100 / S.usdJpy).toFixed(2);
     setCardTick(D.mUsdJpy, D.mUsdJpyChg, S.usdJpy, S.usdJpyPrev);
+    setRange(D.mUsdJpyRange, S.jpy24hLo, S.jpy24hHi, S.usdJpy, 2);
   }
 
-  // Brent / JPY — derived from USD × FX; sub: USD per barrel
-  if (S.brentUsd != null && S.usdJpy != null) {
-    D.mBrentJpyVal.innerHTML = '¥' + num(S.brentUsd * S.usdJpy, 0) + '<span class="unit">JPY</span>';
-    D.mBrentJpySub.textContent = '$' + num(S.brentUsd, 2) + ' / bbl';
-    setCardTick(D.mBrentJpy, D.mBrentJpyChg, S.brentUsd, S.brentUsdPrev);
+  // BTC / USD — range from Binance 24h ticker
+  if (S.btcUsd != null) {
+    D.mBtcUsdVal.innerHTML = '$' + num(S.btcUsd, 0) + '<span class="unit">USD</span>';
+    if (S.btc24hPct != null) setCardPct(D.mBtcUsd, D.mBtcUsdChg, S.btc24hPct);
+    setRange(D.mBtcUsdRange, S.btc24hLo, S.btc24hHi, S.btcUsd, 0);
   }
 }
 
@@ -926,14 +962,16 @@ window.addEventListener('focus', fireResume);
 window.addEventListener('pageshow', fireResume);   // bfcache / app resume
 
 
-// ══════════ JPY / USD CARRY CHART — desktop only ══════════
+// ══════════ JPY / USD CARRY — desktop chart + shared FX/range source ══════════
 // Driven entirely by periodic Yahoo Finance refetches (JPY=X, 2m candles). The earlier
 // approach appended ticks from the CoinGecko FX poll, but that value is a near-static
 // reference rate, so the live tail flatlined. A cache-buster defeats the CORS proxy's
 // response cache (allorigins caches hard — that's why it moved in a browser but froze on
 // the TV). Each refresh redraws from real intraday FX, so the line actually moves.
+// On mobile this runs chartless: it just supplies USD/JPY last + session hi/lo for the
+// range bar on the USD/JPY card.
 async function refreshJpy(initial){
-  if (IS_MOBILE || !window.areaJpy) return;
+  if (!IS_MOBILE && !window.areaJpy) return;
   const url = 'https://query1.finance.yahoo.com/v8/finance/chart/JPY=X?interval=5m&range=1d&_=' + Date.now();
   const raw = await proxyHtml(url, 9000);
   if (!raw) return;
@@ -948,14 +986,22 @@ async function refreshJpy(initial){
     pts.push({ time: ts[i] + TZ_OFFSET, value: +v });
   }
   if (pts.length < 2) return;
-  window.areaJpy.setData(pts);
-  // Frame the last ~6 hours (5m bars → 72 bars) pinned to the latest, with a little right pad.
-  const bars = pts.length, WANT = 72;
-  window.chartJpy.timeScale().setVisibleLogicalRange({ from: Math.max(0, bars - WANT), to: bars + 1 });
+  if (window.areaJpy) {
+    window.areaJpy.setData(pts);
+    // Frame the last ~6 hours (5m bars → 72 bars) pinned to the latest, with a little right pad.
+    const bars = pts.length, WANT = 72;
+    window.chartJpy.timeScale().setVisibleLogicalRange({ from: Math.max(0, bars - WANT), to: bars + 1 });
+  }
+
+  // Session hi/lo for the mobile range bar (and anything else that wants it)
+  let hi = -Infinity, lo = Infinity;
+  for (const p of pts) { if (p.value > hi) hi = p.value; if (p.value < lo) lo = p.value; }
+  S.jpy24hHi = hi; S.jpy24hLo = lo;
 
   const last = pts[pts.length - 1].value, base = pts[0].value;
-  S.usdJpyPrev = S.usdJpy; S.usdJpy = last;      // Yahoo is the real-FX source of truth on desktop
+  S.usdJpyPrev = S.usdJpy; S.usdJpy = last;      // Yahoo is the real-FX source of truth
   S.lastUpdate.jpy = Date.now();
+  if (IS_MOBILE && S.usdJpyPrev != null && S.usdJpyPrev !== last) flash(D.mUsdJpyVal, last > S.usdJpyPrev ? 'up' : 'down');
   if (D.jpyMini) {
     const chg = base ? (last / base - 1) * 100 : 0;
     const cls = 's-' + stateClass(chg), sign = chg >= 0 ? '+' : '';
@@ -964,7 +1010,7 @@ async function refreshJpy(initial){
       + '<span class="chg ' + cls + '">' + sign + chg.toFixed(2) + '%</span>';
   }
   render();                                       // refresh USD/JPY, XRP/JPY, Brent/JPY stats
-  if (initial) console.log('✓ JPY chart loaded', pts.length, 'pts @ ¥' + last.toFixed(2));
+  if (initial) console.log('✓ JPY loaded', pts.length, 'pts @ ¥' + last.toFixed(2));
 }
 
 async function fetchFx(){
@@ -981,9 +1027,9 @@ async function fetchFx(){
     },
   ]);
   if (rate) {
-    // On desktop the Yahoo refresh owns USD/JPY; only fall back to this poll if Yahoo is
-    // stale or unavailable (and always on mobile, where the chart/Yahoo path is skipped).
-    const jpyFresh = !IS_MOBILE && S.lastUpdate.jpy && (Date.now() - S.lastUpdate.jpy < 180_000);
+    // The Yahoo refresh owns USD/JPY (desktop and mobile); only fall back to this poll
+    // when Yahoo is stale or unavailable.
+    const jpyFresh = S.lastUpdate.jpy && (Date.now() - S.lastUpdate.jpy < 180_000);
     if (!jpyFresh) {
       S.usdJpyPrev = S.usdJpy; S.usdJpy = rate;
       render();
@@ -994,6 +1040,7 @@ async function fetchFx(){
 }
 
 async function fetchBrent(){
+  if (IS_MOBILE) return; // Brent no longer shown on mobile
   // Source of truth is Brent/USD; JPY is derived (USD × FX) so both always agree.
   const usd = await trySources('brent', [
     // Yahoo Finance JSON via proxy — most reliable, no HTML scraping
@@ -1020,10 +1067,8 @@ async function fetchBrent(){
     },
   ]);
   if (usd != null) {
-    const changed = S.brentUsd != null && S.brentUsd !== usd;
     S.brentUsdPrev = S.brentUsd; S.brentUsd = usd;
     render();
-    if (IS_MOBILE && changed) flash(D.mBrentJpyVal, usd > S.brentUsdPrev ? 'up' : 'down');
     console.log('✓ Brent USD', usd.toFixed(2), '| JPY', S.usdJpy ? (usd * S.usdJpy).toFixed(0) : '—');
   }
 }
@@ -1242,13 +1287,18 @@ function handleWsMessage(evt){
     applyKline('main', {candles: candleMain, volumes: volMain}, d.k, 'rgba(0,232,123,.16)', 'rgba(255,41,82,.16)');
   }
   else if (s === 'btcusdt@ticker') {
-    S.btcUsd = +d.c; S.btc24hPct = +d.P;
+    S.btcPrev = S.btcUsd; S.btcUsd = +d.c; S.btc24hPct = +d.P;
+    S.btc24hHi = +d.h; S.btc24hLo = +d.l;
     D.btcPrice.textContent = '$' + num(S.btcUsd, 0);
     updateAsideChange(D.btcChg, S.btc24hPct);
-    if (IS_MOBILE) renderMobile();
+    if (IS_MOBILE) {
+      if (S.btcPrev != null && S.btcPrev !== S.btcUsd) flash(D.mBtcUsdVal, S.btcUsd > S.btcPrev ? 'up' : 'down');
+      renderMobile();
+    }
   }
   else if (s === 'xrpbtc@ticker') {
     S.xrpBtcPrev = S.xrpBtc; S.xrpBtc = +d.c; S.xrpBtc24hPct = +d.P;
+    S.xrpBtc24hHi = +d.h; S.xrpBtc24hLo = +d.l;
     D.xrpBtcPrice.textContent = num(S.xrpBtc, 8);
     updateAsideChange(D.xrpBtcChg, S.xrpBtc24hPct);
     if (!IS_MOBILE) {
