@@ -6,7 +6,10 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>XRP Terminal</title>
+<meta name="theme-color" content="#04060b">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%2304060b'/><path d='M8 9 L16 17 L24 9 M8 23 L16 15 L24 23' stroke='%2300e87b' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Azeret+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script>
 // Multi-CDN loader for lightweight-charts — tries jsdelivr → unpkg → cdnjs
@@ -81,7 +84,7 @@
   *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
   html { background:var(--bg); }
   body { height:100%; overflow:hidden; color:var(--text); font-family:'Azeret Mono', ui-monospace, monospace; background:transparent;
-         text-shadow: var(--txt-shadow); }
+         text-shadow: var(--txt-shadow); touch-action:manipulation; overscroll-behavior:none; }
   body.idle { cursor:none; }
 
   canvas { text-shadow:none; }
@@ -418,6 +421,22 @@
     box-shadow:0 0 8px var(--accent-glow, transparent), 0 0 0 2px rgba(4,6,11,.85), 0 1px 3px rgba(0,0,0,.7);
     transition:left var(--t-med); }
 
+  /* FX market-hours badge — shared by desktop JPY panel + mobile USD/JPY card */
+  .fx-badge { display:inline-flex; align-items:center; gap:5px; padding:3px 8px; border-radius:5px;
+    font-family:'Outfit',sans-serif; font-size:clamp(8px,.8vw,11px); font-weight:700; letter-spacing:1px;
+    text-transform:uppercase; font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1;
+    line-height:1; white-space:nowrap; }
+  .fx-badge:empty { display:none; }
+  .fx-badge .fdot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+  .fx-badge.open   { background:var(--green-bg); color:var(--green); }
+  .fx-badge.open .fdot { background:var(--green); box-shadow:0 0 6px var(--green); }
+  .fx-badge.soon   { background:rgba(240,176,48,.14); color:var(--amber); }
+  .fx-badge.soon .fdot { background:var(--amber); box-shadow:0 0 6px var(--amber); }
+  .fx-badge.closed { background:var(--red-bg); color:var(--red-2); }
+  .fx-badge.closed .fdot { background:var(--red); }
+  .m-head-right { display:flex; align-items:center; gap:6px; }
+  body.mobile .fx-badge { font-size:10px; }
+
   /* per-card accents */
   #mXrpUsd  { --accent:var(--green); --accent-glow:var(--green-glow); }
   #mXrpBtc  { --accent:var(--green); --accent-glow:var(--green-glow); }
@@ -505,7 +524,7 @@
   <div class="m-card fl" id="mUsdJpy">
     <div class="m-card-head">
       <div class="m-label"><span class="dot"></span><span class="ticker">USD</span><span class="pair">/ JPY</span></div>
-      <div class="m-chg" id="mUsdJpyChg">·</div>
+      <div class="m-head-right"><span class="fx-badge" id="mFx"></span><div class="m-chg" id="mUsdJpyChg">·</div></div>
     </div>
     <div class="m-price" id="mUsdJpyVal">—<span class="unit">JPY</span></div>
     <div class="m-range" id="mUsdJpyRange">
@@ -619,7 +638,7 @@
       </div>
       <div class="chart-panel jpy-panel">
         <div class="chart-header">
-          <div class="chart-label"><span class="live-dot"></span>USD / <em class="jpy-em">JPY</em> · CARRY</div>
+          <div class="chart-label"><span class="live-dot"></span>USD / <em class="jpy-em">JPY</em> · CARRY<span class="fx-badge" id="fxDesk"></span></div>
           <div class="aside-price-small" id="jpyMini">—</div>
         </div>
         <div class="chart-canvas" id="chartJpy"></div>
@@ -709,7 +728,7 @@ const D = {};
   'usdJpy','xrpJpy','brentUsd','brentJpy',
   'rangeLo','rangeHi','rangeDot','rangePos',
   'vol24','mcap','rlusdCap','xrpSats',
-  'chartMain','chartJpy','jpyMini','xrpUsdtMini',
+  'chartMain','chartJpy','jpyMini','xrpUsdtMini','fxDesk','mFx',
   // mobile
   'mClk','mDot','mLabel',
   'mXrpUsd','mXrpUsdVal','mXrpUsdChg','mXrpUsdRange',
@@ -851,6 +870,41 @@ function flash(el, dir){
   el.classList.add(cls);
   setTimeout(() => el.classList.remove(cls), 400);
 }
+
+// ══════════ FX MARKET HOURS — 24/5: Sun 17:00 → Fri 17:00 New York ══════════
+// Computed in America/New_York via Intl so US DST is handled for free.
+const NY_FMT = new Intl.DateTimeFormat('en-US', {timeZone:'America/New_York', weekday:'short', hour:'2-digit', minute:'2-digit', second:'2-digit', hourCycle:'h23'});
+const NY_DOW = {Sun:0, Mon:1, Tue:2, Wed:3, Thu:4, Fri:5, Sat:6};
+const FX_OPEN_SEC  = 17 * 3600;               // Sunday 17:00 NY
+const FX_CLOSE_SEC = 5 * 86400 + 17 * 3600;   // Friday 17:00 NY
+const WEEK_SEC = 7 * 86400;
+let fxOpenNow = true;
+
+function fxState(){
+  const p = {};
+  NY_FMT.formatToParts(new Date()).forEach(x => p[x.type] = x.value);
+  const t = NY_DOW[p.weekday] * 86400 + (+p.hour) * 3600 + (+p.minute) * 60 + (+p.second);
+  if (t >= FX_OPEN_SEC && t < FX_CLOSE_SEC) {
+    const toClose = FX_CLOSE_SEC - t;
+    return { st: toClose <= 2 * 3600 ? 'soon' : 'open', sec: toClose };
+  }
+  return { st: 'closed', sec: t < FX_OPEN_SEC ? FX_OPEN_SEC - t : WEEK_SEC - t + FX_OPEN_SEC };
+}
+const pad2 = n => String(n).padStart(2, '0');
+const fmtDur = s => Math.floor(s / 3600) + ':' + pad2(Math.floor(s % 3600 / 60)) + ':' + pad2(s % 60);
+
+function updateFx(){
+  const f = fxState();
+  fxOpenNow = f.st !== 'closed';
+  const html = '<span class="fdot"></span>' +
+    (f.st === 'open' ? 'FX OPEN' : f.st === 'soon' ? 'CLOSES ' + fmtDur(f.sec) : 'OPENS ' + fmtDur(f.sec));
+  [D.fxDesk, D.mFx].forEach(el => {
+    if (!el) return;
+    el.className = 'fx-badge ' + f.st;
+    el.innerHTML = html;
+  });
+}
+updateFx();
 
 // ══════════ MOBILE RENDER ══════════
 function setCardState(card, chg, cls){
