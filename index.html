@@ -833,7 +833,7 @@
       </div>
       <div class="chart-panel jpy-panel">
         <div class="chart-header">
-          <div class="chart-label"><span class="live-dot"></span>USD / <em class="jpy-em">JPY</em> · CARRY<span class="fx-badge" id="fxDesk"></span></div>
+          <div class="chart-label"><span class="live-dot"></span>USD / <em class="jpy-em">JPY</em> · <span id="jpyInterval">FX</span><span class="fx-badge" id="fxDesk"></span></div>
           <div class="aside-price-small" id="jpyMini">—</div>
         </div>
         <div class="chart-canvas" id="chartJpy"></div>
@@ -974,7 +974,8 @@ async function requestBody(url, timeout, mode){
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeout);
     try {
-      const response = await fetch(url, {signal:controller.signal, cache:'no-store'});
+      const immutable = /currency-api@\d{4}-\d{2}-\d{2}\//.test(url) || /^https:\/\/\d{4}-\d{2}-\d{2}\.currency-api\.pages\.dev\//.test(url);
+      const response = await fetch(url, {signal:controller.signal, cache:immutable?'force-cache':'no-store'});
       if (!response.ok) throw new Error('HTTP ' + response.status);
       return await response[mode]();
     } catch (error) { return null; }
@@ -984,13 +985,6 @@ async function requestBody(url, timeout, mode){
   try { return await task; } finally { pendingRequests.delete(key); }
 }
 const safeJson = (url, timeout = 7000) => requestBody(url, timeout, 'json');
-async function proxyHtml(url, timeout = 6000){
-  const direct = await requestBody(url, timeout, 'text');
-  if (direct) { try { if (JSON.parse(direct)?.chart?.result?.[0]) return direct; } catch {} }
-  const ao = await safeJson(CFG.PROXY_AO + encodeURIComponent(url), timeout);
-  if (ao?.contents) { try { if (JSON.parse(ao.contents)?.chart?.result?.[0]) return ao.contents; } catch {} }
-  return requestBody(CFG.PROXY_CP + encodeURIComponent(url), timeout, 'text');
-}
 function readCache(key, maxAge = 7 * 86400000){
   try {
     const item = JSON.parse(localStorage.getItem('xrp-terminal-v2:' + key));
@@ -1019,18 +1013,6 @@ async function marketJson(path, valid){
   }
   return null;
 }
-async function yahooChart(symbol){
-  if (await backendReady) {
-    const result = await safeJson('/api/yahoo?symbol=' + encodeURIComponent(symbol), 18000);
-    if (result?.chart?.result?.[0]) return result.chart.result[0];
-    return null; // The server already tried both hosts. Avoid a proxy request storm.
-  }
-  for (const host of ['query1', 'query2']) {
-    const raw = await proxyHtml('https://' + host + '.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(symbol) + '?interval=5m&range=5d');
-    try { const result = JSON.parse(raw)?.chart?.result?.[0]; if (result) return result; } catch {}
-  }
-  return null;
-}
 function chartStatus(id, message){
   if (IS_MOBILE) return;
   const target = D[id];
@@ -1044,17 +1026,6 @@ function chartStatus(id, message){
   }
   badge.textContent = message; badge.hidden = !message;
 }
-function extractPrice(html, patterns){
-  for (const p of patterns) {
-    const m = html.match(p);
-    if (m) {
-      const v = parseFloat(m[1].replace(/,/g,''));
-      if (!isNaN(v) && v > 0) return v;
-    }
-  }
-  return null;
-}
-
 async function trySources(key, sources){
   for (const src of sources) {
     try {
@@ -1075,7 +1046,9 @@ const STALE_MAP = {
 function refreshStaleness(){
   const now = Date.now();
   for (const [key, ids] of Object.entries(STALE_MAP)) {
-    const stale = !S.lastUpdate[key] || (now - S.lastUpdate[key]) > CFG.STALE[key];
+    const macro = key === 'fx' ? macroState.jpy : key === 'brent' ? macroState.brent : null;
+    const threshold = macro && ['daily','spot-daily'].includes(macro.kind) ? 14*DAY_MS : CFG.STALE[key];
+    const stale = !S.lastUpdate[key] || (now - S.lastUpdate[key]) > threshold;
     ids.forEach(id => D[id] && D[id].classList.toggle('stale', stale));
   }
 }
@@ -1276,112 +1249,181 @@ window.addEventListener('focus', fireResume);
 window.addEventListener('pageshow', fireResume);   // bfcache / app resume
 
 
-// ══════════ JPY / USD CARRY — desktop chart + shared FX/range source ══════════
-// Driven entirely by periodic Yahoo Finance refetches (JPY=X, 2m candles). The earlier
-// approach appended ticks from the CoinGecko FX poll, but that value is a near-static
-// reference rate, so the live tail flatlined. A cache-buster defeats the CORS proxy's
-// response cache (allorigins caches hard — that's why it moved in a browser but froze on
-// the TV). Each refresh redraws from real intraday FX, so the line actually moves.
-// On mobile this runs chartless: it just supplies USD/JPY last + session hi/lo for the
-// range bar on the USD/JPY card.
-async function refreshJpy(initial){
-
-  let r = await yahooChart('JPY=X');
-  const cached = !r && readCache('jpy');
-  if (!r && cached) r = cached.value;
-  if (!r) { chartStatus('chartJpy', 'FX data unavailable. Retrying.'); return; }
-  const ts = r?.timestamp, cl = r?.indicators?.quote?.[0]?.close;
-  if (!Array.isArray(ts) || !Array.isArray(cl)) return;
-  const pts = [];
-  for (let i = 0; i < ts.length; i++) {
-    const v = cl[i];
-    if (v == null || !(v > 50 && v < 400)) continue;
-    if (Number.isFinite(+ts[i])) pts.push({ time: +ts[i] + TZ_OFFSET, value: +v });
-  }
-  const latestTime = Math.max(...pts.map(p => p.time));
-  const unique = [...new Map(pts.filter(p => p.time >= latestTime-86400).map(p => [p.time, p])).values()].sort((a,b) => a.time-b.time);
-  pts.splice(0, pts.length, ...unique);
-  if (pts.length < 2) { chartStatus('chartJpy', 'FX data unavailable. Retrying.'); return; }
-  if (!cached) writeCache('jpy', r);
-  const quoteAt = (Number(r.meta?.regularMarketTime) || pts[pts.length-1].time - TZ_OFFSET) * 1000;
-  chartStatus('chartJpy', (cached ? 'Saved data · ' : 'Last quote · ') + new Date(quoteAt).toLocaleString('en-GB', {timeZone:CFG.TZ}) + ' ICT');
-  if (window.areaJpy) {
-    window.areaJpy.setData(pts);
-    // Frame the last ~6 hours (5m bars → 72 bars) pinned to the latest, with a little right pad.
-    const bars = pts.length, WANT = 72;
-    if (!window.__jpyFramed) { window.chartJpy.timeScale().setVisibleLogicalRange({ from: Math.max(0, bars - WANT), to: bars + 1 }); window.__jpyFramed = true; }
-  }
-
-  // Session hi/lo for the mobile range bar (and anything else that wants it)
-  let hi = -Infinity, lo = Infinity;
-  for (const p of pts) { if (p.value > hi) hi = p.value; if (p.value < lo) lo = p.value; }
-  S.jpy24hHi = hi; S.jpy24hLo = lo;
-
-  const last = pts[pts.length - 1].value, base = pts[0].value;
-  S.usdJpyPrev = S.usdJpy; S.usdJpy = last;      // Yahoo is the real-FX source of truth
-  S.lastUpdate.jpy = cached ? cached.at : Date.now();
-  S.lastUpdate.fx = S.lastUpdate.jpy;
-  if (IS_MOBILE && S.usdJpyPrev != null && S.usdJpyPrev !== last) flash(D.mUsdJpyVal, last > S.usdJpyPrev ? 'up' : 'down');
-  if (D.jpyMini) {
-    const chg = base ? (last / base - 1) * 100 : 0;
-    const cls = 's-' + stateClass(chg), sign = chg >= 0 ? '+' : '';
-    D.jpyMini.innerHTML = '¥' + num(last, 2)
-      + '<span class="unit">JPY</span>'
-      + '<span class="chg ' + cls + '">' + sign + chg.toFixed(2) + '%</span>';
-  }
-  render();                                       // refresh USD/JPY, XRP/JPY, Brent/JPY stats
-  if (initial) console.log('✓ JPY loaded', pts.length, 'pts @ ¥' + last.toFixed(2));
+// Independent providers. Each response retains its instrument, frequency and quote date.
+const macroState = {jpy:null, brent:null};
+const providerMemory = new Map(), providerRetry = new Map();
+const DAY_MS = 86400000;
+const EIA_URL = 'https://api.eia.gov/v2/petroleum/pri/spt/data/?' + new URLSearchParams({
+  api_key:'DEMO_KEY', frequency:'daily', 'data[0]':'value', 'facets[series][]':'RBRTE',
+  'sort[0][column]':'period','sort[0][direction]':'desc',length:'10'
+});
+function numeric(v){ return (typeof v === 'number' || typeof v === 'string' && v.trim() !== '') && Number.isFinite(Number(v)); }
+function dayTime(day){
+  if (typeof day !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(day)) return NaN;
+  const ms = Date.parse(day+'T00:00:00Z');
+  return Number.isFinite(ms) && new Date(ms).toISOString().slice(0,10) === day ? ms/1000 : NaN;
 }
-
-async function fetchFx(){
-  const rate = await trySources('fx', [
-    async () => {
-      const d = await safeJson('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,jpy', 8000);
-      if (!d?.bitcoin?.usd || !d?.bitcoin?.jpy) return null;
-      const r = d.bitcoin.jpy / d.bitcoin.usd;
-      return (Number.isFinite(r) && r > 0) ? r : null;
-    },
-    async () => {
-      const d = await safeJson('https://api.exchangerate-api.com/v4/latest/USD', 6000);
-      return Number.isFinite(d?.rates?.JPY) && d.rates.JPY > 0 ? d.rates.JPY : null;
-    },
-  ]);
-  if (rate) {
-    // The Yahoo refresh owns USD/JPY (desktop and mobile); only fall back to this poll
-    // when Yahoo is stale or unavailable.
-    const jpyFresh = S.lastUpdate.jpy && (Date.now() - S.lastUpdate.jpy < 180_000);
-    if (!jpyFresh) {
-      S.usdJpyPrev = S.usdJpy; S.usdJpy = rate;
-      render();
-      if (IS_MOBILE && S.usdJpyPrev != null && S.usdJpyPrev !== rate) flash(D.mUsdJpyVal, rate > S.usdJpyPrev ? 'up' : 'down');
+function validMacro(r, asset){
+  if (!['jpy','brent'].includes(asset) || !r || r.asset !== asset || !Number.isFinite(r.price) || r.price <= 0 ||
+      !Number.isFinite(r.asOf) || r.asOf <= 0 || r.asOf*1000 > Date.now()+60000 ||
+      Date.now()-r.asOf*1000 > 14*DAY_MS || !Number.isFinite(r.fetchedAt) ||
+      r.fetchedAt > Date.now()+60000 || typeof r.source !== 'string') return false;
+  if (asset === 'brent') return r.unit === 'USD/barrel' && ['futures','spot-daily'].includes(r.kind);
+  return r.unit === 'JPY/USD' && ['intraday','daily'].includes(r.kind) && Array.isArray(r.points) &&
+    r.points.length >= 2 && r.points.every((p,i) => Number.isFinite(p.time) && p.time > 0 && p.time <= r.asOf &&
+      Number.isFinite(p.value) && p.value > 0 && (!i || r.points[i-1].time < p.time)) &&
+    r.asOf === r.points[r.points.length-1].time && r.price === r.points[r.points.length-1].value;
+}
+function uniquePoints(points){
+  return [...new Map(points.filter(p => numeric(p.time) && numeric(p.value) && +p.time>0 && +p.value>0 && +p.time*1000<=Date.now()+60000)
+    .map(p=>[+p.time,{time:+p.time,value:+p.value}])).values()].sort((a,b)=>a.time-b.time).slice(-2000);
+}
+function yahooRecord(json, asset){
+  const r=json?.chart?.result?.[0], meta=r?.meta;
+  if (!meta || meta.symbol !== (asset==='jpy'?'JPY=X':'BZ=F')) return null;
+  if (asset==='brent') return {asset,source:'Yahoo Finance',instrument:'BZ=F',kind:'futures',unit:'USD/barrel',price:Number(meta.regularMarketPrice),asOf:Number(meta.regularMarketTime),fetchedAt:Date.now()};
+  let points=uniquePoints((r.timestamp || []).map((time,i)=>({time,value:r.indicators?.quote?.[0]?.close?.[i]})));
+  if (points.length<2) return null;
+  const last=points[points.length-1]; points=points.filter(p=>p.time>=last.time-86400);
+  return {asset,source:'Yahoo Finance',instrument:'USD/JPY',kind:'intraday',unit:'JPY/USD',price:last.value,asOf:last.time,points,fetchedAt:Date.now()};
+}
+function frankfurterRecord(json){
+  if (json?.base !== 'USD' || !json.rates) return null;
+  const points=uniquePoints(Object.entries(json.rates).map(([day,r])=>({time:dayTime(day),value:r?.JPY})));
+  if (points.length<2) return null;
+  const last=points[points.length-1];
+  return {asset:'jpy',source:'Frankfurter / ECB',instrument:'USD/JPY',kind:'daily',unit:'JPY/USD',price:last.value,asOf:last.time,points,fetchedAt:Date.now()};
+}
+function eiaRecord(json){
+  const points=uniquePoints((json?.response?.data || []).filter(r=>r.series==='RBRTE' && r.product==='EPCBRENT' &&
+    (r.units==='$/BBL' || r.units==='Dollars per Barrel')).map(r=>({time:dayTime(r.period),value:r.value})));
+  if (!points.length) return null;
+  const last=points[points.length-1];
+  return {asset:'brent',source:'EIA',instrument:'Europe Brent spot',kind:'spot-daily',unit:'USD/barrel',price:last.value,asOf:last.time,fetchedAt:Date.now()};
+}
+async function currencyHistory(){
+  const cached=providerMemory.get('currency-history') || readCache('provider3:currency-history',14*DAY_MS)?.value;
+  if(validMacro(cached,'jpy') && Date.now()-cached.fetchedAt<6*3600000)return cached;
+  if(Date.now()<(providerRetry.get('currency-history')||0))return validMacro(cached,'jpy')?cached:null;
+  const received=[];
+  const today=new Date();
+  const days=Array.from({length:7},(_,i)=>new Date(Date.UTC(today.getUTCFullYear(),today.getUTCMonth(),today.getUTCDate()-1-i)).toISOString().slice(0,10));
+  let result=null;
+  await Promise.allSettled(days.map(async day=>{
+    const saved=readCache('fx-day3:'+day,30*DAY_MS)?.value;
+    let payload=saved;
+    const valid=d=>d?.date===day && numeric(d?.usd?.jpy) && +d.usd.jpy>0;
+    if(!valid(payload)){
+      payload=await safeJson('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@'+day+'/v1/currencies/usd.json',18000);
+      if(!valid(payload))payload=await safeJson('https://'+day+'.currency-api.pages.dev/v1/currencies/usd.json',10000);
+      if(!valid(payload))return;
+      writeCache('fx-day3:'+day,{date:payload.date,usd:{jpy:+payload.usd.jpy}});
     }
-    console.log('✓ USD/JPY', rate.toFixed(2));
-  }
+    received.push({time:dayTime(day),value:+payload.usd.jpy});
+    const points=uniquePoints(received);
+    if(points.length>=2){
+      const last=points[points.length-1];
+      result={asset:'jpy',source:'Currency API',instrument:'USD/JPY',unit:'JPY/USD',kind:'daily',price:last.value,asOf:last.time,points,fetchedAt:Date.now()};
+      acceptMacro(result);
+    }
+  }));
+  if(result){providerMemory.set('currency-history',result);writeCache('provider3:currency-history',result,result.fetchedAt);}
+  else providerRetry.set('currency-history',Date.now()+300000);
+  return result;
 }
 
-async function fetchBrent(){
-  if (IS_MOBILE) return;
-  const r = await yahooChart('BZ=F');
-  const price = r?.meta?.regularMarketPrice, quoteTime = r?.meta?.regularMarketTime;
-  const valid = Number.isFinite(price) && price > 0 && Number.isFinite(quoteTime) && quoteTime > 0;
-  const cached = valid ? null : readCache('brent');
-  const quote = valid ? {price, quoteTime} : cached?.value;
-  if (!quote || !Number.isFinite(quote.price) || !(quote.price > 0) || !Number.isFinite(quote.quoteTime)) {
-    D.brentUsd.textContent = 'Unavailable'; D.brentJpy.textContent = 'Unavailable';
-    D.brentUsd.title = 'Brent futures feed unavailable. Automatic retry is enabled.';
-    return;
-  }
-  if (valid) writeCache('brent', quote);
-  S.brentUsdPrev = S.brentUsd; S.brentUsd = quote.price;
-  S.lastUpdate.brent = valid ? Date.now() : cached.at;
-  render();
-  const age = Date.now() - quote.quoteTime * 1000;
-  const label = cached ? 'Saved' : age > 20 * 60000 ? 'Delayed / market closed' : 'Latest';
-  let status = document.getElementById('brentStatus');
-  if (!status) { status = document.createElement('small'); status.id = 'brentStatus'; status.style.cssText = 'font-size:9px;color:#98a3c0'; D.brentUsd.parentElement.appendChild(status); }
-  status.textContent = label + ' · ' + new Date(quote.quoteTime * 1000).toLocaleString('en-GB', {timeZone:CFG.TZ,month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) + ' ICT';
-  D.brentUsd.title = D.brentJpy.title = 'Brent futures (BZ=F), USD per barrel. ' + status.textContent;
+function preferMacro(next, previous){
+  if (!previous || !validMacro(previous,next.asset)) return true;
+  // Do not prefer an old intraday record over a much newer daily observation.
+  if (Math.abs(next.asOf-previous.asOf)>2*86400) return next.asOf>previous.asOf;
+  const rank=r=>['intraday','futures'].includes(r.kind)?2:1;
+  if (rank(next)!==rank(previous)) return rank(next)>rank(previous);
+  if (next.asOf!==previous.asOf) return next.asOf>previous.asOf;
+  if(next.source!==previous.source && (next.source==='Currency API'||previous.source==='Currency API')) return previous.source==='Currency API';
+  return next.fetchedAt>=previous.fetchedAt;
 }
+async function providerRecord(id,asset,url,parse,ttl){
+  let cached=providerMemory.get(id) || readCache('provider3:'+id,14*DAY_MS)?.value;
+  if (!validMacro(cached,asset)) cached=null;
+  if (cached && Date.now()-cached.fetchedAt < ttl) return cached;
+  if (Date.now() < (providerRetry.get(id)||0)) return cached ? {...cached,saved:true} : null;
+  try {
+    const r=parse(await safeJson(url,12000));
+    if (!validMacro(r,asset)) throw new Error('Invalid '+id+' response');
+    providerMemory.set(id,r); writeCache('provider3:'+id,r,r.fetchedAt); providerRetry.delete(id);
+    return r;
+  } catch {
+    providerRetry.set(id,Date.now()+(id==='eia'?1800000:120000));
+    return cached ? {...cached,saved:true} : null;
+  }
+}
+function acceptMacro(record){
+  if (!validMacro(record,record?.asset) || !preferMacro(record,macroState[record.asset])) return;
+  macroState[record.asset]=record;
+  writeCache('macro3:'+record.asset,record,record.fetchedAt);
+  if (record.asset==='jpy') paintJpy(record); else paintBrent(record);
+}
+async function refreshMacro(asset){
+  const old=macroState[asset] || readCache('macro3:'+asset,14*DAY_MS)?.value;
+  if (validMacro(old,asset)) acceptMacro({...old,saved:true});
+  // The server is optional. Its failure must never disable independent browser feeds.
+  if (await backendReady) {
+    const record=await safeJson('/api/macro?asset='+asset,14000);
+    if (validMacro(record,asset)) { acceptMacro(record); return; }
+  }
+  const symbol=asset==='jpy'?'JPY=X':'BZ=F';
+  const tasks=['query1','query2'].map(host=>providerRecord(host+':'+asset,asset,
+    'https://'+host+'.finance.yahoo.com/v8/finance/chart/'+encodeURIComponent(symbol)+'?interval=5m&range=5d',
+    d=>yahooRecord(d,asset),60000));
+  if (asset==='jpy') {
+    tasks.push(currencyHistory());
+    const now=new Date(), start=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth()-1,1)).toISOString().slice(0,10);
+    for (const [id,host] of [['frankfurter','https://api.frankfurter.app/'],['frankfurter-dev','https://api.frankfurter.dev/v1/']])
+      tasks.push(providerRecord(id,asset,host+start+'..?from=USD&to=JPY',frankfurterRecord,3600000));
+  } else tasks.push(providerRecord('eia',asset,EIA_URL,eiaRecord,6*3600000));
+  // Paint each successful result immediately. A slow Yahoo request cannot hold up a daily fallback.
+  await Promise.allSettled(tasks.map(task=>task.then(record=>{ if(record)acceptMacro(record); })));
+  if (!macroState[asset]) {
+    if(asset==='jpy')chartStatus('chartJpy','Checking exchange-rate sources…');
+    else D.brentUsd.title='No verified Brent response. Sources will be checked again.';
+  }
+}
+function quoteLabel(r){
+  const date=r.kind==='daily'||r.kind==='spot-daily'
+    ? new Date(r.asOf*1000).toISOString().slice(0,10)
+    : new Date(r.asOf*1000).toLocaleString('en-GB',{timeZone:CFG.TZ,month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})+' ICT';
+  return (r.saved?'Saved · ':'')+r.source+' · '+date;
+}
+function paintJpy(r){
+  const daily=r.kind==='daily';
+  if(window.areaJpy){
+    const points=r.points.map(p=>({time:p.time+TZ_OFFSET,value:p.value}));
+    window.areaJpy.setData(points);
+    const mode=r.kind;
+    window.chartJpy.applyOptions({timeScale:{timeVisible:!daily,tickMarkFormatter:t=>daily?new Date((t-TZ_OFFSET)*1000).toLocaleDateString('en-GB',{day:'numeric',month:'short',timeZone:'UTC'}):fmtTime(t-TZ_OFFSET)}});
+    if(window.__jpyMode!==mode){window.chartJpy.timeScale().fitContent();window.__jpyMode=mode;}
+  }
+  S.usdJpyPrev=S.usdJpy; S.usdJpy=r.price;
+  S.jpy24hHi=daily?null:Math.max(...r.points.map(p=>p.value));
+  S.jpy24hLo=daily?null:Math.min(...r.points.map(p=>p.value));
+  if(D.mUsdJpyRange)D.mUsdJpyRange.hidden=daily;
+  S.lastUpdate.jpy=S.lastUpdate.fx=r.fetchedAt;
+  const mode=document.getElementById('jpyInterval');if(mode)mode.textContent=daily?'DAILY':'5 MIN';
+  chartStatus('chartJpy',(daily?'Daily reference · ':'')+quoteLabel(r));
+  D.usdJpy.title=(daily?'Daily reference rate. ':'Intraday quote. ')+quoteLabel(r);
+  if(D.jpyMini)D.jpyMini.textContent='¥'+num(r.price,2)+(daily?' · daily':'');
+  render();
+}
+function paintBrent(r){
+  S.brentUsdPrev=S.brentUsd;S.brentUsd=r.price;S.lastUpdate.brent=r.fetchedAt;render();
+  let status=document.getElementById('brentStatus');
+  if(!status){status=document.createElement('small');status.id='brentStatus';status.style.cssText='font-size:9px;color:#98a3c0';D.brentUsd.parentElement.appendChild(status);}
+  status.textContent=(r.kind==='spot-daily'?'Daily spot · ':'Futures · ')+quoteLabel(r);
+  D.brentUsd.title=D.brentJpy.title=r.instrument+' · USD per barrel · '+quoteLabel(r);
+}
+async function refreshJpy(){await refreshMacro('jpy');}
+async function fetchBrent(){if(!IS_MOBILE)await refreshMacro('brent');}
+
 
 const WMO_ICONS = {0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',80:'🌦️',81:'🌧️',82:'⛈️',95:'⛈️',96:'⛈️',99:'⛈️'};
 const WMO_DESC  = {0:'Clear sky',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',45:'Fog',48:'Fog',51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',61:'Light rain',63:'Rain',65:'Heavy rain',80:'Rain showers',81:'Rain showers',82:'Heavy showers',95:'Thunderstorm',96:'Thunderstorm',99:'Severe storm'};
@@ -1753,7 +1795,7 @@ onResume = () => {
   if (Date.now()-lastResume < 2000) return;
   lastResume = Date.now();
   if (!currentWs || currentWs.readyState !== 1 || Date.now()-lastWsMsg > 10000) forceReconnect();
-  for (const fn of [refreshCandles,refreshTickers,refreshJpy,fetchBrent,fetchFx]) runJob(fn);
+  for (const fn of [refreshCandles,refreshTickers,refreshJpy,fetchBrent]) runJob(fn);
 };
 window.addEventListener('online', onResume);
 window.addEventListener('offline', () => { closeSocket(); lastWsMsg = 0; refreshMarketStatus(); });
@@ -1772,7 +1814,6 @@ function scheduleJob(fn, interval){
   tick();
 }
 const jobs = [
-  [fetchFx,       CFG.POLL.fx],
   [fetchBrent,    CFG.POLL.brent],
   [fetchWeather,  CFG.POLL.weather],
   [fetchAqi,      CFG.POLL.aqi],
