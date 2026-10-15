@@ -177,9 +177,9 @@ if (!window.LightweightCharts) {
     position: relative;
     z-index: 3;
     display: grid;
-    grid-template-rows: auto minmax(200px, 33vh) auto 1fr auto;
+    grid-template-rows: auto minmax(200px, 34vh) auto 1fr;
     height: 100vh;
-    padding: var(--sp-3) var(--sp-4) var(--sp-2);
+    padding: var(--sp-3) var(--sp-4);
     gap: var(--sp-2);
     min-height: 0;
   }
@@ -189,7 +189,6 @@ if (!window.LightweightCharts) {
   .dash > :nth-child(2) { animation-delay: 50ms; }
   .dash > :nth-child(3) { animation-delay: 100ms; }
   .dash > :nth-child(4) { animation-delay: 150ms; }
-  .dash > :nth-child(5) { animation-delay: 200ms; }
   @keyframes fade-in { to { opacity: 1; } }
 
   /* ══════════ 1. COMMAND TOPBAR ══════════ */
@@ -1013,32 +1012,16 @@ if (!window.LightweightCharts) {
   .fx-badge.closed { background: var(--red-bg); color: var(--red-2); border: 1px solid var(--red-border); }
   .fx-badge.closed .fdot { background: var(--red); }
 
-  /* ══════════ 5. FOOTER ══════════ */
-  .footbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 var(--sp-2);
-    font-family: 'Outfit', sans-serif;
-    font-size: var(--fs-micro);
-    font-weight: 500;
-    letter-spacing: 1.5px;
-    color: var(--text-ghost);
-    text-transform: uppercase;
-  }
-  .footbar .hint { opacity: 0; transition: opacity var(--t-med); }
-  body:not(.idle) .footbar .hint { opacity: 0.85; }
-
   /* Responsive Breakpoints */
   @media (max-width: 1180px) {
     .topbar { grid-template-columns: auto 1fr; }
     .env-strip { grid-column: 1 / -1; justify-content: flex-start; order: 3; }
     .stats { grid-template-columns: repeat(4, 1fr); }
-    .dash { grid-template-rows: auto minmax(195px, 31vh) auto 1fr auto; }
+    .dash { grid-template-rows: auto minmax(195px, 32vh) auto 1fr; }
   }
   @media (max-width: 760px) {
     body:not(.mobile) { overflow-y: auto; }
-    body:not(.mobile) .dash { height: auto; min-height: 100vh; grid-template-rows: auto auto auto minmax(260px, 1fr) auto; }
+    body:not(.mobile) .dash { height: auto; min-height: 100vh; grid-template-rows: auto auto auto minmax(280px, 1fr); }
     .hero { grid-template-columns: 1fr; }
     .jpy-panel .chart-canvas { min-height: 150px; }
     .stats { grid-template-columns: repeat(2, 1fr); }
@@ -1526,7 +1509,7 @@ if (!window.LightweightCharts) {
           <div class="chart-header-left">
             <div class="chart-label">
               <span class="live-dot"></span>
-              <span>USD / <em class="jpy-em">JPY</em> · <span id="jpyInterval">FX</span></span>
+              <span>USD / <em class="jpy-em">JPY</em></span>
             </div>
             <span class="fx-badge" id="fxDesk"></span>
           </div>
@@ -1540,7 +1523,7 @@ if (!window.LightweightCharts) {
   <!-- 3. MACRO TELEMETRY RIBBON -->
   <section class="stats">
     <div class="stat">
-      <div class="stat-top"><span class="stat-label">USD / JPY</span><span class="stat-meta" id="jpySourceMeta">FX</span></div>
+      <div class="stat-top"><span class="stat-label">USD / JPY</span><span class="stat-meta">FX</span></div>
       <span class="stat-val fx" id="usdJpy">···</span>
     </div>
     <div class="stat">
@@ -1548,7 +1531,7 @@ if (!window.LightweightCharts) {
       <span class="stat-val xrp" id="xrpJpy">···</span>
     </div>
     <div class="stat">
-      <div class="stat-top"><span class="stat-label">Brent / USD</span><span class="stat-meta" id="brentStatus">OIL</span></div>
+      <div class="stat-top"><span class="stat-label">Brent / USD</span><span class="stat-meta">OIL</span></div>
       <span class="stat-val oil" id="brentUsd">···</span>
     </div>
     <div class="stat">
@@ -1599,13 +1582,6 @@ if (!window.LightweightCharts) {
     </div>
   </section>
 
-  <!-- 5. FOOTER -->
-  <footer class="footbar">
-    <span>XRP Terminal — Institutional Telemetry</span>
-    <span class="hint">[F] Fullscreen · [Dbl-Click Chart] Fit Zoom · [Click Currency] Pin FX</span>
-    <span>Feeds: Binance · Yahoo/ECB · US Treasury · IQAir/Open-Meteo · CoinGecko/Llama</span>
-  </footer>
-
 </div>
 
 <script>
@@ -1627,7 +1603,7 @@ window.__appStarted = true;
 (function(){
 'use strict';
 
-// ══════════ 1. ALL STATE & CONSTANTS HOISTED (NO TDZ) ══════════
+// ══════════ 1. ALL STATE & CONSTANTS HOISTED ══════════
 const CFG = {
   TZ: 'Asia/Bangkok',
   TZ_OFFSET_SEC: 7 * 3600,
@@ -1637,6 +1613,7 @@ const CFG = {
   PROXY_CP: 'https://corsproxy.io/?',
   PROXY_AO: 'https://api.allorigins.win/get?url=',
   MAX_CANDLES: 2000,
+  VISIBLE_CANDLES: 68, // Focused, breathable default candle count on main chart
   IDLE_MS: 4000,
   POLL: {
     brent: 120_000,
@@ -1670,7 +1647,7 @@ const D = {};
   'portfolioVal','portfolioPnl','portfolioCcy','portfolioIncome','ccyTabs',
   'btcPrice','btcChg','btcLoCap','btcHiCap','btcMiniFill',
   'xrpBtcPrice','xrpBtcChg','xrpBtcLoCap','xrpBtcHiCap','xrpBtcMiniFill',
-  'usdJpy','xrpJpy','brentUsd','brentJpy','jpySourceMeta','brentStatus',
+  'usdJpy','xrpJpy','brentUsd','brentJpy',
   'rangeLo','rangeHi','rangeDot','rangeFill','rangePos',
   'vol24','mcap','rlusdCap','xrpSats',
   'chartMain','chartJpy','jpyMini','xrpUsdtMini','fxDesk','mFx',
@@ -1702,7 +1679,6 @@ const S = {
   lastUpdate: { fx: 0, brent: 0, weather: 0, aqi: 0, rlusd: 0, jpy: 0, rates: 0 },
 };
 
-// Hoisted runtime & chart state variables
 const pendingRequests = new Map();
 const runningJobs     = new Map();
 const macroState      = { jpy: null, brent: null };
@@ -1760,13 +1736,15 @@ const fmtTime   = s => new Date(s * 1000).toLocaleTimeString('en-GB', {hour12:fa
 const fmtFull   = s => new Date(s * 1000).toLocaleString('en-GB', {hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit', day:'2-digit', month:'short', timeZone: CFG.TZ});
 const toTzSec   = ms => Math.floor(Number(ms) / 1000) + TZ_OFFSET;
 const num       = (v, d) => v == null || !Number.isFinite(+v) ? '—' : (+v).toLocaleString('en-US', {minimumFractionDigits:d, maximumFractionDigits:d});
+// BTC/USD formatted to 1 decimal place in thousands, e.g. $81.1K
+const fmtBtcK   = v => v == null || !Number.isFinite(+v) ? '···' : '$' + (+v / 1000).toFixed(1) + 'K';
 const compact   = v => {
   if (v == null || !Number.isFinite(+v)) return '—';
   const n = +v;
   if (n >= 1e12) return (n / 1e12).toFixed(2) + 'T';
   if (n >= 1e9)  return (n / 1e9 ).toFixed(2) + 'B';
   if (n >= 1e6)  return (n / 1e6 ).toFixed(1) + 'M';
-  if (n >= 1e3)  return (n / 1e3 ).toFixed(0) + 'K';
+  if (n >= 1e3)  return (n / 1e3 ).toFixed(1) + 'K';
   return n.toFixed(0);
 };
 const money      = (v, sym) => sym + Math.abs(v).toLocaleString('en-US', {maximumFractionDigits:0});
@@ -1894,8 +1872,8 @@ function updateRange(){
 function updateAsideRanges(){
   if (IS_MOBILE) return;
   if (S.btcUsd != null && S.btc24hLo != null && S.btc24hHi != null) {
-    D.btcLoCap.textContent = '$' + compact(S.btc24hLo);
-    D.btcHiCap.textContent = '$' + compact(S.btc24hHi);
+    D.btcLoCap.textContent = fmtBtcK(S.btc24hLo);
+    D.btcHiCap.textContent = fmtBtcK(S.btc24hHi);
     const span = S.btc24hHi - S.btc24hLo;
     const pos = span > 0 ? Math.max(0, Math.min(1, (S.btcUsd - S.btc24hLo) / span)) : 0.5;
     D.btcMiniFill.style.width = (pos * 100).toFixed(1) + '%';
@@ -2178,10 +2156,10 @@ function setCardTick(card, chg, cur, prev){
   setCardState(card, chg, cls);
   chg.textContent = cur > prev ? '▲' : '▼';
 }
-function setRange(wrap, lo, hi, cur, dec){
+function setRange(wrap, lo, hi, cur, dec, fmtFn){
   if (!wrap || lo == null || hi == null || cur == null) return;
-  wrap.querySelector('.lo').textContent = num(lo, dec);
-  wrap.querySelector('.hi').textContent = num(hi, dec);
+  wrap.querySelector('.lo').textContent = fmtFn ? fmtFn(lo) : num(lo, dec);
+  wrap.querySelector('.hi').textContent = fmtFn ? fmtFn(hi) : num(hi, dec);
   const span = hi - lo;
   const pos = span > 0 ? Math.max(0, Math.min(1, (cur - lo) / span)) : 0.5;
   wrap.querySelector('.m-range-dot').style.left = (pos * 100).toFixed(1) + '%';
@@ -2206,9 +2184,9 @@ function renderMobile(){
     setRange(D.mUsdJpyRange, S.jpy24hLo, S.jpy24hHi, S.usdJpy, 2);
   }
   if (S.btcUsd != null) {
-    D.mBtcUsdVal.innerHTML = '$' + num(S.btcUsd, 0) + '<span class="unit">USD</span>';
+    D.mBtcUsdVal.innerHTML = fmtBtcK(S.btcUsd) + '<span class="unit">USD</span>';
     if (S.btc24hPct != null) setCardPct(D.mBtcUsd, D.mBtcUsdChg, S.btc24hPct);
-    setRange(D.mBtcUsdRange, S.btc24hLo, S.btc24hHi, S.btcUsd, 0);
+    setRange(D.mBtcUsdRange, S.btc24hLo, S.btc24hHi, S.btcUsd, 0, fmtBtcK);
   }
 }
 
@@ -2291,7 +2269,6 @@ async function currencyHistory(){
   const received = [];
   const today = new Date();
   const days = Array.from({length: 7}, (_, i) => new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - 1 - i)).toISOString().slice(0, 10));
-  let result = null;
   await Promise.allSettled(days.map(async day => {
     const saved = readCache('fx-day3:' + day, 30 * DAY_MS)?.value;
     let payload = saved;
@@ -2303,20 +2280,17 @@ async function currencyHistory(){
       writeCache('fx-day3:' + day, {date: payload.date, usd: {jpy: +payload.usd.jpy}});
     }
     received.push({time: dayTime(day), value: +payload.usd.jpy});
-    const points = uniquePoints(received);
-    if (points.length >= 2) {
-      const last = points[points.length - 1];
-      result = {asset: 'jpy', source: 'Currency API', instrument: 'USD/JPY', unit: 'JPY/USD', kind: 'daily', price: last.value, asOf: last.time, points, fetchedAt: Date.now()};
-      acceptMacro(result);
-    }
   }));
-  if (result) {
+  const points = uniquePoints(received);
+  if (points.length >= 2) {
+    const last = points[points.length - 1];
+    const result = {asset: 'jpy', source: 'Currency API', instrument: 'USD/JPY', unit: 'JPY/USD', kind: 'daily', price: last.value, asOf: last.time, points, fetchedAt: Date.now()};
     providerMemory.set('currency-history', result);
     writeCache('provider3:currency-history', result, result.fetchedAt);
-  } else {
-    providerRetry.set('currency-history', Date.now() + 300000);
+    return result;
   }
-  return result;
+  providerRetry.set('currency-history', Date.now() + 300000);
+  return null;
 }
 
 function preferMacro(next, previous){
@@ -2384,31 +2358,24 @@ async function refreshMacro(asset){
   await Promise.allSettled(tasks.map(task => task.then(record => { if (record) acceptMacro(record); })));
 }
 
-function quoteLabel(r){
-  const date = r.kind === 'daily' || r.kind === 'spot-daily'
-    ? new Date(r.asOf * 1000).toISOString().slice(0, 10)
-    : new Date(r.asOf * 1000).toLocaleString('en-GB', {timeZone: CFG.TZ, month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}) + ' ICT';
-  return (r.saved ? 'Cached · ' : '') + r.source + ' · ' + date;
-}
-
 function paintJpy(r){
   const daily = r.kind === 'daily';
-  if (window.areaJpy) {
+  if (window.areaJpy && window.chartJpy) {
     const points = r.points.map(p => ({time: p.time + TZ_OFFSET, value: p.value}));
     window.areaJpy.setData(points);
-    const mode = r.kind;
     window.chartJpy.applyOptions({
       timeScale: {
+        rightOffset: 0,
+        fixLeftEdge: true,
+        fixRightEdge: true,
         timeVisible: !daily,
         tickMarkFormatter: t => daily
           ? new Date((t - TZ_OFFSET) * 1000).toLocaleDateString('en-GB', {day:'numeric', month:'short', timeZone:'UTC'})
           : fmtTime(t - TZ_OFFSET)
       }
     });
-    if (window.__jpyMode !== mode) {
-      window.chartJpy.timeScale().fitContent();
-      window.__jpyMode = mode;
-    }
+    // Always fit content so the latest point touches the right axis
+    window.chartJpy.timeScale().fitContent();
   }
   S.usdJpyPrev = S.usdJpy;
   S.usdJpy = r.price;
@@ -2417,12 +2384,7 @@ function paintJpy(r){
   if (D.mUsdJpyRange) D.mUsdJpyRange.hidden = daily;
   S.lastUpdate.jpy = S.lastUpdate.fx = r.fetchedAt;
 
-  const modeEl = document.getElementById('jpyInterval');
-  if (modeEl) modeEl.textContent = daily ? 'DAILY' : '5M';
-  if (D.jpySourceMeta) D.jpySourceMeta.textContent = daily ? 'DAILY' : '5M LIVE';
-  chartStatus('chartJpy', (daily ? 'Daily Reference · ' : '') + quoteLabel(r));
-  D.usdJpy.title = quoteLabel(r);
-  if (D.jpyMini) D.jpyMini.innerHTML = '¥' + num(r.price, 2) + '<span class="unit">' + (daily ? 'ECB' : 'SPOT') + '</span>';
+  if (D.jpyMini) D.jpyMini.innerHTML = '¥' + num(r.price, 2);
   scheduleRender();
 }
 
@@ -2430,8 +2392,6 @@ function paintBrent(r){
   S.brentUsdPrev = S.brentUsd;
   S.brentUsd = r.price;
   S.lastUpdate.brent = r.fetchedAt;
-  if (D.brentStatus) D.brentStatus.textContent = r.kind === 'spot-daily' ? 'EIA SPOT' : 'BZ=F';
-  D.brentUsd.title = D.brentJpy.title = r.instrument + ' · ' + quoteLabel(r);
   scheduleRender();
 }
 
@@ -2548,6 +2508,16 @@ async function fetchXrpMeta(){
 }
 
 // ══════════ 11. CHARTS (Desktop Only) ══════════
+function focusRecentCandles(){
+  if (!chartMain || !data.main.candles.length) return;
+  const total = data.main.candles.length;
+  const visible = Math.min(CFG.VISIBLE_CANDLES, total);
+  chartMain.timeScale().setVisibleLogicalRange({
+    from: Math.max(0, total - visible),
+    to: total + 1.5
+  });
+}
+
 function createChart(el, opts = {}){
   const c = LightweightCharts.createChart(el, {
     layout: {
@@ -2557,7 +2527,7 @@ function createChart(el, opts = {}){
       fontSize: opts.fs || 11
     },
     grid: {
-      vertLines: {color: 'rgba(255, 255, 255, 0.035)'},
+      vertLines: {color: 'rgba(255, 255, 255, 0.03)'},
       horzLines: {color: 'rgba(255, 255, 255, 0.045)'}
     },
     crosshair: {
@@ -2570,7 +2540,11 @@ function createChart(el, opts = {}){
       borderColor: 'rgba(255, 255, 255, 0.08)',
       timeVisible: true,
       secondsVisible: false,
-      rightOffset: 3,
+      rightOffset: opts.rightOffset ?? 2,
+      barSpacing: opts.barSpacing ?? 12,
+      minBarSpacing: opts.minBarSpacing ?? 4,
+      fixLeftEdge: opts.fixLeftEdge ?? false,
+      fixRightEdge: opts.fixRightEdge ?? false,
       tickMarkFormatter: t => fmtTime(t - TZ_OFFSET)
     },
     localization: { timeFormatter: t => fmtFull(t - TZ_OFFSET) },
@@ -2580,11 +2554,15 @@ function createChart(el, opts = {}){
   const fit = () => {
     if (el.clientWidth > 0 && el.clientHeight > 0) {
       c.applyOptions({width: el.clientWidth, height: el.clientHeight});
+      if (opts.autoFitOnResize) c.timeScale().fitContent();
     }
   };
   new ResizeObserver(fit).observe(el);
   fit();
-  el.addEventListener('dblclick', () => c.timeScale().fitContent());
+  el.addEventListener('dblclick', () => {
+    if (opts.onResetZoom) opts.onResetZoom();
+    else c.timeScale().fitContent();
+  });
   return c;
 }
 
@@ -2593,9 +2571,9 @@ const CANDLE_STYLE = {
   downColor: '#ff2952',
   borderUpColor: '#00e87b',
   borderDownColor: '#ff2952',
-  wickUpColor: 'rgba(0, 232, 123, 0.60)',
-  wickDownColor: 'rgba(255, 41, 82, 0.60)',
-  priceLineColor: 'rgba(255, 255, 255, 0.28)',
+  wickUpColor: 'rgba(0, 232, 123, 0.72)',
+  wickDownColor: 'rgba(255, 41, 82, 0.72)',
+  priceLineColor: 'rgba(0, 232, 123, 0.35)',
   priceLineWidth: 1,
   priceLineStyle: 2,
   lastValueVisible: true
@@ -2618,11 +2596,16 @@ const AREA_JPY = {
 function initCharts(){
   if (IS_MOBILE || chartMain || !window.LightweightCharts) return;
   try {
-    chartMain = createChart(D.chartMain);
+    chartMain = createChart(D.chartMain, {
+      barSpacing: 12,
+      minBarSpacing: 4,
+      rightOffset: 2,
+      onResetZoom: focusRecentCandles
+    });
     candleMain = chartMain.addCandlestickSeries({...CANDLE_STYLE, priceFormat: {type:'price', precision:4, minMove:0.0001}});
     volMain = chartMain.addHistogramSeries({priceFormat: {type:'volume'}, priceScaleId: 'vol', lastValueVisible: false});
-    volMain.priceScale().applyOptions({scaleMargins: {top: 0.85, bottom: 0}});
-    candleMain.priceScale().applyOptions({scaleMargins: {top: 0.08, bottom: 0.18}});
+    volMain.priceScale().applyOptions({scaleMargins: {top: 0.86, bottom: 0}});
+    candleMain.priceScale().applyOptions({scaleMargins: {top: 0.10, bottom: 0.18}});
 
     chartMain.subscribeCrosshairMove(param => {
       if (!D.ohlcBar) return;
@@ -2642,14 +2625,20 @@ function initCharts(){
         (v?.value != null ? `<span><em>V</em><b>${compact(v.value)}</b></span>` : '');
     });
 
-    window.chartJpy = createChart(D.chartJpy, {fs: 10});
+    window.chartJpy = createChart(D.chartJpy, {
+      fs: 10,
+      rightOffset: 0,
+      fixLeftEdge: true,
+      fixRightEdge: true,
+      autoFitOnResize: true
+    });
     window.areaJpy = window.chartJpy.addAreaSeries(AREA_JPY);
     chartStatus('chartMain', 'Loading candles…');
 
     const saved = readCache('candles:' + S.klineInterval);
     if (saved) {
       commitRows(saved.value, false);
-      chartStatus('chartMain', 'Cached candles · Syncing live…');
+      chartStatus('chartMain', '');
     }
     runJob(refreshCandles);
     runJob(refreshJpy);
@@ -2716,11 +2705,11 @@ function commitRows(rows, merge = true, version = candleVersion){
   }
   if (!result.length) return;
   data.main.candles = result.map(([t, o, h, l, c]) => ({time: toTzSec(t), open: o, high: h, low: l, close: c}));
-  data.main.volumes = result.map(([t, o, h, l, c, v]) => ({time: toTzSec(t), value: v, color: c >= o ? 'rgba(0, 232, 123, 0.18)' : 'rgba(255, 41, 82, 0.18)'}));
+  data.main.volumes = result.map(([t, o, h, l, c, v]) => ({time: toTzSec(t), value: v, color: c >= o ? 'rgba(0, 232, 123, 0.16)' : 'rgba(255, 41, 82, 0.16)'}));
   candleMain.setData(data.main.candles);
   volMain.setData(data.main.volumes);
   if (!framed) {
-    chartMain.timeScale().fitContent();
+    focusRecentCandles();
     framed = true;
   }
   for (const t of streamVersions.keys()) if (t < result[0][0]) streamVersions.delete(t);
@@ -2732,7 +2721,7 @@ async function refreshCandles(){
   const version = candleVersion;
   const rows = await marketJson(`/klines?symbol=XRPUSDT&interval=${tf}&limit=500`, r => normalizeRows(r).length > 0);
   if (!rows) {
-    chartStatus('chartMain', data.main.candles.length ? 'Cached candles · Retrying feed…' : 'Candle feed unavailable · Retrying…');
+    chartStatus('chartMain', data.main.candles.length ? '' : 'Candle feed unavailable · Retrying…');
     return;
   }
   if (tf !== S.klineInterval) return;
@@ -2845,12 +2834,12 @@ function handleWsMessage(evt){
     scheduleRender();
   }
   else if (s.startsWith('xrpusdt@kline_')) {
-    applyKline('main', {candles: candleMain, volumes: volMain}, d.k, 'rgba(0, 232, 123, 0.18)', 'rgba(255, 41, 82, 0.18)');
+    applyKline('main', {candles: candleMain, volumes: volMain}, d.k, 'rgba(0, 232, 123, 0.16)', 'rgba(255, 41, 82, 0.16)');
   }
   else if (s === 'btcusdt@ticker') {
     S.btcPrev = S.btcUsd; S.btcUsd = +d.c; S.btc24hPct = +d.P;
     S.btc24hHi = +d.h; S.btc24hLo = +d.l;
-    D.btcPrice.textContent = '$' + num(S.btcUsd, 0);
+    D.btcPrice.textContent = fmtBtcK(S.btcUsd);
     updateAsideChange(D.btcChg, S.btc24hPct);
     if (IS_MOBILE && S.btcPrev != null && S.btcPrev !== S.btcUsd) {
       flash(D.mBtcUsdVal, S.btcUsd > S.btcPrev ? 'up' : 'down');
@@ -2893,8 +2882,6 @@ function refreshMarketStatus(){
   }
   if (candleMain) {
     if (!data.main.candles.length) chartStatus('chartMain', 'Waiting for candle data…');
-    else if (Date.now() - candleAt > 360000) chartStatus('chartMain', 'Candles out of date · Resyncing…');
-    else if (!historyAt) chartStatus('chartMain', 'Syncing candle history…');
     else chartStatus('chartMain', '');
   }
 }
@@ -3018,9 +3005,11 @@ function setMobileMode(mobile){
       initCharts();
       if (chartMain && D.chartMain.clientWidth > 0) {
         chartMain.applyOptions({width: D.chartMain.clientWidth, height: D.chartMain.clientHeight});
+        focusRecentCandles();
       }
       if (window.chartJpy && D.chartJpy.clientWidth > 0) {
         window.chartJpy.applyOptions({width: D.chartJpy.clientWidth, height: D.chartJpy.clientHeight});
+        window.chartJpy.timeScale().fitContent();
       }
       for (const fn of [refreshCandles, refreshJpy, fetchBrent, fetchWeather, fetchAqi, fetchXrpMeta, fetchRlusd]) {
         runJob(fn);
@@ -3096,7 +3085,6 @@ initCharts();
 window.addEventListener('chartsReady', initCharts);
 window.addEventListener('chartsFailed', () => {
   chartStatus('chartMain', 'Chart library unavailable · Live quotes active.');
-  chartStatus('chartJpy', 'Chart library unavailable · Live quotes active.');
 });
 connectWs();
 jobs.forEach(([fn, interval]) => scheduleJob(fn, interval));
