@@ -177,7 +177,7 @@ if (!window.LightweightCharts) {
     position: relative;
     z-index: 3;
     display: grid;
-    grid-template-rows: auto minmax(200px, 34vh) auto 1fr;
+    grid-template-rows: auto minmax(200px, 33vh) auto minmax(0, 1fr);
     height: 100vh;
     padding: var(--sp-3) var(--sp-4);
     gap: var(--sp-2);
@@ -862,6 +862,7 @@ if (!window.LightweightCharts) {
   .charts {
     display: grid;
     grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr);
     min-height: 0;
   }
   .chart-panel {
@@ -884,6 +885,7 @@ if (!window.LightweightCharts) {
     border-bottom: 1px solid var(--border);
     background: rgba(4, 6, 12, 0.45);
     flex-wrap: wrap;
+    flex-shrink: 0;
   }
   .chart-header-left, .chart-header-right {
     display: flex;
@@ -967,7 +969,17 @@ if (!window.LightweightCharts) {
   .aside-price-small .unit { font-size: 0.72em; color: var(--text-dim); font-weight: 500; margin-left: 3px; }
   .aside-price-small .chg  { font-size: 0.78em; font-weight: 600; margin-left: 6px; }
 
-  .chart-canvas { flex: 1; width: 100%; min-height: 0; position: relative; }
+  .chart-canvas {
+    flex: 1 1 auto;
+    width: 100%;
+    min-height: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .chart-canvas > .tv-lightweight-charts {
+    position: absolute !important;
+    inset: 0 !important;
+  }
   .chart-canvas, .chart-canvas * { text-shadow: none; }
 
   .data-status {
@@ -1017,7 +1029,7 @@ if (!window.LightweightCharts) {
     .topbar { grid-template-columns: auto 1fr; }
     .env-strip { grid-column: 1 / -1; justify-content: flex-start; order: 3; }
     .stats { grid-template-columns: repeat(4, 1fr); }
-    .dash { grid-template-rows: auto minmax(195px, 32vh) auto 1fr; }
+    .dash { grid-template-rows: auto minmax(195px, 32vh) auto minmax(0, 1fr); }
   }
   @media (max-width: 760px) {
     body:not(.mobile) { overflow-y: auto; }
@@ -1563,13 +1575,13 @@ if (!window.LightweightCharts) {
         <div class="chart-header-left">
           <div class="chart-label">
             <span class="live-dot"></span>
-            <span>XRP / USDT · <span id="mainIntervalLabel">3M</span> · Binance</span>
+            <span>XRP / USDT · <span id="mainIntervalLabel">15M</span> · Binance</span>
           </div>
           <div class="tf-group" id="tfGroup">
             <button type="button" class="tf-btn" data-tf="1m">1M</button>
-            <button type="button" class="tf-btn active" data-tf="3m">3M</button>
+            <button type="button" class="tf-btn" data-tf="3m">3M</button>
             <button type="button" class="tf-btn" data-tf="5m">5M</button>
-            <button type="button" class="tf-btn" data-tf="15m">15M</button>
+            <button type="button" class="tf-btn active" data-tf="15m">15M</button>
             <button type="button" class="tf-btn" data-tf="1h">1H</button>
           </div>
           <div class="ohlc-bar" id="ohlcBar"></div>
@@ -1613,7 +1625,7 @@ const CFG = {
   PROXY_CP: 'https://corsproxy.io/?',
   PROXY_AO: 'https://api.allorigins.win/get?url=',
   MAX_CANDLES: 2000,
-  VISIBLE_CANDLES: 68, // Focused, breathable default candle count on main chart
+  VISIBLE_CANDLES: 64, // 64 x 15m = 16 hours of clean, well-spaced candlesticks
   IDLE_MS: 4000,
   POLL: {
     brent: 120_000,
@@ -1673,7 +1685,7 @@ const S = {
   xrpSupply: 60.88e9,
   xrpAth: null,
   rlusdMcap: null,
-  klineInterval: '3m',
+  klineInterval: '15m',
   rates: { usd: 1, thb: null, twd: null, cad: null },
   portfolio: null,
   lastUpdate: { fx: 0, brent: 0, weather: 0, aqi: 0, rlusd: 0, jpy: 0, rates: 0 },
@@ -1691,6 +1703,10 @@ let renderQueued      = false;
 let candleMain        = null;
 let volMain           = null;
 let chartMain         = null;
+let hiPriceLine       = null;
+let loPriceLine       = null;
+let midPriceLine      = null;
+let lastExtremaKey    = '';
 let historyAt         = 0;
 let candleAt          = 0;
 let framed            = false;
@@ -1736,7 +1752,6 @@ const fmtTime   = s => new Date(s * 1000).toLocaleTimeString('en-GB', {hour12:fa
 const fmtFull   = s => new Date(s * 1000).toLocaleString('en-GB', {hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit', day:'2-digit', month:'short', timeZone: CFG.TZ});
 const toTzSec   = ms => Math.floor(Number(ms) / 1000) + TZ_OFFSET;
 const num       = (v, d) => v == null || !Number.isFinite(+v) ? '—' : (+v).toLocaleString('en-US', {minimumFractionDigits:d, maximumFractionDigits:d});
-// BTC/USD formatted to 1 decimal place in thousands, e.g. $81.1K
 const fmtBtcK   = v => v == null || !Number.isFinite(+v) ? '···' : '$' + (+v / 1000).toFixed(1) + 'K';
 const compact   = v => {
   if (v == null || !Number.isFinite(+v)) return '—';
@@ -2209,8 +2224,9 @@ function validMacro(r, asset){
       Date.now() - r.asOf * 1000 > 14 * DAY_MS || !Number.isFinite(r.fetchedAt) ||
       r.fetchedAt > Date.now() + 60000 || typeof r.source !== 'string') return false;
   if (asset === 'brent') return r.unit === 'USD/barrel' && ['futures','spot-daily'].includes(r.kind);
+  const minPoints = r.kind === 'daily' ? 5 : 2;
   return r.unit === 'JPY/USD' && ['intraday','daily'].includes(r.kind) && Array.isArray(r.points) &&
-    r.points.length >= 2 && r.points.every((p, i) => Number.isFinite(p.time) && p.time > 0 && p.time <= r.asOf &&
+    r.points.length >= minPoints && r.points.every((p, i) => Number.isFinite(p.time) && p.time > 0 && p.time <= r.asOf &&
       Number.isFinite(p.value) && p.value > 0 && (!i || r.points[i - 1].time < p.time)) &&
     r.asOf === r.points[r.points.length - 1].time && r.price === r.points[r.points.length - 1].value;
 }
@@ -2218,6 +2234,35 @@ function validMacro(r, asset){
 function uniquePoints(points){
   return [...new Map(points.filter(p => numeric(p.time) && numeric(p.value) && +p.time > 0 && +p.value > 0 && +p.time * 1000 <= Date.now() + 60000)
     .map(p => [+p.time, {time: +p.time, value: +p.value}])).values()].sort((a, b) => a.time - b.time).slice(-2000);
+}
+
+// Densifies sparse daily series so Lightweight Charts sets a small barSpacing
+// and plots the rightmost point flush against the right price axis.
+function densifySeries(points, targetCount = 140){
+  if (!Array.isArray(points) || points.length < 2 || points.length >= targetCount) return points;
+  const out = [];
+  const segments = points.length - 1;
+  const stepsPerSeg = Math.max(2, Math.ceil(targetCount / segments));
+  for (let i = 0; i < segments; i++) {
+    const p0 = points[i];
+    const p1 = points[i + 1];
+    const dt = p1.time - p0.time;
+    const dv = p1.value - p0.value;
+    for (let s = 0; s < stepsPerSeg; s++) {
+      const frac = s / stepsPerSeg;
+      const t = Math.round(p0.time + dt * frac);
+      if (!out.length || t > out[out.length - 1].time) {
+        out.push({time: t, value: p0.value + dv * frac});
+      }
+    }
+  }
+  const last = points[points.length - 1];
+  if (!out.length || last.time > out[out.length - 1].time) {
+    out.push({time: last.time, value: last.value});
+  } else {
+    out[out.length - 1] = {time: last.time, value: last.value};
+  }
+  return out;
 }
 
 function yahooRecord(json, asset){
@@ -2243,7 +2288,7 @@ function yahooRecord(json, asset){
 function frankfurterRecord(json){
   if (json?.base !== 'USD' || !json.rates) return null;
   const points = uniquePoints(Object.entries(json.rates).map(([day, r]) => ({time: dayTime(day), value: r?.JPY})));
-  if (points.length < 2) return null;
+  if (points.length < 5) return null;
   const last = points[points.length - 1];
   return {
     asset: 'jpy', source: 'ECB / Frankfurter', instrument: 'USD/JPY', kind: 'daily',
@@ -2263,12 +2308,12 @@ function eiaRecord(json){
 }
 
 async function currencyHistory(){
-  const cached = providerMemory.get('currency-history') || readCache('provider3:currency-history', 14 * DAY_MS)?.value;
+  const cached = providerMemory.get('currency-history') || readCache('provider4:currency-history', 14 * DAY_MS)?.value;
   if (validMacro(cached, 'jpy') && Date.now() - cached.fetchedAt < 6 * 3600000) return cached;
   if (Date.now() < (providerRetry.get('currency-history') || 0)) return validMacro(cached, 'jpy') ? cached : null;
   const received = [];
   const today = new Date();
-  const days = Array.from({length: 7}, (_, i) => new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - 1 - i)).toISOString().slice(0, 10));
+  const days = Array.from({length: 10}, (_, i) => new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - 1 - i)).toISOString().slice(0, 10));
   await Promise.allSettled(days.map(async day => {
     const saved = readCache('fx-day3:' + day, 30 * DAY_MS)?.value;
     let payload = saved;
@@ -2282,11 +2327,11 @@ async function currencyHistory(){
     received.push({time: dayTime(day), value: +payload.usd.jpy});
   }));
   const points = uniquePoints(received);
-  if (points.length >= 2) {
+  if (points.length >= 5) {
     const last = points[points.length - 1];
     const result = {asset: 'jpy', source: 'Currency API', instrument: 'USD/JPY', unit: 'JPY/USD', kind: 'daily', price: last.value, asOf: last.time, points, fetchedAt: Date.now()};
     providerMemory.set('currency-history', result);
-    writeCache('provider3:currency-history', result, result.fetchedAt);
+    writeCache('provider4:currency-history', result, result.fetchedAt);
     return result;
   }
   providerRetry.set('currency-history', Date.now() + 300000);
@@ -2305,7 +2350,7 @@ function preferMacro(next, previous){
 }
 
 async function providerRecord(id, asset, url, parse, ttl, useCorsFallback = false){
-  let cached = providerMemory.get(id) || readCache('provider3:' + id, 14 * DAY_MS)?.value;
+  let cached = providerMemory.get(id) || readCache('provider4:' + id, 14 * DAY_MS)?.value;
   if (!validMacro(cached, asset)) cached = null;
   if (cached && Date.now() - cached.fetchedAt < ttl) return cached;
   if (Date.now() < (providerRetry.get(id) || 0)) return cached ? {...cached, saved: true} : null;
@@ -2314,7 +2359,7 @@ async function providerRecord(id, asset, url, parse, ttl, useCorsFallback = fals
     const r = parse(raw);
     if (!validMacro(r, asset)) throw new Error('Invalid ' + id + ' response');
     providerMemory.set(id, r);
-    writeCache('provider3:' + id, r, r.fetchedAt);
+    writeCache('provider4:' + id, r, r.fetchedAt);
     providerRetry.delete(id);
     return r;
   } catch {
@@ -2326,13 +2371,13 @@ async function providerRecord(id, asset, url, parse, ttl, useCorsFallback = fals
 function acceptMacro(record){
   if (!validMacro(record, record?.asset) || !preferMacro(record, macroState[record.asset])) return;
   macroState[record.asset] = record;
-  writeCache('macro3:' + record.asset, record, record.fetchedAt);
+  writeCache('macro4:' + record.asset, record, record.fetchedAt);
   if (record.asset === 'jpy') paintJpy(record);
   else paintBrent(record);
 }
 
 async function refreshMacro(asset){
-  const old = macroState[asset] || readCache('macro3:' + asset, 14 * DAY_MS)?.value;
+  const old = macroState[asset] || readCache('macro4:' + asset, 14 * DAY_MS)?.value;
   if (validMacro(old, asset)) acceptMacro({...old, saved: true});
   if (await backendReady) {
     const record = await safeJson('/api/macro?asset=' + asset, 12000);
@@ -2349,7 +2394,7 @@ async function refreshMacro(asset){
   ));
   if (asset === 'jpy') {
     tasks.push(currencyHistory());
-    const now = new Date(), start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1)).toISOString().slice(0, 10);
+    const start = new Date(Date.now() - 35 * DAY_MS).toISOString().slice(0, 10);
     for (const [id, host] of [['frankfurter','https://api.frankfurter.app/'],['frankfurter-dev','https://api.frankfurter.dev/v1/']])
       tasks.push(providerRecord(id, asset, host + start + '..?from=USD&to=JPY', frankfurterRecord, 3600000));
   } else {
@@ -2361,8 +2406,9 @@ async function refreshMacro(asset){
 function paintJpy(r){
   const daily = r.kind === 'daily';
   if (window.areaJpy && window.chartJpy) {
-    const points = r.points.map(p => ({time: p.time + TZ_OFFSET, value: p.value}));
-    window.areaJpy.setData(points);
+    const rawPoints = r.points.map(p => ({time: p.time + TZ_OFFSET, value: p.value}));
+    const plotPoints = densifySeries(rawPoints, 140);
+    window.areaJpy.setData(plotPoints);
     window.chartJpy.applyOptions({
       timeScale: {
         rightOffset: 0,
@@ -2374,7 +2420,6 @@ function paintJpy(r){
           : fmtTime(t - TZ_OFFSET)
       }
     });
-    // Always fit content so the latest point touches the right axis
     window.chartJpy.timeScale().fitContent();
   }
   S.usdJpyPrev = S.usdJpy;
@@ -2507,7 +2552,7 @@ async function fetchXrpMeta(){
   scheduleRender();
 }
 
-// ══════════ 11. CHARTS (Desktop Only) ══════════
+// ══════════ 11. CHARTS & HIGH/LOW WICK CALLOUTS (Desktop Only) ══════════
 function focusRecentCandles(){
   if (!chartMain || !data.main.candles.length) return;
   const total = data.main.candles.length;
@@ -2516,32 +2561,138 @@ function focusRecentCandles(){
     from: Math.max(0, total - visible),
     to: total + 1.5
   });
+  updateMainExtrema(true);
+}
+
+// Labels the exact High wick and Low wick in the visible window + adds High/Mid/Low axis scale lines
+function updateMainExtrema(force = false){
+  if (IS_MOBILE || !chartMain || !candleMain || !data.main.candles.length) return;
+  const candles = data.main.candles;
+  const logical = chartMain.timeScale().getVisibleLogicalRange();
+  let from = 0;
+  let to = candles.length - 1;
+  if (logical && Number.isFinite(logical.from) && Number.isFinite(logical.to)) {
+    from = Math.max(0, Math.ceil(logical.from));
+    to = Math.min(candles.length - 1, Math.floor(logical.to));
+  }
+  if (from > to || to - from < 2) {
+    from = Math.max(0, candles.length - CFG.VISIBLE_CANDLES);
+    to = candles.length - 1;
+  }
+
+  let hiBar = candles[from];
+  let loBar = candles[from];
+  for (let i = from; i <= to; i++) {
+    const c = candles[i];
+    if (!c) continue;
+    if (c.high >= hiBar.high) hiBar = c;
+    if (c.low <= loBar.low)   loBar = c;
+  }
+  if (!hiBar || !loBar) return;
+
+  const key = `${hiBar.time}:${hiBar.high.toFixed(4)}|${loBar.time}:${loBar.low.toFixed(4)}`;
+  if (!force && key === lastExtremaKey) return;
+  lastExtremaKey = key;
+
+  // 1. On-chart wick callout markers (even for quick single-candle wicks)
+  const markers = [
+    {
+      time: hiBar.time,
+      position: 'aboveBar',
+      color: '#5cffb0',
+      shape: 'arrowDown',
+      text: 'HIGH $' + num(hiBar.high, 4),
+      size: 1
+    },
+    {
+      time: loBar.time,
+      position: 'belowBar',
+      color: '#ff6b88',
+      shape: 'arrowUp',
+      text: 'LOW $' + num(loBar.low, 4),
+      size: 1
+    }
+  ].sort((a, b) => a.time - b.time);
+  candleMain.setMarkers(markers);
+
+  // 2. Price lines & axis badges so candle scale is always obvious on the right axis
+  const hiOpts = {
+    price: hiBar.high,
+    color: 'rgba(92, 255, 176, 0.45)',
+    lineWidth: 1,
+    lineStyle: LightweightCharts.LineStyle.Dashed,
+    axisLabelVisible: true,
+    title: 'HI',
+    axisLabelColor: '#0e3323',
+    axisLabelTextColor: '#5cffb0'
+  };
+  const loOpts = {
+    price: loBar.low,
+    color: 'rgba(255, 107, 136, 0.45)',
+    lineWidth: 1,
+    lineStyle: LightweightCharts.LineStyle.Dashed,
+    axisLabelVisible: true,
+    title: 'LO',
+    axisLabelColor: '#38111e',
+    axisLabelTextColor: '#ff6b88'
+  };
+  const midPrice = (hiBar.high + loBar.low) / 2;
+  const midOpts = {
+    price: midPrice,
+    color: 'rgba(184, 196, 224, 0.16)',
+    lineWidth: 1,
+    lineStyle: LightweightCharts.LineStyle.SparseDotted,
+    axisLabelVisible: true,
+    title: 'MID',
+    axisLabelColor: '#131b2e',
+    axisLabelTextColor: '#b8c4e0'
+  };
+
+  if (!hiPriceLine) hiPriceLine = candleMain.createPriceLine(hiOpts);
+  else hiPriceLine.applyOptions(hiOpts);
+
+  if (!loPriceLine) loPriceLine = candleMain.createPriceLine(loOpts);
+  else loPriceLine.applyOptions(loOpts);
+
+  if (!midPriceLine) midPriceLine = candleMain.createPriceLine(midOpts);
+  else midPriceLine.applyOptions(midOpts);
 }
 
 function createChart(el, opts = {}){
   const c = LightweightCharts.createChart(el, {
     layout: {
       background: {type: 'solid', color: 'transparent'},
-      textColor: '#8a96b4',
+      textColor: '#b8c4e0',
       fontFamily: 'Azeret Mono, monospace',
       fontSize: opts.fs || 11
     },
     grid: {
-      vertLines: {color: 'rgba(255, 255, 255, 0.03)'},
-      horzLines: {color: 'rgba(255, 255, 255, 0.045)'}
+      vertLines: {color: 'rgba(255, 255, 255, 0.04)'},
+      horzLines: {color: 'rgba(255, 255, 255, 0.06)'}
     },
     crosshair: {
       mode: LightweightCharts.CrosshairMode.Normal,
-      vertLine: {color: 'rgba(94, 200, 255, 0.35)', width: 1, style: 3, labelBackgroundColor: '#162038'},
-      horzLine: {color: 'rgba(94, 200, 255, 0.35)', width: 1, style: 3, labelBackgroundColor: '#162038'}
+      vertLine: {color: 'rgba(94, 200, 255, 0.40)', width: 1, style: 3, labelBackgroundColor: '#162038'},
+      horzLine: {color: 'rgba(94, 200, 255, 0.40)', width: 1, style: 3, labelBackgroundColor: '#162038'}
     },
-    rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.08)', scaleMargins: {top: 0.08, bottom: 0.04} },
+    rightPriceScale: {
+      visible: true,
+      borderVisible: true,
+      ticksVisible: true,
+      entireTextOnly: false,
+      alignLabels: true,
+      borderColor: 'rgba(255, 255, 255, 0.12)',
+      scaleMargins: {top: 0.12, bottom: 0.08}
+    },
     timeScale: {
-      borderColor: 'rgba(255, 255, 255, 0.08)',
+      visible: true,
+      borderVisible: true,
+      ticksVisible: true,
+      borderColor: 'rgba(255, 255, 255, 0.12)',
       timeVisible: true,
       secondsVisible: false,
       rightOffset: opts.rightOffset ?? 2,
-      barSpacing: opts.barSpacing ?? 12,
+      barSpacing: opts.barSpacing ?? 13,
       minBarSpacing: opts.minBarSpacing ?? 4,
       fixLeftEdge: opts.fixLeftEdge ?? false,
       fixRightEdge: opts.fixRightEdge ?? false,
@@ -2552,8 +2703,9 @@ function createChart(el, opts = {}){
     handleScale: true,
   });
   const fit = () => {
-    if (el.clientWidth > 0 && el.clientHeight > 0) {
-      c.applyOptions({width: el.clientWidth, height: el.clientHeight});
+    const rect = el.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) {
+      c.applyOptions({width: Math.floor(rect.width), height: Math.floor(rect.height)});
       if (opts.autoFitOnResize) c.timeScale().fitContent();
     }
   };
@@ -2571,9 +2723,9 @@ const CANDLE_STYLE = {
   downColor: '#ff2952',
   borderUpColor: '#00e87b',
   borderDownColor: '#ff2952',
-  wickUpColor: 'rgba(0, 232, 123, 0.72)',
-  wickDownColor: 'rgba(255, 41, 82, 0.72)',
-  priceLineColor: 'rgba(0, 232, 123, 0.35)',
+  wickUpColor: 'rgba(92, 255, 176, 0.85)',
+  wickDownColor: 'rgba(255, 107, 136, 0.85)',
+  priceLineColor: 'rgba(0, 232, 123, 0.45)',
   priceLineWidth: 1,
   priceLineStyle: 2,
   lastValueVisible: true
@@ -2597,7 +2749,7 @@ function initCharts(){
   if (IS_MOBILE || chartMain || !window.LightweightCharts) return;
   try {
     chartMain = createChart(D.chartMain, {
-      barSpacing: 12,
+      barSpacing: 13,
       minBarSpacing: 4,
       rightOffset: 2,
       onResetZoom: focusRecentCandles
@@ -2605,7 +2757,11 @@ function initCharts(){
     candleMain = chartMain.addCandlestickSeries({...CANDLE_STYLE, priceFormat: {type:'price', precision:4, minMove:0.0001}});
     volMain = chartMain.addHistogramSeries({priceFormat: {type:'volume'}, priceScaleId: 'vol', lastValueVisible: false});
     volMain.priceScale().applyOptions({scaleMargins: {top: 0.86, bottom: 0}});
-    candleMain.priceScale().applyOptions({scaleMargins: {top: 0.10, bottom: 0.18}});
+    candleMain.priceScale().applyOptions({scaleMargins: {top: 0.16, bottom: 0.20}});
+
+    chartMain.timeScale().subscribeVisibleLogicalRangeChange(() => {
+      updateMainExtrema(false);
+    });
 
     chartMain.subscribeCrosshairMove(param => {
       if (!D.ohlcBar) return;
@@ -2661,6 +2817,7 @@ if (D.tfGroup) {
     data.main.volumes = [];
     streamVersions.clear();
     framed = false;
+    lastExtremaKey = '';
     const saved = readCache('candles:' + tf);
     if (saved) commitRows(saved.value, false);
     runJob(refreshCandles);
@@ -2711,6 +2868,8 @@ function commitRows(rows, merge = true, version = candleVersion){
   if (!framed) {
     focusRecentCandles();
     framed = true;
+  } else {
+    updateMainExtrema(false);
   }
   for (const t of streamVersions.keys()) if (t < result[0][0]) streamVersions.delete(t);
 }
@@ -2799,6 +2958,7 @@ function applyKline(kind, series, k, upColor, dnColor){
   series.candles.update(candle);
   series.volumes.update(volume);
   trimChart(kind, series);
+  updateMainExtrema(false);
   streamVersions.set(ms, ++candleVersion);
   candleAt = Date.now();
 }
