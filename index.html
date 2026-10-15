@@ -60,19 +60,19 @@ if (!window.LightweightCharts) {
     --btc-bg:        rgba(255, 165, 48, 0.12);
     --flat-bg:       rgba(255, 255, 255, 0.05);
 
-    --fs-micro: clamp(8px, 0.6vw, 10px);
-    --fs-xs:    clamp(9px, 0.72vw, 11px);
-    --fs-sm:    clamp(11px, 0.88vw, 13px);
-    --fs-md:    clamp(12px, 1.08vw, 16px);
-    --fs-lg:    clamp(15px, 1.4vw, 22px);
-    --fs-xl:    clamp(18px, 1.9vw, 30px);
-    --fs-price: clamp(38px, 4.8vw, 82px);
+    --fs-micro: clamp(8px, 0.58vw, 10px);
+    --fs-xs:    clamp(9px, 0.70vw, 11px);
+    --fs-sm:    clamp(11px, 0.85vw, 13px);
+    --fs-md:    clamp(12px, 1.05vw, 16px);
+    --fs-lg:    clamp(14px, 1.35vw, 21px);
+    --fs-xl:    clamp(17px, 1.75vw, 28px);
+    --fs-price: clamp(34px, 4.3vw, 74px);
 
-    --sp-1: clamp(2px, 0.25vw, 4px);
-    --sp-2: clamp(4px, 0.45vw, 7px);
-    --sp-3: clamp(6px, 0.65vw, 10px);
-    --sp-4: clamp(8px, 0.9vw, 14px);
-    --sp-5: clamp(12px, 1.2vw, 18px);
+    --sp-1: clamp(2px, 0.22vw, 4px);
+    --sp-2: clamp(4px, 0.40vw, 6px);
+    --sp-3: clamp(5px, 0.60vw, 9px);
+    --sp-4: clamp(7px, 0.80vw, 12px);
+    --sp-5: clamp(10px, 1.1vw, 16px);
 
     --r-sm: 6px;
     --r-md: 10px;
@@ -102,7 +102,7 @@ if (!window.LightweightCharts) {
   .tnum, .price-big, .price-unit, .chg-pill, .ath-note, .portfolio-val, .portfolio-pnl,
   .income-value, .aside-val, .aside-chg, .aside-price-small, .stat-val, .clock-time,
   .clock-date, .env-val, .aqi-val, .range24-cap, .m-price, .m-chg, .m-port-val,
-  .m-range-cap, .ohlc-bar {
+  .m-range-cap, .ohlc-bar, .wick-tag {
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum" 1;
   }
@@ -177,9 +177,9 @@ if (!window.LightweightCharts) {
     position: relative;
     z-index: 3;
     display: grid;
-    grid-template-rows: auto minmax(200px, 33vh) auto minmax(0, 1fr);
+    grid-template-rows: auto minmax(172px, 27vh) auto minmax(0, 1fr);
     height: 100vh;
-    padding: var(--sp-3) var(--sp-4);
+    padding: var(--sp-2) var(--sp-4);
     gap: var(--sp-2);
     min-height: 0;
   }
@@ -197,7 +197,7 @@ if (!window.LightweightCharts) {
     grid-template-columns: auto 1fr auto;
     align-items: center;
     gap: var(--sp-3);
-    padding: var(--sp-2) var(--sp-4);
+    padding: 6px var(--sp-4);
     border-radius: var(--r-lg);
     background: linear-gradient(180deg, rgba(12, 18, 32, 0.82) 0%, rgba(7, 10, 18, 0.76) 100%);
     backdrop-filter: blur(16px) saturate(140%);
@@ -217,8 +217,8 @@ if (!window.LightweightCharts) {
     gap: var(--sp-2);
   }
   .brand-icon {
-    width: clamp(26px, 2.1vw, 34px);
-    height: clamp(26px, 2.1vw, 34px);
+    width: clamp(24px, 1.9vw, 32px);
+    height: clamp(24px, 1.9vw, 32px);
     display: grid;
     place-items: center;
     border-radius: var(--r-sm);
@@ -230,7 +230,7 @@ if (!window.LightweightCharts) {
   .brand-title-wrap { display: flex; flex-direction: column; gap: 1px; }
   .brand-name {
     font-family: 'Outfit', sans-serif;
-    font-size: clamp(13px, 1.25vw, 18px);
+    font-size: clamp(13px, 1.2vw, 17px);
     font-weight: 800;
     letter-spacing: clamp(2px, 0.22vw, 3.5px);
     text-transform: uppercase;
@@ -248,7 +248,7 @@ if (!window.LightweightCharts) {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 4px 9px;
+    padding: 3px 8px;
     border-radius: 99px;
     background: var(--surface-inset);
     border: 1px solid var(--border-hi);
@@ -406,10 +406,10 @@ if (!window.LightweightCharts) {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: var(--sp-3) var(--sp-4);
+    padding: var(--sp-2) var(--sp-4);
     position: relative;
     overflow: visible;
-    gap: var(--sp-2);
+    gap: 4px;
     min-height: 0;
   }
   .hero-main::before {
@@ -448,7 +448,7 @@ if (!window.LightweightCharts) {
   .pair-badge .venueTag {
     font-size: var(--fs-micro);
     color: var(--text-ghost);
-    padding: 2px 6px;
+    padding: 1px 6px;
     border-radius: 4px;
     background: var(--surface-inset);
     border: 1px solid var(--border);
@@ -484,7 +484,7 @@ if (!window.LightweightCharts) {
     font-family: 'Outfit', sans-serif;
     font-size: var(--fs-price);
     font-weight: 800;
-    line-height: 0.9;
+    line-height: 0.88;
     letter-spacing: -2px;
     color: var(--green);
     text-shadow: 0 0 50px rgba(0, 232, 123, 0.22);
@@ -502,14 +502,14 @@ if (!window.LightweightCharts) {
   }
   .price-unit {
     font-family: 'Outfit', sans-serif;
-    font-size: clamp(13px, 1.4vw, 20px);
+    font-size: clamp(12px, 1.3vw, 18px);
     font-weight: 500;
     color: var(--text-dim);
     letter-spacing: 1.8px;
   }
   .chg-pill {
-    font-size: clamp(13px, 1.35vw, 20px);
-    padding: 5px 12px;
+    font-size: clamp(12px, 1.25vw, 18px);
+    padding: 4px 11px;
     border-radius: var(--r-md);
   }
 
@@ -517,8 +517,8 @@ if (!window.LightweightCharts) {
   .range24 {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    padding: 6px 10px;
+    gap: 3px;
+    padding: 5px 10px;
     border-radius: var(--r-md);
     background: var(--surface-inset);
     border: 1px solid var(--border);
@@ -564,7 +564,7 @@ if (!window.LightweightCharts) {
   .range24-dot {
     position: absolute;
     top: 50%; left: 50%;
-    width: 12px; height: 12px;
+    width: 11px; height: 11px;
     border-radius: 50%;
     background: var(--green);
     transform: translate(-50%, -50%);
@@ -577,8 +577,8 @@ if (!window.LightweightCharts) {
     position: relative;
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    padding: 6px 10px;
+    gap: 3px;
+    padding: 5px 10px;
     border-radius: var(--r-md);
     background: linear-gradient(135deg, rgba(0, 232, 123, 0.05) 0%, rgba(6, 9, 18, 0.65) 100%);
     border: 1px solid var(--border-hi);
@@ -731,8 +731,8 @@ if (!window.LightweightCharts) {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    gap: 4px;
-    padding: var(--sp-2) var(--sp-3);
+    gap: 3px;
+    padding: 6px var(--sp-3);
     position: relative;
     overflow: hidden;
   }
@@ -803,7 +803,7 @@ if (!window.LightweightCharts) {
     display: grid;
     grid-template-columns: repeat(8, 1fr);
     gap: var(--sp-2);
-    padding: 6px;
+    padding: 5px;
     border-radius: var(--r-lg);
     background: linear-gradient(180deg, rgba(10, 15, 26, 0.72) 0%, rgba(6, 9, 17, 0.80) 100%);
     backdrop-filter: blur(14px);
@@ -816,7 +816,7 @@ if (!window.LightweightCharts) {
     flex-direction: column;
     justify-content: space-between;
     gap: 1px;
-    padding: 5px 8px;
+    padding: 4px 8px;
     border-radius: var(--r-md);
     background: var(--surface-inset);
     border: 1px solid var(--border);
@@ -858,7 +858,7 @@ if (!window.LightweightCharts) {
   .stat-val.xrp { color: var(--green); }
   .stat-val.oil { color: var(--amber); }
 
-  /* ══════════ 4. CHART PANELS ══════════ */
+  /* ══════════ 4. CHART PANELS & WICK CALLOUT OVERLAY ══════════ */
   .charts {
     display: grid;
     grid-template-columns: 1fr;
@@ -872,7 +872,7 @@ if (!window.LightweightCharts) {
     display: flex;
     flex-direction: column;
   }
-  .jpy-panel { flex: 1 1 auto; min-height: 90px; }
+  .jpy-panel { flex: 1 1 auto; min-height: 82px; }
   .jpy-panel .live-dot { background: var(--cyan) !important; box-shadow: 0 0 6px var(--cyan) !important; }
   .chart-label em.jpy-em { font-style: normal; color: var(--cyan); font-weight: 700; }
 
@@ -881,7 +881,7 @@ if (!window.LightweightCharts) {
     align-items: center;
     justify-content: space-between;
     gap: var(--sp-2);
-    padding: 5px var(--sp-3);
+    padding: 4px var(--sp-3);
     border-bottom: 1px solid var(--border);
     background: rgba(4, 6, 12, 0.45);
     flex-wrap: wrap;
@@ -982,6 +982,69 @@ if (!window.LightweightCharts) {
   }
   .chart-canvas, .chart-canvas * { text-shadow: none; }
 
+  /* Precision High/Low Wick Callout Overlay (Zero Vertical Margin Penalty) */
+  .wick-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 5;
+    overflow: hidden;
+  }
+  .wick-callout {
+    position: absolute;
+    left: 0;
+    top: 0;
+    pointer-events: none;
+    will-change: transform;
+  }
+  .wick-dot {
+    position: absolute;
+    left: -4px;
+    top: -4px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+  .wick-callout.hi .wick-dot {
+    background: var(--green-2);
+    box-shadow: 0 0 10px var(--green), 0 0 0 2px #050811;
+  }
+  .wick-callout.lo .wick-dot {
+    background: var(--red-2);
+    box-shadow: 0 0 10px var(--red), 0 0 0 2px #050811;
+  }
+  .wick-tag {
+    position: absolute;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 8px;
+    border-radius: 5px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    line-height: 1.15;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.65);
+  }
+  .wick-callout.hi .wick-tag {
+    top: 0;
+    background: rgba(6, 28, 19, 0.90);
+    color: var(--green-2);
+    border: 1px solid rgba(92, 255, 176, 0.45);
+  }
+  .wick-callout.lo .wick-tag {
+    bottom: 0;
+    background: rgba(36, 9, 18, 0.90);
+    color: var(--red-2);
+    border: 1px solid rgba(255, 107, 136, 0.45);
+  }
+  .wick-callout.side-r .wick-tag { left: 8px; }
+  .wick-callout.side-l .wick-tag { right: 8px; }
+
   .data-status {
     position: absolute;
     left: 10px;
@@ -1029,11 +1092,11 @@ if (!window.LightweightCharts) {
     .topbar { grid-template-columns: auto 1fr; }
     .env-strip { grid-column: 1 / -1; justify-content: flex-start; order: 3; }
     .stats { grid-template-columns: repeat(4, 1fr); }
-    .dash { grid-template-rows: auto minmax(195px, 32vh) auto minmax(0, 1fr); }
+    .dash { grid-template-rows: auto minmax(170px, 28vh) auto minmax(0, 1fr); }
   }
   @media (max-width: 760px) {
     body:not(.mobile) { overflow-y: auto; }
-    body:not(.mobile) .dash { height: auto; min-height: 100vh; grid-template-rows: auto auto auto minmax(280px, 1fr); }
+    body:not(.mobile) .dash { height: auto; min-height: 100vh; grid-template-rows: auto auto auto minmax(320px, 1fr); }
     .hero { grid-template-columns: 1fr; }
     .jpy-panel .chart-canvas { min-height: 150px; }
     .stats { grid-template-columns: repeat(2, 1fr); }
@@ -1590,7 +1653,18 @@ if (!window.LightweightCharts) {
           <div class="aside-price-small" id="xrpUsdtMini">···</div>
         </div>
       </div>
-      <div class="chart-canvas" id="chartMain"></div>
+      <div class="chart-canvas" id="chartMain">
+        <div class="wick-overlay">
+          <div class="wick-callout hi side-r" id="wickHi" hidden>
+            <div class="wick-dot"></div>
+            <div class="wick-tag" id="wickHiText">HIGH —</div>
+          </div>
+          <div class="wick-callout lo side-r" id="wickLo" hidden>
+            <div class="wick-dot"></div>
+            <div class="wick-tag" id="wickLoText">LOW —</div>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -1625,7 +1699,7 @@ const CFG = {
   PROXY_CP: 'https://corsproxy.io/?',
   PROXY_AO: 'https://api.allorigins.win/get?url=',
   MAX_CANDLES: 2000,
-  VISIBLE_CANDLES: 64, // 64 x 15m = 16 hours of clean, well-spaced candlesticks
+  VISIBLE_CANDLES: 64,
   IDLE_MS: 4000,
   POLL: {
     brent: 120_000,
@@ -1664,6 +1738,7 @@ const D = {};
   'vol24','mcap','rlusdCap','xrpSats',
   'chartMain','chartJpy','jpyMini','xrpUsdtMini','fxDesk','mFx',
   'mainIntervalLabel','tfGroup','ohlcBar',
+  'wickHi','wickHiText','wickLo','wickLoText',
   'btnFullscreen','btnMobileSwitch','btnDeskSwitch',
   // Mobile elements
   'mClk','mDot','mLabel',
@@ -1697,16 +1772,16 @@ const macroState      = { jpy: null, brent: null };
 const providerMemory  = new Map();
 const providerRetry   = new Map();
 const streamVersions  = new Map();
-const data            = { main: { candles: [], volumes: [] } };
+const data            = { main: { candles: [] } };
 
 let renderQueued      = false;
 let candleMain        = null;
-let volMain           = null;
 let chartMain         = null;
 let hiPriceLine       = null;
 let loPriceLine       = null;
 let midPriceLine      = null;
-let lastExtremaKey    = '';
+let visibleHiPrice    = -Infinity;
+let visibleLoPrice    = Infinity;
 let historyAt         = 0;
 let candleAt          = 0;
 let framed            = false;
@@ -2236,8 +2311,6 @@ function uniquePoints(points){
     .map(p => [+p.time, {time: +p.time, value: +p.value}])).values()].sort((a, b) => a.time - b.time).slice(-2000);
 }
 
-// Densifies sparse daily series so Lightweight Charts sets a small barSpacing
-// and plots the rightmost point flush against the right price axis.
 function densifySeries(points, targetCount = 140){
   if (!Array.isArray(points) || points.length < 2 || points.length >= targetCount) return points;
   const out = [];
@@ -2552,20 +2625,32 @@ async function fetchXrpMeta(){
   scheduleRender();
 }
 
-// ══════════ 11. CHARTS & HIGH/LOW WICK CALLOUTS (Desktop Only) ══════════
+// ══════════ 11. CHARTS & FULL-HEIGHT WICK CALLOUTS (Desktop Only) ══════════
 function focusRecentCandles(){
   if (!chartMain || !data.main.candles.length) return;
   const total = data.main.candles.length;
   const visible = Math.min(CFG.VISIBLE_CANDLES, total);
+  chartMain.priceScale('right').applyOptions({ autoScale: true });
   chartMain.timeScale().setVisibleLogicalRange({
     from: Math.max(0, total - visible),
     to: total + 1.5
   });
-  updateMainExtrema(true);
+  scheduleExtremaSync();
 }
 
-// Labels the exact High wick and Low wick in the visible window + adds High/Mid/Low axis scale lines
-function updateMainExtrema(force = false){
+let extremaRaf = 0;
+function scheduleExtremaSync(){
+  if (extremaRaf) cancelAnimationFrame(extremaRaf);
+  extremaRaf = requestAnimationFrame(() => {
+    extremaRaf = requestAnimationFrame(() => {
+      extremaRaf = 0;
+      updateMainExtrema();
+    });
+  });
+}
+
+// Positions the High/Low wick callout badges & price lines without adding vertical margins
+function updateMainExtrema(){
   if (IS_MOBILE || !chartMain || !candleMain || !data.main.candles.length) return;
   const candles = data.main.candles;
   const logical = chartMain.timeScale().getVisibleLogicalRange();
@@ -2590,35 +2675,13 @@ function updateMainExtrema(force = false){
   }
   if (!hiBar || !loBar) return;
 
-  const key = `${hiBar.time}:${hiBar.high.toFixed(4)}|${loBar.time}:${loBar.low.toFixed(4)}`;
-  if (!force && key === lastExtremaKey) return;
-  lastExtremaKey = key;
+  visibleHiPrice = hiBar.high;
+  visibleLoPrice = loBar.low;
 
-  // 1. On-chart wick callout markers (even for quick single-candle wicks)
-  const markers = [
-    {
-      time: hiBar.time,
-      position: 'aboveBar',
-      color: '#5cffb0',
-      shape: 'arrowDown',
-      text: 'HIGH $' + num(hiBar.high, 4),
-      size: 1
-    },
-    {
-      time: loBar.time,
-      position: 'belowBar',
-      color: '#ff6b88',
-      shape: 'arrowUp',
-      text: 'LOW $' + num(loBar.low, 4),
-      size: 1
-    }
-  ].sort((a, b) => a.time - b.time);
-  candleMain.setMarkers(markers);
-
-  // 2. Price lines & axis badges so candle scale is always obvious on the right axis
+  // 1. Update right-axis price lines for HI / MID / LO
   const hiOpts = {
     price: hiBar.high,
-    color: 'rgba(92, 255, 176, 0.45)',
+    color: 'rgba(92, 255, 176, 0.42)',
     lineWidth: 1,
     lineStyle: LightweightCharts.LineStyle.Dashed,
     axisLabelVisible: true,
@@ -2628,7 +2691,7 @@ function updateMainExtrema(force = false){
   };
   const loOpts = {
     price: loBar.low,
-    color: 'rgba(255, 107, 136, 0.45)',
+    color: 'rgba(255, 107, 136, 0.42)',
     lineWidth: 1,
     lineStyle: LightweightCharts.LineStyle.Dashed,
     axisLabelVisible: true,
@@ -2656,6 +2719,38 @@ function updateMainExtrema(force = false){
 
   if (!midPriceLine) midPriceLine = candleMain.createPriceLine(midOpts);
   else midPriceLine.applyOptions(midOpts);
+
+  // 2. Position precision HTML callout tags directly on the High and Low wick tips
+  const paneW = chartMain.timeScale().width() || (D.chartMain.clientWidth - 70);
+  const paneH = (D.chartMain.clientHeight || 300) - (chartMain.timeScale().height() || 26);
+
+  const hiX = chartMain.timeScale().timeToCoordinate(hiBar.time);
+  const hiY = candleMain.priceToCoordinate(hiBar.high);
+  if (D.wickHi && hiX != null && hiY != null && Number.isFinite(hiX) && Number.isFinite(hiY)) {
+    const clampedY = Math.max(4, Math.min(paneH - 22, Math.round(hiY)));
+    const placeLeft = hiX > paneW * 0.68;
+    D.wickHi.classList.toggle('side-l', placeLeft);
+    D.wickHi.classList.toggle('side-r', !placeLeft);
+    D.wickHi.style.transform = `translate3d(${Math.round(hiX)}px, ${clampedY}px, 0)`;
+    D.wickHiText.textContent = (placeLeft ? `HIGH $${num(hiBar.high, 4)} ▶` : `◀ HIGH $${num(hiBar.high, 4)}`);
+    D.wickHi.hidden = false;
+  } else if (D.wickHi) {
+    D.wickHi.hidden = true;
+  }
+
+  const loX = chartMain.timeScale().timeToCoordinate(loBar.time);
+  const loY = candleMain.priceToCoordinate(loBar.low);
+  if (D.wickLo && loX != null && loY != null && Number.isFinite(loX) && Number.isFinite(loY)) {
+    const clampedY = Math.max(22, Math.min(paneH - 4, Math.round(loY)));
+    const placeLeft = loX > paneW * 0.68;
+    D.wickLo.classList.toggle('side-l', placeLeft);
+    D.wickLo.classList.toggle('side-r', !placeLeft);
+    D.wickLo.style.transform = `translate3d(${Math.round(loX)}px, ${clampedY}px, 0)`;
+    D.wickLoText.textContent = (placeLeft ? `LOW $${num(loBar.low, 4)} ▶` : `◀ LOW $${num(loBar.low, 4)}`);
+    D.wickLo.hidden = false;
+  } else if (D.wickLo) {
+    D.wickLo.hidden = true;
+  }
 }
 
 function createChart(el, opts = {}){
@@ -2677,12 +2772,13 @@ function createChart(el, opts = {}){
     },
     rightPriceScale: {
       visible: true,
+      autoScale: true,
       borderVisible: true,
       ticksVisible: true,
       entireTextOnly: false,
       alignLabels: true,
       borderColor: 'rgba(255, 255, 255, 0.12)',
-      scaleMargins: {top: 0.12, bottom: 0.08}
+      scaleMargins: opts.scaleMargins || {top: 0.01, bottom: 0.01}
     },
     timeScale: {
       visible: true,
@@ -2707,6 +2803,7 @@ function createChart(el, opts = {}){
     if (rect.width > 0 && rect.height > 0) {
       c.applyOptions({width: Math.floor(rect.width), height: Math.floor(rect.height)});
       if (opts.autoFitOnResize) c.timeScale().fitContent();
+      if (opts.onResizeSync) opts.onResizeSync();
     }
   };
   new ResizeObserver(fit).observe(el);
@@ -2723,8 +2820,8 @@ const CANDLE_STYLE = {
   downColor: '#ff2952',
   borderUpColor: '#00e87b',
   borderDownColor: '#ff2952',
-  wickUpColor: 'rgba(92, 255, 176, 0.85)',
-  wickDownColor: 'rgba(255, 107, 136, 0.85)',
+  wickUpColor: '#5cffb0',
+  wickDownColor: '#ff6b88',
   priceLineColor: 'rgba(0, 232, 123, 0.45)',
   priceLineWidth: 1,
   priceLineStyle: 2,
@@ -2752,15 +2849,29 @@ function initCharts(){
       barSpacing: 13,
       minBarSpacing: 4,
       rightOffset: 2,
-      onResetZoom: focusRecentCandles
+      scaleMargins: {top: 0.01, bottom: 0.01},
+      onResetZoom: focusRecentCandles,
+      onResizeSync: scheduleExtremaSync
     });
-    candleMain = chartMain.addCandlestickSeries({...CANDLE_STYLE, priceFormat: {type:'price', precision:4, minMove:0.0001}});
-    volMain = chartMain.addHistogramSeries({priceFormat: {type:'volume'}, priceScaleId: 'vol', lastValueVisible: false});
-    volMain.priceScale().applyOptions({scaleMargins: {top: 0.86, bottom: 0}});
-    candleMain.priceScale().applyOptions({scaleMargins: {top: 0.16, bottom: 0.20}});
+    candleMain = chartMain.addCandlestickSeries({
+      ...CANDLE_STYLE,
+      priceFormat: {type:'price', precision:4, minMove:0.0001},
+      autoscaleInfoProvider: original => {
+        const res = original();
+        if (!res || !res.priceRange) return res;
+        return {
+          priceRange: res.priceRange,
+          margins: { above: 3, below: 3 }
+        };
+      }
+    });
+    candleMain.priceScale().applyOptions({
+      autoScale: true,
+      scaleMargins: {top: 0.01, bottom: 0.01}
+    });
 
     chartMain.timeScale().subscribeVisibleLogicalRangeChange(() => {
-      updateMainExtrema(false);
+      scheduleExtremaSync();
     });
 
     chartMain.subscribeCrosshairMove(param => {
@@ -2770,15 +2881,13 @@ function initCharts(){
         return;
       }
       const c = param.seriesData.get(candleMain);
-      const v = param.seriesData.get(volMain);
       if (!c) { D.ohlcBar.innerHTML = ''; return; }
       const cls = c.close >= c.open ? 's-up' : 's-dn';
       D.ohlcBar.innerHTML =
         `<span><em>O</em><b class="${cls}">${num(c.open, 4)}</b></span>` +
         `<span><em>H</em><b class="${cls}">${num(c.high, 4)}</b></span>` +
         `<span><em>L</em><b class="${cls}">${num(c.low, 4)}</b></span>` +
-        `<span><em>C</em><b class="${cls}">${num(c.close, 4)}</b></span>` +
-        (v?.value != null ? `<span><em>V</em><b>${compact(v.value)}</b></span>` : '');
+        `<span><em>C</em><b class="${cls}">${num(c.close, 4)}</b></span>`;
     });
 
     window.chartJpy = createChart(D.chartJpy, {
@@ -2786,6 +2895,7 @@ function initCharts(){
       rightOffset: 0,
       fixLeftEdge: true,
       fixRightEdge: true,
+      scaleMargins: {top: 0.06, bottom: 0.06},
       autoFitOnResize: true
     });
     window.areaJpy = window.chartJpy.addAreaSeries(AREA_JPY);
@@ -2814,10 +2924,10 @@ if (D.tfGroup) {
     D.tfGroup.querySelectorAll('.tf-btn').forEach(b => b.classList.toggle('active', b === btn));
     if (D.mainIntervalLabel) D.mainIntervalLabel.textContent = tf.toUpperCase();
     data.main.candles = [];
-    data.main.volumes = [];
     streamVersions.clear();
     framed = false;
-    lastExtremaKey = '';
+    visibleHiPrice = -Infinity;
+    visibleLoPrice = Infinity;
     const saved = readCache('candles:' + tf);
     if (saved) commitRows(saved.value, false);
     runJob(refreshCandles);
@@ -2830,9 +2940,7 @@ function trimChart(kind, series){
   if (arr.candles.length > CFG.MAX_CANDLES) {
     const n = arr.candles.length - CFG.MAX_CANDLES;
     arr.candles.splice(0, n);
-    arr.volumes.splice(0, n);
     series.candles.setData(arr.candles);
-    series.volumes.setData(arr.volumes);
   }
 }
 
@@ -2840,16 +2948,16 @@ function normalizeRows(rows){
   if (!Array.isArray(rows)) return [];
   const unique = new Map();
   for (const k of rows) {
-    if (!Array.isArray(k) || k.slice(0, 6).some(v => v == null || v === '')) continue;
-    const [t, o, h, l, c, v] = k.slice(0, 6).map(Number);
-    if (![t, o, h, l, c, v].every(Number.isFinite) || t <= 0 || Math.floor(t) !== t || Math.min(o, h, l, c) <= 0 || v < 0 || h < Math.max(o, l, c) || l > Math.min(o, h, c)) continue;
-    unique.set(t, [t, o, h, l, c, v]);
+    if (!Array.isArray(k) || k.slice(0, 5).some(v => v == null || v === '')) continue;
+    const [t, o, h, l, c] = k.slice(0, 5).map(Number);
+    if (![t, o, h, l, c].every(Number.isFinite) || t <= 0 || Math.floor(t) !== t || Math.min(o, h, l, c) <= 0 || h < Math.max(o, l, c) || l > Math.min(o, h, c)) continue;
+    unique.set(t, [t, o, h, l, c]);
   }
   return [...unique.values()].sort((a, b) => a[0] - b[0]).slice(-CFG.MAX_CANDLES);
 }
 
 function rowsFromMemory(){
-  return data.main.candles.map((c, i) => [(c.time - TZ_OFFSET) * 1000, c.open, c.high, c.low, c.close, data.main.volumes[i].value]);
+  return data.main.candles.map(c => [(c.time - TZ_OFFSET) * 1000, c.open, c.high, c.low, c.close]);
 }
 
 function commitRows(rows, merge = true, version = candleVersion){
@@ -2862,14 +2970,13 @@ function commitRows(rows, merge = true, version = candleVersion){
   }
   if (!result.length) return;
   data.main.candles = result.map(([t, o, h, l, c]) => ({time: toTzSec(t), open: o, high: h, low: l, close: c}));
-  data.main.volumes = result.map(([t, o, h, l, c, v]) => ({time: toTzSec(t), value: v, color: c >= o ? 'rgba(0, 232, 123, 0.16)' : 'rgba(255, 41, 82, 0.16)'}));
   candleMain.setData(data.main.candles);
-  volMain.setData(data.main.volumes);
+  chartMain.priceScale('right').applyOptions({ autoScale: true });
   if (!framed) {
     focusRecentCandles();
     framed = true;
   } else {
-    updateMainExtrema(false);
+    scheduleExtremaSync();
   }
   for (const t of streamVersions.keys()) if (t < result[0][0]) streamVersions.delete(t);
 }
@@ -2939,26 +3046,28 @@ function updateMainMini(pct){
     + '<span class="chg ' + cls + '">' + sign + pct.toFixed(2) + '%</span>';
 }
 
-function applyKline(kind, series, k, upColor, dnColor){
+function applyKline(kind, series, k){
   if (IS_MOBILE || !candleMain || !k) return;
-  const rows = normalizeRows([[k.t, k.o, k.h, k.l, k.c, k.v]]);
+  const rows = normalizeRows([[k.t, k.o, k.h, k.l, k.c]]);
   if (!rows.length) return;
-  const [ms, o, h, l, c, v] = rows[0], t = toTzSec(ms);
+  const [ms, o, h, l, c] = rows[0], t = toTzSec(ms);
   const arr = data[kind], last = arr.candles[arr.candles.length - 1];
   if (last && t < last.time) return;
   const candle = {time: t, open: o, high: h, low: l, close: c};
-  const volume = {time: t, value: v, color: c >= o ? upColor : dnColor};
-  if (last?.time === t) {
+  const isNewBar = !last || last.time !== t;
+  if (!isNewBar) {
     arr.candles[arr.candles.length - 1] = candle;
-    arr.volumes[arr.volumes.length - 1] = volume;
   } else {
     arr.candles.push(candle);
-    arr.volumes.push(volume);
   }
   series.candles.update(candle);
-  series.volumes.update(volume);
   trimChart(kind, series);
-  updateMainExtrema(false);
+
+  // If a new high or new low breaks out (or a new bar opens), ensure autoScale adjusts immediately
+  if (isNewBar || h >= visibleHiPrice || l <= visibleLoPrice) {
+    chartMain.priceScale('right').applyOptions({ autoScale: true });
+  }
+  scheduleExtremaSync();
   streamVersions.set(ms, ++candleVersion);
   candleAt = Date.now();
 }
@@ -2994,7 +3103,7 @@ function handleWsMessage(evt){
     scheduleRender();
   }
   else if (s.startsWith('xrpusdt@kline_')) {
-    applyKline('main', {candles: candleMain, volumes: volMain}, d.k, 'rgba(0, 232, 123, 0.16)', 'rgba(255, 41, 82, 0.16)');
+    applyKline('main', {candles: candleMain}, d.k);
   }
   else if (s === 'btcusdt@ticker') {
     S.btcPrev = S.btcUsd; S.btcUsd = +d.c; S.btc24hPct = +d.P;
