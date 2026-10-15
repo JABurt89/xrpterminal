@@ -12,91 +12,71 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Azeret+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-<!-- Multi-CDN Loader for TradingView Lightweight Charts v4.1.3 -->
+<!-- Synchronous Primary Load + Automatic Fallback for TradingView Lightweight Charts v4.1.3 -->
+<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 <script>
-(function loadLightweightCharts(){
-  const cdns = [
-    'https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js',
-    'https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/lightweight-charts/4.1.3/lightweight-charts.standalone.production.min.js'
-  ];
-  let idx = 0;
-  function tryNext(){
-    if (window.LightweightCharts) {
-      window.dispatchEvent(new Event('chartsReady'));
-      return;
-    }
-    if (idx >= cdns.length) {
-      window.dispatchEvent(new Event('chartsFailed'));
-      return;
-    }
-    const s = document.createElement('script');
-    s.src = cdns[idx++];
-    s.async = true;
-    s.onload = () => window.dispatchEvent(new Event('chartsReady'));
-    s.onerror = tryNext;
-    document.head.appendChild(s);
-  }
-  tryNext();
-})();
+if (!window.LightweightCharts) {
+  const s = document.createElement('script');
+  s.src = 'https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js';
+  s.onload = () => window.dispatchEvent(new Event('chartsReady'));
+  s.onerror = () => window.dispatchEvent(new Event('chartsFailed'));
+  document.head.appendChild(s);
+}
 </script>
 
 <style>
   /* ══════════ DESIGN TOKENS ══════════ */
   :root {
-    --bg:           #04060b;
-    --surface:      rgba(9, 13, 24, 0.74);
-    --surface-2:    rgba(13, 19, 34, 0.82);
-    --surface-inset:rgba(4, 6, 12, 0.55);
-    --border:       rgba(255, 255, 255, 0.06);
-    --border-hi:    rgba(255, 255, 255, 0.11);
-    --specular:     inset 0 1px 0 rgba(255, 255, 255, 0.07);
-    --card-shadow:  0 10px 32px rgba(0, 0, 0, 0.48), var(--specular);
+    --bg:            #04060b;
+    --surface:       rgba(9, 13, 24, 0.74);
+    --surface-2:     rgba(13, 19, 34, 0.82);
+    --surface-inset: rgba(4, 6, 12, 0.55);
+    --border:        rgba(255, 255, 255, 0.06);
+    --border-hi:     rgba(255, 255, 255, 0.11);
+    --specular:      inset 0 1px 0 rgba(255, 255, 255, 0.07);
+    --card-shadow:   0 10px 32px rgba(0, 0, 0, 0.48), var(--specular);
 
-    --text:         #eef2fa;
-    --text-dim:     #94a1c2;
-    --text-ghost:   #586484;
+    --text:          #eef2fa;
+    --text-dim:      #94a1c2;
+    --text-ghost:    #586484;
 
-    --green:        #00e87b;
-    --green-2:      #5cffb0;
-    --green-bg:     rgba(0, 232, 123, 0.12);
-    --green-border: rgba(0, 232, 123, 0.28);
-    --green-glow:   rgba(0, 232, 123, 0.26);
+    --green:         #00e87b;
+    --green-2:       #5cffb0;
+    --green-bg:      rgba(0, 232, 123, 0.12);
+    --green-border:  rgba(0, 232, 123, 0.28);
+    --green-glow:    rgba(0, 232, 123, 0.26);
 
-    --red:          #ff2952;
-    --red-2:        #ff6b88;
-    --red-bg:       rgba(255, 41, 82, 0.12);
-    --red-border:   rgba(255, 41, 82, 0.28);
-    --red-glow:     rgba(255, 41, 82, 0.26);
+    --red:           #ff2952;
+    --red-2:         #ff6b88;
+    --red-bg:        rgba(255, 41, 82, 0.12);
+    --red-border:    rgba(255, 41, 82, 0.28);
+    --red-glow:      rgba(255, 41, 82, 0.26);
 
-    --amber:        #f5b038;
-    --amber-bg:     rgba(245, 176, 56, 0.12);
-    --cyan:         #5ec8ff;
-    --cyan-bg:      rgba(94, 200, 255, 0.12);
-    --btc:          #ffa530;
-    --btc-bg:       rgba(255, 165, 48, 0.12);
-    --flat-bg:      rgba(255, 255, 255, 0.05);
+    --amber:         #f5b038;
+    --amber-bg:      rgba(245, 176, 56, 0.12);
+    --cyan:          #5ec8ff;
+    --cyan-bg:       rgba(94, 200, 255, 0.12);
+    --btc:           #ffa530;
+    --btc-bg:        rgba(255, 165, 48, 0.12);
+    --flat-bg:       rgba(255, 255, 255, 0.05);
 
-    --fs-micro: clamp(8px, 0.62vw, 10px);
-    --fs-xs:    clamp(9px, 0.75vw, 12px);
-    --fs-sm:    clamp(11px, 0.92vw, 14px);
-    --fs-md:    clamp(13px, 1.18vw, 18px);
-    --fs-lg:    clamp(16px, 1.55vw, 24px);
-    --fs-xl:    clamp(20px, 2.15vw, 34px);
-    --fs-xxl:   clamp(26px, 3.1vw, 48px);
-    --fs-price: clamp(46px, 5.8vw, 96px);
+    --fs-micro: clamp(8px, 0.6vw, 10px);
+    --fs-xs:    clamp(9px, 0.72vw, 11px);
+    --fs-sm:    clamp(11px, 0.88vw, 13px);
+    --fs-md:    clamp(12px, 1.08vw, 16px);
+    --fs-lg:    clamp(15px, 1.4vw, 22px);
+    --fs-xl:    clamp(18px, 1.9vw, 30px);
+    --fs-price: clamp(38px, 4.8vw, 82px);
 
-    --sp-1: clamp(3px, 0.3vw, 5px);
-    --sp-2: clamp(5px, 0.5vw, 8px);
-    --sp-3: clamp(8px, 0.75vw, 12px);
-    --sp-4: clamp(10px, 1.05vw, 16px);
-    --sp-5: clamp(14px, 1.4vw, 22px);
-    --sp-6: clamp(18px, 1.9vw, 30px);
+    --sp-1: clamp(2px, 0.25vw, 4px);
+    --sp-2: clamp(4px, 0.45vw, 7px);
+    --sp-3: clamp(6px, 0.65vw, 10px);
+    --sp-4: clamp(8px, 0.9vw, 14px);
+    --sp-5: clamp(12px, 1.2vw, 18px);
 
     --r-sm: 6px;
     --r-md: 10px;
     --r-lg: 14px;
-    --r-xl: 18px;
 
     --t-fast:   140ms ease;
     --t-med:    280ms ease;
@@ -119,7 +99,6 @@
   body.idle { cursor: none; }
   canvas { text-shadow: none; }
 
-  /* Tabular numerals across all live telemetry */
   .tnum, .price-big, .price-unit, .chg-pill, .ath-note, .portfolio-val, .portfolio-pnl,
   .income-value, .aside-val, .aside-chg, .aside-price-small, .stat-val, .clock-time,
   .clock-date, .env-val, .aqi-val, .range24-cap, .m-price, .m-chg, .m-port-val,
@@ -128,7 +107,7 @@
     font-feature-settings: "tnum" 1;
   }
 
-  /* ══════════SHARED UTILITY CLASSES ══════════ */
+  /* ══════════ SHARED UTILITY CLASSES ══════════ */
   .glass-card {
     background: linear-gradient(165deg, rgba(12, 18, 32, 0.76) 0%, rgba(6, 9, 17, 0.84) 100%);
     backdrop-filter: blur(16px) saturate(140%);
@@ -198,10 +177,10 @@
     position: relative;
     z-index: 3;
     display: grid;
-    grid-template-rows: auto auto auto 1fr auto;
+    grid-template-rows: auto minmax(200px, 33vh) auto 1fr auto;
     height: 100vh;
     padding: var(--sp-3) var(--sp-4) var(--sp-2);
-    gap: var(--sp-3);
+    gap: var(--sp-2);
     min-height: 0;
   }
 
@@ -218,7 +197,7 @@
     display: grid;
     grid-template-columns: auto 1fr auto;
     align-items: center;
-    gap: var(--sp-4);
+    gap: var(--sp-3);
     padding: var(--sp-2) var(--sp-4);
     border-radius: var(--r-lg);
     background: linear-gradient(180deg, rgba(12, 18, 32, 0.82) 0%, rgba(7, 10, 18, 0.76) 100%);
@@ -239,8 +218,8 @@
     gap: var(--sp-2);
   }
   .brand-icon {
-    width: clamp(28px, 2.3vw, 38px);
-    height: clamp(28px, 2.3vw, 38px);
+    width: clamp(26px, 2.1vw, 34px);
+    height: clamp(26px, 2.1vw, 34px);
     display: grid;
     place-items: center;
     border-radius: var(--r-sm);
@@ -252,9 +231,9 @@
   .brand-title-wrap { display: flex; flex-direction: column; gap: 1px; }
   .brand-name {
     font-family: 'Outfit', sans-serif;
-    font-size: clamp(14px, 1.35vw, 20px);
+    font-size: clamp(13px, 1.25vw, 18px);
     font-weight: 800;
-    letter-spacing: clamp(2px, 0.25vw, 4px);
+    letter-spacing: clamp(2px, 0.22vw, 3.5px);
     text-transform: uppercase;
     line-height: 1;
   }
@@ -262,7 +241,7 @@
   .brand-sub {
     font-size: var(--fs-micro);
     color: var(--text-ghost);
-    letter-spacing: 1.8px;
+    letter-spacing: 1.6px;
     text-transform: uppercase;
   }
 
@@ -277,7 +256,7 @@
     font-family: 'Outfit', sans-serif;
     font-size: var(--fs-micro);
     font-weight: 700;
-    letter-spacing: 1.5px;
+    letter-spacing: 1.4px;
     color: var(--text-dim);
   }
   .status-dot {
@@ -299,7 +278,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: var(--sp-3);
+    gap: var(--sp-2);
     font-family: 'Outfit', sans-serif;
     min-width: 0;
     overflow: hidden;
@@ -308,31 +287,31 @@
     display: flex;
     align-items: center;
     gap: var(--sp-3);
-    padding: 4px 12px;
+    padding: 3px 10px;
     border-radius: var(--r-md);
     background: var(--surface-inset);
     border: 1px solid var(--border);
     flex-shrink: 0;
   }
-  .env-item { display: flex; align-items: center; gap: 6px; }
+  .env-item { display: flex; align-items: center; gap: 5px; }
   .env-icon { font-size: var(--fs-md); line-height: 1; }
-  .env-val  { font-size: var(--fs-sm); font-weight: 700; line-height: 1.1; color: var(--text); }
+  .env-val  { font-size: var(--fs-xs); font-weight: 700; line-height: 1.1; color: var(--text); }
   .env-sub  { font-size: var(--fs-micro); color: var(--text-dim); line-height: 1.1; white-space: nowrap; }
-  .env-sep  { width: 1px; height: 18px; background: var(--border-hi); flex-shrink: 0; }
+  .env-sep  { width: 1px; height: 16px; background: var(--border-hi); flex-shrink: 0; }
 
   .aqi {
-    padding: 3px 9px;
+    padding: 2px 8px;
     border-radius: var(--r-sm);
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     font-weight: 700;
     border: 1px solid var(--border-hi);
     background: rgba(0, 0, 0, 0.35);
   }
-  .aqi-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .aqi-val { font-size: var(--fs-sm); line-height: 1; }
-  .aqi-level { font-size: var(--fs-micro); font-weight: 600; opacity: 0.9; letter-spacing: 0.6px; text-transform: uppercase; white-space: nowrap; }
+  .aqi-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .aqi-val { font-size: var(--fs-xs); line-height: 1; }
+  .aqi-level { font-size: var(--fs-micro); font-weight: 600; opacity: 0.9; letter-spacing: 0.5px; text-transform: uppercase; white-space: nowrap; }
 
   /* 8-Hour Forecast Strip */
   .hourly {
@@ -348,14 +327,14 @@
     flex-direction: column;
     align-items: center;
     gap: 1px;
-    min-width: clamp(36px, 2.5vw, 46px);
-    padding: 3px 5px;
+    min-width: clamp(34px, 2.3vw, 44px);
+    padding: 2px 4px;
     border-radius: var(--r-sm);
     background: var(--surface-inset);
     border: 1px solid var(--border);
   }
-  .hr-time { font-family: 'Outfit', sans-serif; font-size: var(--fs-micro); font-weight: 600; color: var(--text-dim); line-height: 1.1; }
-  .hr-mid  { display: flex; align-items: center; gap: 2px; line-height: 1.1; }
+  .hr-time { font-family: 'Outfit', sans-serif; font-size: var(--fs-micro); font-weight: 600; color: var(--text-dim); line-height: 1.05; }
+  .hr-mid  { display: flex; align-items: center; gap: 2px; line-height: 1.05; }
   .hr-icon { font-size: var(--fs-xs); line-height: 1; }
   .hr-temp { font-family: 'Outfit', sans-serif; font-size: var(--fs-xs); font-weight: 700; color: var(--text); line-height: 1; }
   .hr-pop  { font-family: 'Outfit', sans-serif; font-size: var(--fs-micro); font-weight: 600; color: var(--text-ghost); line-height: 1; }
@@ -374,7 +353,7 @@
     font-family: 'Outfit', sans-serif;
     line-height: 1.1;
   }
-  .clock-row { display: flex; align-items: baseline; gap: 6px; }
+  .clock-row { display: flex; align-items: baseline; gap: 5px; }
   .clock-time { font-size: var(--fs-lg); font-weight: 700; letter-spacing: 0.5px; color: var(--text); }
   .clock-tz {
     font-size: var(--fs-micro);
@@ -399,27 +378,27 @@
     border: 1px solid var(--border-hi);
     color: var(--text-dim);
     border-radius: var(--r-sm);
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
     display: grid;
     place-items: center;
     cursor: pointer;
     transition: all var(--t-fast);
     font-family: 'Outfit', sans-serif;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
   }
   .icon-btn:hover {
     color: var(--text);
     border-color: var(--green-border);
-    background: rgba(0, 232, 123, 0.08);
+    background: rgba(0, 232, 123, 0.12);
   }
 
   /* ══════════ 2. HERO BENTO GRID ══════════ */
   .hero {
     display: grid;
-    grid-template-columns: 7fr 5fr;
-    gap: var(--sp-3);
+    grid-template-columns: 1.15fr 0.85fr;
+    gap: var(--sp-2);
     min-height: 0;
   }
 
@@ -428,10 +407,11 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: var(--sp-4) var(--sp-5);
+    padding: var(--sp-3) var(--sp-4);
     position: relative;
     overflow: visible;
-    gap: var(--sp-3);
+    gap: var(--sp-2);
+    min-height: 0;
   }
   .hero-main::before {
     content: '';
@@ -446,22 +426,22 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--sp-3);
+    gap: var(--sp-2);
   }
   .pair-badge {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 7px;
     font-family: 'Outfit', sans-serif;
     font-size: var(--fs-xs);
     font-weight: 700;
-    letter-spacing: 2.5px;
+    letter-spacing: 2px;
     text-transform: uppercase;
     color: var(--text-dim);
   }
   .pair-badge .dot {
-    width: 8px;
-    height: 8px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
     background: var(--green);
     box-shadow: 0 0 10px var(--green);
@@ -473,64 +453,64 @@
     border-radius: 4px;
     background: var(--surface-inset);
     border: 1px solid var(--border);
-    letter-spacing: 1.5px;
+    letter-spacing: 1.2px;
   }
 
   .ath-note {
     font-family: 'Outfit', sans-serif;
     font-size: var(--fs-xs);
     color: var(--text-dim);
-    letter-spacing: 0.8px;
-    padding: 3px 9px;
+    letter-spacing: 0.6px;
+    padding: 2px 8px;
     border-radius: var(--r-sm);
     background: var(--surface-inset);
     border: 1px solid var(--border);
   }
-  .ath-note .val { font-weight: 700; color: var(--text); margin-left: 4px; }
+  .ath-note .val { font-weight: 700; color: var(--text); margin-left: 3px; }
 
   /* Primary Price & Change Row */
   .price-cluster {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
-    gap: var(--sp-4);
+    gap: var(--sp-3);
     flex-wrap: wrap;
   }
   .price-line {
     display: flex;
     align-items: baseline;
-    gap: var(--sp-3);
+    gap: var(--sp-2);
   }
   .price-big {
     font-family: 'Outfit', sans-serif;
     font-size: var(--fs-price);
     font-weight: 800;
     line-height: 0.9;
-    letter-spacing: -2.5px;
+    letter-spacing: -2px;
     color: var(--green);
-    text-shadow: 0 0 55px rgba(0, 232, 123, 0.22);
+    text-shadow: 0 0 50px rgba(0, 232, 123, 0.22);
     transition: color 0.15s ease, text-shadow 0.15s ease, transform var(--t-bounce);
   }
   .price-big.flash-up {
     color: var(--green-2);
-    text-shadow: 0 0 80px var(--green-glow);
+    text-shadow: 0 0 75px var(--green-glow);
     transform: scale(1.014);
   }
   .price-big.flash-dn {
     color: var(--red-2);
-    text-shadow: 0 0 80px var(--red-glow);
+    text-shadow: 0 0 75px var(--red-glow);
     transform: scale(0.988);
   }
   .price-unit {
     font-family: 'Outfit', sans-serif;
-    font-size: clamp(14px, 1.7vw, 24px);
+    font-size: clamp(13px, 1.4vw, 20px);
     font-weight: 500;
     color: var(--text-dim);
-    letter-spacing: 2px;
+    letter-spacing: 1.8px;
   }
   .chg-pill {
-    font-size: clamp(14px, 1.5vw, 22px);
-    padding: 6px 14px;
+    font-size: clamp(13px, 1.35vw, 20px);
+    padding: 5px 12px;
     border-radius: var(--r-md);
   }
 
@@ -538,8 +518,8 @@
   .range24 {
     display: flex;
     flex-direction: column;
-    gap: 5px;
-    padding: var(--sp-2) var(--sp-3);
+    gap: 4px;
+    padding: 6px 10px;
     border-radius: var(--r-md);
     background: var(--surface-inset);
     border: 1px solid var(--border);
@@ -551,12 +531,12 @@
     font-family: 'Outfit', sans-serif;
     font-size: var(--fs-micro);
     font-weight: 600;
-    letter-spacing: 2px;
+    letter-spacing: 1.8px;
     color: var(--text-dim);
     text-transform: uppercase;
   }
   .range24-head .pos { color: var(--text); font-weight: 700; letter-spacing: 0.8px; }
-  .range24-row { display: flex; align-items: center; gap: var(--sp-3); }
+  .range24-row { display: flex; align-items: center; gap: var(--sp-2); }
   .range24-cap {
     font-family: 'Outfit', sans-serif;
     font-size: var(--fs-xs);
@@ -564,12 +544,12 @@
     white-space: nowrap;
     line-height: 1;
   }
-  .range24-cap.lo { color: var(--red-2); min-width: 4.2em; }
-  .range24-cap.hi { color: var(--green-2); min-width: 4.2em; text-align: right; }
+  .range24-cap.lo { color: var(--red-2); min-width: 4em; }
+  .range24-cap.hi { color: var(--green-2); min-width: 4em; text-align: right; }
   .range24-track {
     position: relative;
     flex: 1;
-    height: 6px;
+    height: 5px;
     border-radius: 99px;
     background: linear-gradient(90deg, rgba(255, 41, 82, 0.28) 0%, rgba(245, 176, 56, 0.25) 50%, rgba(0, 232, 123, 0.32) 100%);
     box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6);
@@ -585,11 +565,11 @@
   .range24-dot {
     position: absolute;
     top: 50%; left: 50%;
-    width: 13px; height: 13px;
+    width: 12px; height: 12px;
     border-radius: 50%;
     background: var(--green);
     transform: translate(-50%, -50%);
-    box-shadow: 0 0 10px var(--green-glow), 0 0 0 2.5px #060911;
+    box-shadow: 0 0 10px var(--green-glow), 0 0 0 2px #060911;
     transition: left var(--t-med);
   }
 
@@ -598,8 +578,8 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    padding: var(--sp-2) var(--sp-3);
+    gap: 4px;
+    padding: 6px 10px;
     border-radius: var(--r-md);
     background: linear-gradient(135deg, rgba(0, 232, 123, 0.05) 0%, rgba(6, 9, 18, 0.65) 100%);
     border: 1px solid var(--border-hi);
@@ -614,20 +594,17 @@
     font-family: 'Outfit', sans-serif;
     font-size: var(--fs-micro);
     font-weight: 700;
-    letter-spacing: 2px;
+    letter-spacing: 1.6px;
     color: var(--text-dim);
     text-transform: uppercase;
-    display: flex;
-    align-items: center;
-    gap: 6px;
   }
   .ccy-tabs {
     display: inline-flex;
     align-items: center;
-    gap: 3px;
+    gap: 2px;
     background: rgba(0, 0, 0, 0.35);
     padding: 2px;
-    border-radius: 6px;
+    border-radius: 5px;
     border: 1px solid var(--border);
   }
   .ccy-tab {
@@ -638,8 +615,8 @@
     font-family: 'Outfit', sans-serif;
     font-size: var(--fs-micro);
     font-weight: 700;
-    letter-spacing: 0.8px;
-    padding: 2px 6px;
+    letter-spacing: 0.6px;
+    padding: 1px 6px;
     border-radius: 4px;
     cursor: pointer;
     transition: all var(--t-fast);
@@ -656,7 +633,7 @@
     display: flex;
     align-items: baseline;
     justify-content: space-between;
-    gap: var(--sp-3);
+    gap: var(--sp-2);
     flex-wrap: wrap;
   }
   .portfolio-expand {
@@ -668,7 +645,7 @@
     cursor: pointer;
     display: inline-flex;
     align-items: baseline;
-    gap: 8px;
+    gap: 6px;
     white-space: nowrap;
     line-height: 1.1;
   }
@@ -684,7 +661,7 @@
   }
   .income-value {
     color: var(--green);
-    font-size: var(--fs-sm);
+    font-size: var(--fs-xs);
     font-weight: 600;
     transition: opacity 0.18s ease;
   }
@@ -709,32 +686,32 @@
     border-color: var(--cyan);
   }
   .portfolio-pnl {
-    font-size: var(--fs-sm);
+    font-size: var(--fs-xs);
     transition: opacity 0.18s ease;
   }
   .ccy-fade { opacity: 0.15 !important; }
 
-  /* Floating Popover for Treasury Details (never shifts layout) */
+  /* Floating Popover for Treasury Details */
   .income-details {
     position: absolute;
     left: 0;
-    bottom: calc(100% + 10px);
-    z-index: 50;
-    width: clamp(300px, 38vw, 500px);
+    top: calc(100% + 8px);
+    z-index: 60;
+    width: clamp(280px, 36vw, 480px);
     padding: var(--sp-3) var(--sp-4);
     border-radius: var(--r-md);
     background: rgba(8, 12, 22, 0.96);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--border-hi);
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.75);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.8);
     color: var(--text-dim);
     font-family: 'Outfit', sans-serif;
     font-size: 12px;
-    line-height: 1.5;
+    line-height: 1.45;
     white-space: normal;
   }
-  .income-details p + p { margin-top: 6px; }
+  .income-details p + p { margin-top: 5px; }
   .income-details p:first-child { color: var(--green); font-weight: 700; }
   .income-details a { color: var(--cyan); text-decoration: none; }
   .income-details a:hover { text-decoration: underline; }
@@ -743,20 +720,20 @@
   .hero-aside {
     display: grid;
     grid-template-rows: auto 1fr;
-    gap: var(--sp-3);
+    gap: var(--sp-2);
     min-height: 0;
   }
   .aside-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: var(--sp-3);
+    gap: var(--sp-2);
   }
   .aside-metric {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    gap: 6px;
-    padding: var(--sp-3) var(--sp-4);
+    gap: 4px;
+    padding: var(--sp-2) var(--sp-3);
     position: relative;
     overflow: hidden;
   }
@@ -764,18 +741,18 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 6px;
+    gap: 4px;
   }
   .aside-label {
     font-family: 'Outfit', sans-serif;
     font-size: var(--fs-micro);
     font-weight: 700;
-    letter-spacing: 2px;
+    letter-spacing: 1.6px;
     color: var(--text-dim);
     text-transform: uppercase;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
   }
   .aside-label .dot { width: 6px; height: 6px; border-radius: 50%; }
   .aside-label .dot.btc { background: var(--btc); box-shadow: 0 0 6px var(--btc); }
@@ -783,10 +760,10 @@
 
   .aside-val {
     font-family: 'Outfit', sans-serif;
-    font-size: var(--fs-xl);
+    font-size: var(--fs-lg);
     font-weight: 800;
-    letter-spacing: -0.5px;
-    line-height: 1;
+    letter-spacing: -0.4px;
+    line-height: 1.05;
     white-space: nowrap;
   }
   .aside-val.btc { color: var(--btc); }
@@ -799,7 +776,7 @@
   .aside-sub-bar {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     font-family: 'Outfit', sans-serif;
     font-size: var(--fs-micro);
     color: var(--text-ghost);
@@ -807,7 +784,7 @@
   .aside-mini-track {
     position: relative;
     flex: 1;
-    height: 4px;
+    height: 3px;
     border-radius: 99px;
     background: rgba(255, 255, 255, 0.08);
     overflow: hidden;
@@ -827,7 +804,7 @@
     display: grid;
     grid-template-columns: repeat(8, 1fr);
     gap: var(--sp-2);
-    padding: var(--sp-2);
+    padding: 6px;
     border-radius: var(--r-lg);
     background: linear-gradient(180deg, rgba(10, 15, 26, 0.72) 0%, rgba(6, 9, 17, 0.80) 100%);
     backdrop-filter: blur(14px);
@@ -839,8 +816,8 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    gap: 2px;
-    padding: var(--sp-2) var(--sp-3);
+    gap: 1px;
+    padding: 5px 8px;
     border-radius: var(--r-md);
     background: var(--surface-inset);
     border: 1px solid var(--border);
@@ -856,7 +833,7 @@
     font-family: 'Outfit', sans-serif;
     font-size: var(--fs-micro);
     font-weight: 700;
-    letter-spacing: 1.5px;
+    letter-spacing: 1.2px;
     color: var(--text-dim);
     text-transform: uppercase;
     white-space: nowrap;
@@ -895,7 +872,7 @@
     display: flex;
     flex-direction: column;
   }
-  .jpy-panel { flex: 1 1 auto; min-height: 130px; }
+  .jpy-panel { flex: 1 1 auto; min-height: 90px; }
   .jpy-panel .live-dot { background: var(--cyan) !important; box-shadow: 0 0 6px var(--cyan) !important; }
   .chart-label em.jpy-em { font-style: normal; color: var(--cyan); font-weight: 700; }
 
@@ -903,8 +880,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--sp-3);
-    padding: 7px var(--sp-4);
+    gap: var(--sp-2);
+    padding: 5px var(--sp-3);
     border-bottom: 1px solid var(--border);
     background: rgba(4, 6, 12, 0.45);
     flex-wrap: wrap;
@@ -912,18 +889,18 @@
   .chart-header-left, .chart-header-right {
     display: flex;
     align-items: center;
-    gap: var(--sp-3);
+    gap: var(--sp-2);
     min-width: 0;
   }
   .chart-label {
     font-family: 'Outfit', sans-serif;
     font-size: var(--fs-xs);
     font-weight: 700;
-    letter-spacing: 2px;
+    letter-spacing: 1.8px;
     color: var(--text-dim);
     display: flex;
     align-items: center;
-    gap: 7px;
+    gap: 6px;
     text-transform: uppercase;
     white-space: nowrap;
   }
@@ -943,7 +920,7 @@
     gap: 2px;
     background: rgba(0, 0, 0, 0.35);
     padding: 2px;
-    border-radius: 6px;
+    border-radius: 5px;
     border: 1px solid var(--border);
   }
   .tf-btn {
@@ -954,8 +931,8 @@
     font-family: 'Outfit', sans-serif;
     font-size: var(--fs-micro);
     font-weight: 700;
-    letter-spacing: 0.8px;
-    padding: 2px 7px;
+    letter-spacing: 0.6px;
+    padding: 1px 6px;
     border-radius: 4px;
     cursor: pointer;
     transition: all var(--t-fast);
@@ -970,7 +947,7 @@
   .ohlc-bar {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     font-size: var(--fs-xs);
     color: var(--text-dim);
     white-space: nowrap;
@@ -978,7 +955,7 @@
   .ohlc-bar span em {
     font-style: normal;
     color: var(--text-ghost);
-    margin-right: 3px;
+    margin-right: 2px;
   }
 
   .aside-price-small {
@@ -996,19 +973,19 @@
 
   .data-status {
     position: absolute;
-    left: 12px;
-    top: 8px;
+    left: 10px;
+    top: 6px;
     z-index: 4;
     color: var(--text-dim);
     font-family: 'Outfit', sans-serif;
     font-size: 10px;
     font-weight: 600;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.4px;
     pointer-events: none;
     background: rgba(6, 9, 17, 0.82);
     border: 1px solid var(--border-hi);
     border-radius: 5px;
-    padding: 3px 8px;
+    padding: 2px 7px;
     backdrop-filter: blur(6px);
   }
 
@@ -1017,12 +994,12 @@
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    padding: 3px 8px;
+    padding: 2px 7px;
     border-radius: 5px;
     font-family: 'Outfit', sans-serif;
     font-size: var(--fs-micro);
     font-weight: 700;
-    letter-spacing: 1px;
+    letter-spacing: 0.8px;
     text-transform: uppercase;
     line-height: 1;
     white-space: nowrap;
@@ -1045,25 +1022,25 @@
     font-family: 'Outfit', sans-serif;
     font-size: var(--fs-micro);
     font-weight: 500;
-    letter-spacing: 1.8px;
+    letter-spacing: 1.5px;
     color: var(--text-ghost);
     text-transform: uppercase;
   }
   .footbar .hint { opacity: 0; transition: opacity var(--t-med); }
   body:not(.idle) .footbar .hint { opacity: 0.85; }
 
-  /* Responsive Breakpoints for Desktop View */
+  /* Responsive Breakpoints */
   @media (max-width: 1180px) {
     .topbar { grid-template-columns: auto 1fr; }
     .env-strip { grid-column: 1 / -1; justify-content: flex-start; order: 3; }
     .stats { grid-template-columns: repeat(4, 1fr); }
+    .dash { grid-template-rows: auto minmax(195px, 31vh) auto 1fr auto; }
   }
-  @media (max-width: 900px) {
+  @media (max-width: 760px) {
     body:not(.mobile) { overflow-y: auto; }
-    body:not(.mobile) .dash { height: auto; min-height: 100vh; }
+    body:not(.mobile) .dash { height: auto; min-height: 100vh; grid-template-rows: auto auto auto minmax(260px, 1fr) auto; }
     .hero { grid-template-columns: 1fr; }
-    .jpy-panel .chart-canvas { min-height: 180px; }
-    .chart-panel .chart-canvas { min-height: 280px; }
+    .jpy-panel .chart-canvas { min-height: 150px; }
     .stats { grid-template-columns: repeat(2, 1fr); }
   }
 
@@ -1150,7 +1127,6 @@
   }
   .m-port .income-details {
     top: calc(100% + 8px);
-    bottom: auto;
     left: 0;
     width: min(90vw, 420px);
   }
@@ -1300,7 +1276,7 @@
     <div class="m-clock" id="mClk">--:--</div>
     <div class="m-right">
       <div class="m-status"><div class="dot" id="mDot"></div><span id="mLabel">LIVE</span></div>
-      <button class="icon-btn" id="btnDeskSwitch" title="Switch to Desktop View">TV</button>
+      <button type="button" class="icon-btn" id="btnDeskSwitch" title="Switch to Desktop View">TV</button>
     </div>
   </div>
 
@@ -1309,7 +1285,7 @@
     <div class="m-port-label">1M XRP · 24H</div>
     <details class="portfolio-expand">
       <summary class="portfolio-compact">
-        <span class="m-port-val" id="mPortVal">—</span>
+        <span class="m-port-val" id="mPortVal">···</span>
         <span class="income-value" id="mPortIncome">(—/MO)</span>
         <span class="portfolio-ccy" id="mPortCcy">USD</span>
         <span class="info-hint">T-BILL ⓘ</span>
@@ -1322,7 +1298,7 @@
         <p>Assumes sale of all 1M XRP, then investment of the full USD value. Monthly average = value × annual yield ÷ 12. Bills pay at maturity. Excludes taxes and fees.</p>
       </div>
     </details>
-    <span class="m-chg fl" id="mPortPnl">—</span>
+    <span class="m-chg fl" id="mPortPnl">·</span>
   </div>
 
   <!-- 4 Core Asset Cards -->
@@ -1331,7 +1307,7 @@
       <div class="m-label"><span class="dot"></span><span class="ticker">XRP</span><span class="pair">/ USD</span></div>
       <div class="m-chg" id="mXrpUsdChg">·</div>
     </div>
-    <div class="m-price" id="mXrpUsdVal">—<span class="unit">USD</span></div>
+    <div class="m-price" id="mXrpUsdVal">···<span class="unit">USD</span></div>
     <div class="m-range" id="mXrpUsdRange">
       <span class="m-range-cap lo">—</span>
       <div class="m-range-track"><div class="m-range-dot"></div></div>
@@ -1344,7 +1320,7 @@
       <div class="m-label"><span class="dot"></span><span class="ticker">XRP</span><span class="pair">/ BTC</span></div>
       <div class="m-chg" id="mXrpBtcChg">·</div>
     </div>
-    <div class="m-price" id="mXrpBtcVal">—<span class="unit">SAT</span></div>
+    <div class="m-price" id="mXrpBtcVal">···<span class="unit">SAT</span></div>
     <div class="m-range" id="mXrpBtcRange">
       <span class="m-range-cap lo">—</span>
       <div class="m-range-track"><div class="m-range-dot"></div></div>
@@ -1357,7 +1333,7 @@
       <div class="m-label"><span class="dot"></span><span class="ticker">USD</span><span class="pair">/ JPY</span></div>
       <div class="m-head-right"><span class="fx-badge" id="mFx"></span><div class="m-chg" id="mUsdJpyChg">·</div></div>
     </div>
-    <div class="m-price" id="mUsdJpyVal">—<span class="unit">JPY</span></div>
+    <div class="m-price" id="mUsdJpyVal">···<span class="unit">JPY</span></div>
     <div class="m-range" id="mUsdJpyRange">
       <span class="m-range-cap lo">—</span>
       <div class="m-range-track"><div class="m-range-dot"></div></div>
@@ -1370,7 +1346,7 @@
       <div class="m-label"><span class="dot"></span><span class="ticker">BTC</span><span class="pair">/ USD</span></div>
       <div class="m-chg" id="mBtcUsdChg">·</div>
     </div>
-    <div class="m-price" id="mBtcUsdVal">—<span class="unit">USD</span></div>
+    <div class="m-price" id="mBtcUsdVal">···<span class="unit">USD</span></div>
     <div class="m-range" id="mBtcUsdRange">
       <span class="m-range-cap lo">—</span>
       <div class="m-range-track"><div class="m-range-dot"></div></div>
@@ -1440,8 +1416,8 @@
         <span class="clock-date" id="clkDate">—</span>
       </div>
       <div class="top-actions">
-        <button class="icon-btn" id="btnMobileSwitch" title="Switch to Mobile Grid View">📱</button>
-        <button class="icon-btn" id="btnFullscreen" title="Toggle Fullscreen [F]">⛶</button>
+        <button type="button" class="icon-btn" id="btnMobileSwitch" title="Switch to Mobile Grid View">📱</button>
+        <button type="button" class="icon-btn" id="btnFullscreen" title="Toggle Fullscreen [F]">⛶</button>
       </div>
     </div>
   </header>
@@ -1461,10 +1437,10 @@
 
       <div class="price-cluster">
         <div class="price-line">
-          <span class="price-big" id="xrpPrice">—</span>
+          <span class="price-big" id="xrpPrice">···</span>
           <span class="price-unit">USD</span>
         </div>
-        <span class="pill fl chg-pill" id="xrpChg">—</span>
+        <span class="pill fl chg-pill" id="xrpChg">·</span>
       </div>
 
       <div class="range24">
@@ -1488,16 +1464,16 @@
             <span>1M XRP Vault · 24H PnL &amp; T-Bill Yield</span>
           </div>
           <div class="ccy-tabs" id="ccyTabs" title="Click a currency to pin/unpin">
-            <button class="ccy-tab" data-ccy="thb">THB</button>
-            <button class="ccy-tab" data-ccy="twd">TWD</button>
-            <button class="ccy-tab active" data-ccy="usd">USD</button>
-            <button class="ccy-tab" data-ccy="cad">CAD</button>
+            <button type="button" class="ccy-tab" data-ccy="thb">THB</button>
+            <button type="button" class="ccy-tab" data-ccy="twd">TWD</button>
+            <button type="button" class="ccy-tab active" data-ccy="usd">USD</button>
+            <button type="button" class="ccy-tab" data-ccy="cad">CAD</button>
           </div>
         </div>
         <div class="portfolio-body">
           <details class="portfolio-expand">
             <summary class="portfolio-compact">
-              <span class="portfolio-val" id="portfolioVal">—</span>
+              <span class="portfolio-val" id="portfolioVal">···</span>
               <span class="income-value" id="portfolioIncome">(—/MO)</span>
               <span class="portfolio-ccy" id="portfolioCcy">USD</span>
               <span class="info-hint">13W T-BILL ⓘ</span>
@@ -1510,7 +1486,7 @@
               <p>Assumes sale of all 1M XRP, then investment of the full USD value. Monthly average = value × annual yield ÷ 12. Bills pay at maturity. THB, TWD and CAD amounts convert the USD income at live terminal FX rates.</p>
             </div>
           </details>
-          <span class="pill fl portfolio-pnl" id="portfolioPnl">—</span>
+          <span class="pill fl portfolio-pnl" id="portfolioPnl">·</span>
         </div>
       </div>
     </div>
@@ -1521,9 +1497,9 @@
         <div class="aside-metric glass-card">
           <div class="aside-head">
             <div class="aside-label"><span class="dot btc"></span>BTC / USD</div>
-            <span class="aside-chg s-fl" id="btcChg">—</span>
+            <span class="aside-chg s-fl" id="btcChg">·</span>
           </div>
-          <div class="aside-val btc" id="btcPrice">—</div>
+          <div class="aside-val btc" id="btcPrice">···</div>
           <div class="aside-sub-bar">
             <span id="btcLoCap">L —</span>
             <div class="aside-mini-track"><div class="aside-mini-fill btc" id="btcMiniFill"></div></div>
@@ -1534,9 +1510,9 @@
         <div class="aside-metric glass-card">
           <div class="aside-head">
             <div class="aside-label"><span class="dot xrp"></span>XRP / BTC</div>
-            <span class="aside-chg s-fl" id="xrpBtcChg">—</span>
+            <span class="aside-chg s-fl" id="xrpBtcChg">·</span>
           </div>
-          <div class="aside-val xrp" id="xrpBtcPrice">—</div>
+          <div class="aside-val xrp" id="xrpBtcPrice">···</div>
           <div class="aside-sub-bar">
             <span id="xrpBtcLoCap">L —</span>
             <div class="aside-mini-track"><div class="aside-mini-fill xrp" id="xrpBtcMiniFill"></div></div>
@@ -1554,7 +1530,7 @@
             </div>
             <span class="fx-badge" id="fxDesk"></span>
           </div>
-          <div class="aside-price-small" id="jpyMini">—</div>
+          <div class="aside-price-small" id="jpyMini">···</div>
         </div>
         <div class="chart-canvas" id="chartJpy"></div>
       </div>
@@ -1565,35 +1541,35 @@
   <section class="stats">
     <div class="stat">
       <div class="stat-top"><span class="stat-label">USD / JPY</span><span class="stat-meta" id="jpySourceMeta">FX</span></div>
-      <span class="stat-val fx" id="usdJpy">—</span>
+      <span class="stat-val fx" id="usdJpy">···</span>
     </div>
     <div class="stat">
       <div class="stat-top"><span class="stat-label">XRP / JPY</span><span class="stat-meta">CROSS</span></div>
-      <span class="stat-val xrp" id="xrpJpy">—</span>
+      <span class="stat-val xrp" id="xrpJpy">···</span>
     </div>
     <div class="stat">
       <div class="stat-top"><span class="stat-label">Brent / USD</span><span class="stat-meta" id="brentStatus">OIL</span></div>
-      <span class="stat-val oil" id="brentUsd">—</span>
+      <span class="stat-val oil" id="brentUsd">···</span>
     </div>
     <div class="stat">
       <div class="stat-top"><span class="stat-label">Brent / JPY</span><span class="stat-meta">BBL</span></div>
-      <span class="stat-val oil" id="brentJpy">—</span>
+      <span class="stat-val oil" id="brentJpy">···</span>
     </div>
     <div class="stat">
       <div class="stat-top"><span class="stat-label">24H Vol</span><span class="stat-meta">USDT</span></div>
-      <span class="stat-val" id="vol24">—</span>
+      <span class="stat-val" id="vol24">···</span>
     </div>
     <div class="stat">
       <div class="stat-top"><span class="stat-label">Mkt Cap</span><span class="stat-meta">XRP</span></div>
-      <span class="stat-val" id="mcap">—</span>
+      <span class="stat-val" id="mcap">···</span>
     </div>
     <div class="stat">
       <div class="stat-top"><span class="stat-label">RLUSD Cap</span><span class="stat-meta">RIPPLE</span></div>
-      <span class="stat-val xrp" id="rlusdCap">—</span>
+      <span class="stat-val xrp" id="rlusdCap">···</span>
     </div>
     <div class="stat">
       <div class="stat-top"><span class="stat-label">XRP / Sats</span><span class="stat-meta">BTC</span></div>
-      <span class="stat-val" id="xrpSats">—</span>
+      <span class="stat-val" id="xrpSats">···</span>
     </div>
   </section>
 
@@ -1607,16 +1583,16 @@
             <span>XRP / USDT · <span id="mainIntervalLabel">3M</span> · Binance</span>
           </div>
           <div class="tf-group" id="tfGroup">
-            <button class="tf-btn" data-tf="1m">1M</button>
-            <button class="tf-btn active" data-tf="3m">3M</button>
-            <button class="tf-btn" data-tf="5m">5M</button>
-            <button class="tf-btn" data-tf="15m">15M</button>
-            <button class="tf-btn" data-tf="1h">1H</button>
+            <button type="button" class="tf-btn" data-tf="1m">1M</button>
+            <button type="button" class="tf-btn active" data-tf="3m">3M</button>
+            <button type="button" class="tf-btn" data-tf="5m">5M</button>
+            <button type="button" class="tf-btn" data-tf="15m">15M</button>
+            <button type="button" class="tf-btn" data-tf="1h">1H</button>
           </div>
           <div class="ohlc-bar" id="ohlcBar"></div>
         </div>
         <div class="chart-header-right">
-          <div class="aside-price-small" id="xrpUsdtMini">—</div>
+          <div class="aside-price-small" id="xrpUsdtMini">···</div>
         </div>
       </div>
       <div class="chart-canvas" id="chartMain"></div>
@@ -1651,6 +1627,7 @@ window.__appStarted = true;
 (function(){
 'use strict';
 
+// ══════════ 1. ALL STATE & CONSTANTS HOISTED (NO TDZ) ══════════
 const CFG = {
   TZ: 'Asia/Bangkok',
   TZ_OFFSET_SEC: 7 * 3600,
@@ -1658,7 +1635,7 @@ const CFG = {
   LON: 98.9717,
   IQAIR_KEY: '8a58e160-a04e-44d6-8902-c83fc42021c1',
   PROXY_CP: 'https://corsproxy.io/?',
-  PROXY_AO: 'https://api.allorigins.win/raw?url=',
+  PROXY_AO: 'https://api.allorigins.win/get?url=',
   MAX_CANDLES: 2000,
   IDLE_MS: 4000,
   POLL: {
@@ -1680,6 +1657,9 @@ const CFG = {
   },
   CCY_CYCLE_MS: 5_000,
 };
+
+const DAY_MS = 86400000;
+const TZ_OFFSET = CFG.TZ_OFFSET_SEC;
 
 const D = {};
 [
@@ -1722,7 +1702,60 @@ const S = {
   lastUpdate: { fx: 0, brent: 0, weather: 0, aqi: 0, rlusd: 0, jpy: 0, rates: 0 },
 };
 
-const TZ_OFFSET = CFG.TZ_OFFSET_SEC;
+// Hoisted runtime & chart state variables
+const pendingRequests = new Map();
+const runningJobs     = new Map();
+const macroState      = { jpy: null, brent: null };
+const providerMemory  = new Map();
+const providerRetry   = new Map();
+const streamVersions  = new Map();
+const data            = { main: { candles: [], volumes: [] } };
+
+let renderQueued      = false;
+let candleMain        = null;
+let volMain           = null;
+let chartMain         = null;
+let historyAt         = 0;
+let candleAt          = 0;
+let framed            = false;
+let candleVersion     = 0;
+
+let wsBackoff         = 1000;
+let wsWatchdog        = null;
+let lastWsMsg         = 0;
+let currentWs         = null;
+let wsReconnectTimer  = null;
+let restTickerAt      = 0;
+let wsHost            = 0;
+let connectTimer      = null;
+
+const WS_BACKOFF_MIN  = 1000;
+const WS_BACKOFF_MAX  = 12000;
+const WS_SILENT_MS    = 15000;
+const WS_HOSTS        = ['wss://data-stream.binance.vision:443', 'wss://stream.binance.com:443'];
+
+const STALE_MAP = {
+  fx:      ['usdJpy','xrpJpy','mUsdJpy'],
+  brent:   ['brentUsd','brentJpy'],
+  weather: ['wxIcon','wxTemp','wxHiLo','wxHum','hourly'],
+  aqi:     ['aqiBadge'],
+  rlusd:   ['rlusdCap'],
+};
+
+let treasuryRate   = { annualYield: 0.04211, date: '2026-09-28', checkedAt: 0 };
+let treasuryStatus = 'checking';
+
+const PORTFOLIO_CCY = [
+  { code: 'thb', sym: '฿',   label: 'THB' },
+  { code: 'twd', sym: 'NT$', label: 'TWD' },
+  { code: 'usd', sym: '$',   label: 'USD' },
+  { code: 'cad', sym: 'C$',  label: 'CAD' },
+];
+const USD_INDEX = PORTFOLIO_CCY.findIndex(c => c.code === 'usd');
+let ccyIndex  = USD_INDEX;
+let ccyPinned = false;
+
+// ══════════ 2. FORMATTING HELPERS ══════════
 const fmtTime   = s => new Date(s * 1000).toLocaleTimeString('en-GB', {hour12:false, hour:'2-digit', minute:'2-digit', timeZone: CFG.TZ});
 const fmtFull   = s => new Date(s * 1000).toLocaleString('en-GB', {hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit', day:'2-digit', month:'short', timeZone: CFG.TZ});
 const toTzSec   = ms => Math.floor(Number(ms) / 1000) + TZ_OFFSET;
@@ -1740,8 +1773,7 @@ const money      = (v, sym) => sym + Math.abs(v).toLocaleString('en-US', {maximu
 const signMoney  = (v, sym) => (v >= 0 ? '+' : '−') + money(v, sym);
 const stateClass = pct => pct > 0 ? 'up' : pct < 0 ? 'dn' : 'fl';
 
-// ══════════ NETWORK & CACHE LAYER ══════════
-const pendingRequests = new Map();
+// ══════════ 3. NETWORK & CACHE LAYER ══════════
 async function requestBody(url, timeout, mode){
   const key = mode + ':' + url;
   if (pendingRequests.has(key)) return pendingRequests.get(key);
@@ -1764,14 +1796,16 @@ async function requestBody(url, timeout, mode){
 }
 const safeJson = (url, timeout = 7500) => requestBody(url, timeout, 'json');
 
-// Proxy-aware JSON fetcher for endpoints without browser CORS headers (e.g. Yahoo Finance)
 async function safeJsonWithCorsFallback(targetUrl, timeout = 9000){
-  const direct = await safeJson(targetUrl, timeout);
+  const direct = await safeJson(targetUrl, 4500);
   if (direct) return direct;
   const cp = await safeJson(CFG.PROXY_CP + encodeURIComponent(targetUrl), timeout);
   if (cp) return cp;
   const ao = await safeJson(CFG.PROXY_AO + encodeURIComponent(targetUrl), timeout);
-  return ao;
+  if (ao?.contents) {
+    try { return JSON.parse(ao.contents); } catch {}
+  }
+  return null;
 }
 
 function readCache(key, maxAge = 7 * 86400000){
@@ -1785,17 +1819,15 @@ function writeCache(key, value, at = Date.now()){
   try { localStorage.setItem('xrp-terminal-v2:' + key, JSON.stringify({value, at})); } catch {}
 }
 
-let backend = null;
 const backendReady = (async () => {
   if (!/^https?:$/.test(location.protocol)) return false;
-  const health = await safeJson('/api/health', 1600);
-  backend = health?.service === 'xrp-terminal-v2';
-  return backend;
+  const health = await safeJson('/api/health', 1500);
+  return health?.service === 'xrp-terminal-v2';
 })();
 
 async function marketJson(path, valid){
   if (await backendReady) {
-    const result = await safeJson('/api/binance' + path, 12000);
+    const result = await safeJson('/api/binance' + path, 10000);
     if (valid(result)) return result;
   }
   for (const host of ['https://data-api.binance.vision', 'https://api.binance.com']) {
@@ -1820,8 +1852,7 @@ function chartStatus(id, message){
   badge.hidden = !message;
 }
 
-// ══════════ RAF RENDER BATCHING ══════════
-let renderQueued = false;
+// ══════════ 4. RAF RENDER BATCHING ══════════
 function scheduleRender(){
   if (renderQueued) return;
   renderQueued = true;
@@ -1878,10 +1909,7 @@ function updateAsideRanges(){
   }
 }
 
-// ══════════ 1M XRP PORTFOLIO & US TREASURY YIELD ══════════
-let treasuryRate = { annualYield: 0.04211, date: '2026-09-28', checkedAt: 0 };
-let treasuryStatus = 'checking';
-
+// ══════════ 5. 1M XRP PORTFOLIO & US TREASURY YIELD ══════════
 function validTreasuryRate(r){
   return r && Number.isFinite(r.annualYield) && r.annualYield >= 0 && r.annualYield <= 1
     && /^\d{4}-\d{2}-\d{2}$/.test(r.date) && Number.isFinite(Date.parse(r.date))
@@ -1929,16 +1957,6 @@ async function fetchTreasuryRate(){
   paintTreasuryStatus();
   paintPortfolio();
 }
-
-const PORTFOLIO_CCY = [
-  { code: 'thb', sym: '฿',   label: 'THB' },
-  { code: 'twd', sym: 'NT$', label: 'TWD' },
-  { code: 'usd', sym: '$',   label: 'USD' },
-  { code: 'cad', sym: 'C$',  label: 'CAD' },
-];
-const USD_INDEX = PORTFOLIO_CCY.findIndex(c => c.code === 'usd');
-let ccyIndex = USD_INDEX;
-let ccyPinned = false;
 
 function ccyRate(code){
   const rate = S.rates[code];
@@ -2032,7 +2050,6 @@ function cycleCcy(){
 }
 setInterval(cycleCcy, CFG.CCY_CYCLE_MS);
 
-// Close T-Bill details popover when clicking outside
 document.addEventListener('click', e => {
   document.querySelectorAll('details.portfolio-expand[open]').forEach(d => {
     if (!d.contains(e.target)) d.removeAttribute('open');
@@ -2079,17 +2096,15 @@ async function fetchRates(){
   }
 }
 
-// ══════════ RLUSD MARKET CAP (CoinGecko + DefiLlama Fallback) ══════════
+// ══════════ 6. RLUSD MARKET CAP ══════════
 async function fetchRlusd(){
   if (IS_MOBILE) return;
   if (!S.rlusdMcap) {
     const cached = readCache('rlusd', 7 * 86400000)?.value;
     if (cached > 0) { S.rlusdMcap = cached; scheduleRender(); }
   }
-  // Primary: CoinGecko
   const cg = await safeJson('https://api.coingecko.com/api/v3/simple/price?ids=ripple-usd&vs_currencies=usd&include_market_cap=true', 8000);
   let cap = cg?.['ripple-usd']?.usd_market_cap;
-  // Fallback: DefiLlama Stablecoins API
   if (!(cap > 0)) {
     const llama = await safeJson('https://stablecoins.llama.fi/stablecoins?includePrices=false', 9000);
     const rlusd = (llama?.peggedAssets || []).find(a => a.symbol === 'RLUSD' || a.gecko_id === 'ripple-usd');
@@ -2112,7 +2127,7 @@ function flash(el, dir){
   setTimeout(() => el.classList.remove(cls), 380);
 }
 
-// ══════════ FX MARKET HOURS (24/5: Sun 17:00 → Fri 17:00 New York) ══════════
+// ══════════ 7. FX MARKET HOURS ══════════
 const NY_FMT = new Intl.DateTimeFormat('en-US', {timeZone:'America/New_York', weekday:'short', hour:'2-digit', minute:'2-digit', second:'2-digit', hourCycle:'h23'});
 const NY_DOW = {Sun:0, Mon:1, Tue:2, Wed:3, Thu:4, Fri:5, Sat:6};
 const FX_OPEN_SEC  = 17 * 3600;
@@ -2142,9 +2157,8 @@ function updateFx(){
     el.innerHTML = html;
   });
 }
-updateFx();
 
-// ══════════ MOBILE RENDER ══════════
+// ══════════ 8. MOBILE RENDER ══════════
 function setCardState(card, chg, cls){
   card.classList.remove('up','dn','fl'); card.classList.add(cls);
   chg.classList.remove('up','dn','fl'); chg.classList.add(cls);
@@ -2198,96 +2212,7 @@ function renderMobile(){
   }
 }
 
-// ══════════ CLOCK, STALENESS & VIEW CONTROLS ══════════
-const STALE_MAP = {
-  fx:      ['usdJpy','xrpJpy','mUsdJpy'],
-  brent:   ['brentUsd','brentJpy'],
-  weather: ['wxIcon','wxTemp','wxHiLo','wxHum','hourly'],
-  aqi:     ['aqiBadge'],
-  rlusd:   ['rlusdCap'],
-};
-const DAY_MS = 86400000;
-const macroState = { jpy: null, brent: null };
-
-function refreshStaleness(){
-  const now = Date.now();
-  for (const [key, ids] of Object.entries(STALE_MAP)) {
-    const macro = key === 'fx' ? macroState.jpy : key === 'brent' ? macroState.brent : null;
-    const threshold = macro && ['daily','spot-daily'].includes(macro.kind) ? 14 * DAY_MS : CFG.STALE[key];
-    const stale = !S.lastUpdate[key] || (now - S.lastUpdate[key]) > threshold;
-    ids.forEach(id => D[id] && D[id].classList.toggle('stale', stale));
-  }
-}
-
-function tickClock(){
-  const now = new Date();
-  const t = now.toLocaleTimeString('en-GB', {hour12:false, timeZone: CFG.TZ});
-  D.clk.textContent     = t;
-  D.clkDate.textContent = now.toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short', year:'numeric', timeZone: CFG.TZ});
-  if (D.mClk) D.mClk.textContent = t.slice(0, 5) + ' ICT';
-  updateFx();
-  refreshStaleness();
-  refreshMarketStatus();
-}
-tickClock();
-setInterval(tickClock, 1000);
-
-let idleTimer;
-function resetIdle(){
-  document.body.classList.remove('idle');
-  clearTimeout(idleTimer);
-  idleTimer = setTimeout(() => document.body.classList.add('idle'), CFG.IDLE_MS);
-}
-document.addEventListener('mousemove', resetIdle);
-document.addEventListener('keydown', resetIdle);
-resetIdle();
-
-function toggleFullscreen(){
-  if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
-  else document.exitFullscreen();
-}
-document.addEventListener('keydown', e => {
-  if (e.key === 'f' || e.key === 'F') toggleFullscreen();
-});
-if (D.btnFullscreen) D.btnFullscreen.addEventListener('click', toggleFullscreen);
-
-function setMobileMode(mobile){
-  IS_MOBILE = mobile;
-  document.body.classList.toggle('mobile', mobile);
-  if (!mobile) {
-    initCharts();
-    runJob(refreshCandles);
-    runJob(refreshJpy);
-    runJob(fetchBrent);
-    runJob(fetchWeather);
-    runJob(fetchAqi);
-    runJob(fetchXrpMeta);
-    runJob(fetchRlusd);
-  }
-  scheduleRender();
-}
-if (D.btnMobileSwitch) D.btnMobileSwitch.addEventListener('click', () => setMobileMode(true));
-if (D.btnDeskSwitch)   D.btnDeskSwitch.addEventListener('click', () => setMobileMode(false));
-
-// Wake Lock
-let _wakeLock = null;
-async function acquireWakeLock(){
-  if (!('wakeLock' in navigator) || document.visibilityState !== 'visible') return;
-  try {
-    _wakeLock = await navigator.wakeLock.request('screen');
-    _wakeLock.addEventListener('release', () => { _wakeLock = null; });
-  } catch {}
-}
-acquireWakeLock();
-
-let onResume = () => acquireWakeLock();
-const fireResume = () => { if (document.visibilityState === 'visible') onResume(); };
-document.addEventListener('visibilitychange', fireResume);
-window.addEventListener('focus', fireResume);
-window.addEventListener('pageshow', fireResume);
-
-// ══════════ MACRO PROVIDERS (USD/JPY & BRENT CRUDE) ══════════
-const providerMemory = new Map(), providerRetry = new Map();
+// ══════════ 9. MACRO PROVIDERS (USD/JPY & BRENT CRUDE) ══════════
 const EIA_URL = 'https://api.eia.gov/v2/petroleum/pri/spt/data/?' + new URLSearchParams({
   api_key:'DEMO_KEY', frequency:'daily', 'data[0]':'value', 'facets[series][]':'RBRTE',
   'sort[0][column]':'period', 'sort[0][direction]':'desc', length:'10'
@@ -2446,7 +2371,7 @@ async function refreshMacro(asset){
     'https://' + host + '.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(symbol) + '?interval=5m&range=5d',
     d => yahooRecord(d, asset),
     60000,
-    true // Enable CORS proxy fallback for Yahoo Finance in browser mode
+    true
   ));
   if (asset === 'jpy') {
     tasks.push(currencyHistory());
@@ -2513,7 +2438,7 @@ function paintBrent(r){
 async function refreshJpy(){ await refreshMacro('jpy'); }
 async function fetchBrent(){ if (!IS_MOBILE) await refreshMacro('brent'); }
 
-// ══════════ WEATHER & AQI (Open-Meteo + IQAir with Air-Quality Fallback) ══════════
+// ══════════ 10. WEATHER & AQI ══════════
 const WMO_ICONS = {0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',80:'🌦️',81:'🌧️',82:'⛈️',95:'⛈️',96:'⛈️',99:'⛈️'};
 const WMO_DESC  = {0:'Clear sky',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',45:'Fog',48:'Fog',51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',61:'Light rain',63:'Rain',65:'Heavy rain',80:'Rain showers',81:'Rain showers',82:'Heavy showers',95:'Thunderstorm',96:'Thunderstorm',99:'Severe storm'};
 
@@ -2546,7 +2471,7 @@ function buildHourly(h){
   new Intl.DateTimeFormat('en-CA', {timeZone: CFG.TZ, year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', hourCycle:'h23'})
     .formatToParts(new Date()).forEach(p => parts[p.type] = p.value);
   const currentIsoHour = `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:00`;
-  let idx = h.time.indexOf(currentIsoHour);
+  const idx = h.time.indexOf(currentIsoHour);
   const start = idx >= 0 ? idx + 1 : (parseInt(parts.hour, 10) % 24) + 1;
   let html = '';
   for (let i = start; i < start + 8 && i < h.time.length; i++) {
@@ -2591,7 +2516,6 @@ async function fetchAqi(){
     const cached = readCache('aqi', 3600000);
     if (cached) { applyAqi(cached.value.aqi, cached.value.src, false); S.lastUpdate.aqi = cached.at; }
   }
-  // Primary: IQAir
   const d = await safeJson(`https://api.airvisual.com/v2/nearest_city?lat=${CFG.LAT}&lon=${CFG.LON}&key=${CFG.IQAIR_KEY}`, 9000);
   const iqAqi = d?.data?.current?.pollution?.aqius;
   if (d?.status === 'success' && Number.isFinite(iqAqi)) {
@@ -2599,7 +2523,6 @@ async function fetchAqi(){
     applyAqi(iqAqi, 'IQAir Chiang Mai', true);
     return;
   }
-  // Fallback: Open-Meteo US AQI
   const om = await safeJson(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${CFG.LAT}&longitude=${CFG.LON}&current=us_aqi`, 8000);
   const omAqi = om?.current?.us_aqi;
   if (Number.isFinite(omAqi)) {
@@ -2624,10 +2547,7 @@ async function fetchXrpMeta(){
   scheduleRender();
 }
 
-// ══════════ CHARTS (Desktop Only) ══════════
-let candleMain, volMain, chartMain;
-const data = { main: { candles: [], volumes: [] } };
-
+// ══════════ 11. CHARTS (Desktop Only) ══════════
 function createChart(el, opts = {}){
   const c = LightweightCharts.createChart(el, {
     layout: {
@@ -2704,7 +2624,6 @@ function initCharts(){
     volMain.priceScale().applyOptions({scaleMargins: {top: 0.85, bottom: 0}});
     candleMain.priceScale().applyOptions({scaleMargins: {top: 0.08, bottom: 0.18}});
 
-    // Crosshair OHLCV Inspector
     chartMain.subscribeCrosshairMove(param => {
       if (!D.ohlcBar) return;
       if (!param?.time || !param.seriesData) {
@@ -2740,7 +2659,6 @@ function initCharts(){
   }
 }
 
-// Timeframe Switcher Interaction
 if (D.tfGroup) {
   D.tfGroup.addEventListener('click', e => {
     const btn = e.target.closest('.tf-btn');
@@ -2771,9 +2689,6 @@ function trimChart(kind, series){
     series.volumes.setData(arr.volumes);
   }
 }
-
-let historyAt = 0, candleAt = 0, framed = false, candleVersion = 0;
-const streamVersions = new Map();
 
 function normalizeRows(rows){
   if (!Array.isArray(rows)) return [];
@@ -2845,7 +2760,7 @@ function updateXrpChange(pct){
   const cls = stateClass(pct);
   const arrow = pct > 0 ? '▲' : pct < 0 ? '▼' : '·';
   const sign = pct >= 0 ? '+' : '';
-  D.xrpChg.textContent = (pct == null ? '—' : arrow + ' ' + sign + pct.toFixed(2) + '%');
+  D.xrpChg.textContent = (pct == null ? '·' : arrow + ' ' + sign + pct.toFixed(2) + '%');
   D.xrpChg.className = 'pill chg-pill ' + cls;
 
   const XRP_TOKENS = 1_000_000;
@@ -2954,15 +2869,7 @@ function handleWsMessage(evt){
   }
 }
 
-// ══════════ RESILIENT WEBSOCKET ENGINE ══════════
-let wsBackoff = 1000, wsWatchdog = null, lastWsMsg = 0, currentWs = null, wsReconnectTimer = null;
-const WS_BACKOFF_MIN = 1000;
-const WS_BACKOFF_MAX = 12000;
-const WS_SILENT_MS   = 15000;
-
-let restTickerAt = 0, wsHost = 0, connectTimer = null;
-const WS_HOSTS = ['wss://data-stream.binance.vision:443', 'wss://stream.binance.com:443'];
-
+// ══════════ 12. RESILIENT WEBSOCKET ENGINE ══════════
 function getWsStreams(){
   return IS_MOBILE
     ? 'xrpusdt@ticker/btcusdt@ticker/xrpbtc@ticker'
@@ -2981,7 +2888,8 @@ function refreshMarketStatus(){
     'btcusdt@ticker': ['btcPrice','mBtcUsd'],
     'xrpbtc@ticker':  ['xrpBtcPrice','mXrpBtc']
   })) {
-    for (const id of ids) D[id]?.classList.toggle('stale', Date.now() - (tickerTimes[stream] || 0) > 45000);
+    const ts = tickerTimes[stream];
+    for (const id of ids) D[id]?.classList.toggle('stale', !!ts && Date.now() - ts > 45000);
   }
   if (candleMain) {
     if (!data.main.candles.length) chartStatus('chartMain', 'Waiting for candle data…');
@@ -3057,19 +2965,102 @@ function forceReconnect(){
   connectWs();
 }
 
+// ══════════ 13. CLOCK, STALENESS & VIEW CONTROLS ══════════
+function refreshStaleness(){
+  const now = Date.now();
+  for (const [key, ids] of Object.entries(STALE_MAP)) {
+    const last = S.lastUpdate[key];
+    if (!last) continue;
+    const macro = key === 'fx' ? macroState.jpy : key === 'brent' ? macroState.brent : null;
+    const threshold = macro && ['daily','spot-daily'].includes(macro.kind) ? 14 * DAY_MS : CFG.STALE[key];
+    const stale = (now - last) > threshold;
+    ids.forEach(id => D[id] && D[id].classList.toggle('stale', stale));
+  }
+}
+
+function tickClock(){
+  const now = new Date();
+  const t = now.toLocaleTimeString('en-GB', {hour12:false, timeZone: CFG.TZ});
+  D.clk.textContent     = t;
+  D.clkDate.textContent = now.toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short', year:'numeric', timeZone: CFG.TZ});
+  if (D.mClk) D.mClk.textContent = t.slice(0, 5) + ' ICT';
+  updateFx();
+  refreshStaleness();
+  refreshMarketStatus();
+}
+tickClock();
+setInterval(tickClock, 1000);
+
+let idleTimer;
+function resetIdle(){
+  document.body.classList.remove('idle');
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(() => document.body.classList.add('idle'), CFG.IDLE_MS);
+}
+document.addEventListener('mousemove', resetIdle);
+document.addEventListener('keydown', resetIdle);
+resetIdle();
+
+function toggleFullscreen(){
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+  else document.exitFullscreen();
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+});
+if (D.btnFullscreen) D.btnFullscreen.addEventListener('click', toggleFullscreen);
+
+function setMobileMode(mobile){
+  IS_MOBILE = mobile;
+  document.body.classList.toggle('mobile', mobile);
+  requestAnimationFrame(() => {
+    if (!mobile) {
+      initCharts();
+      if (chartMain && D.chartMain.clientWidth > 0) {
+        chartMain.applyOptions({width: D.chartMain.clientWidth, height: D.chartMain.clientHeight});
+      }
+      if (window.chartJpy && D.chartJpy.clientWidth > 0) {
+        window.chartJpy.applyOptions({width: D.chartJpy.clientWidth, height: D.chartJpy.clientHeight});
+      }
+      for (const fn of [refreshCandles, refreshJpy, fetchBrent, fetchWeather, fetchAqi, fetchXrpMeta, fetchRlusd]) {
+        runJob(fn);
+      }
+    }
+    forceReconnect();
+    paintPortfolio();
+    scheduleRender();
+  });
+}
+if (D.btnMobileSwitch) D.btnMobileSwitch.addEventListener('click', () => setMobileMode(true));
+if (D.btnDeskSwitch)   D.btnDeskSwitch.addEventListener('click', () => setMobileMode(false));
+
+// Wake Lock & Resume
+let _wakeLock = null;
+async function acquireWakeLock(){
+  if (!('wakeLock' in navigator) || document.visibilityState !== 'visible') return;
+  try {
+    _wakeLock = await navigator.wakeLock.request('screen');
+    _wakeLock.addEventListener('release', () => { _wakeLock = null; });
+  } catch {}
+}
+acquireWakeLock();
+
 let lastResume = 0;
-onResume = () => {
+function onResume(){
   acquireWakeLock();
   if (Date.now() - lastResume < 2000) return;
   lastResume = Date.now();
   if (!currentWs || currentWs.readyState !== 1 || Date.now() - lastWsMsg > 10000) forceReconnect();
   for (const fn of [refreshCandles, refreshTickers, refreshJpy, fetchBrent, fetchRates, fetchTreasuryRate]) runJob(fn);
-};
+}
+const fireResume = () => { if (document.visibilityState === 'visible') onResume(); };
+document.addEventListener('visibilitychange', fireResume);
+window.addEventListener('focus', fireResume);
+window.addEventListener('pageshow', fireResume);
 window.addEventListener('online', onResume);
 window.addEventListener('offline', () => { closeSocket(); lastWsMsg = 0; refreshMarketStatus(); });
 
-// ══════════ NON-OVERLAPPING JOB SCHEDULER ══════════
-const runningJobs = new Map();
+// ══════════ 14. NON-OVERLAPPING JOB SCHEDULER ══════════
 function runJob(fn){
   if (runningJobs.has(fn)) return runningJobs.get(fn);
   const task = Promise.resolve()
