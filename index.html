@@ -138,6 +138,8 @@ if (!window.LightweightCharts) {
   .s-up { color: var(--green); }
   .s-dn { color: var(--red-2); }
   .s-fl { color: var(--text-dim); }
+  .macro-note { display:block; font-size:var(--fs-micro); color:var(--text-dim); line-height:1.2; margin-top:2px; overflow-wrap:anywhere; }
+  .macro-note.old { color:var(--amber); }
   .stale { opacity: 0.42 !important; transition: opacity var(--t-med); }
 
   /* ══════════ BACKGROUND LAYERS ══════════ */
@@ -1391,7 +1393,7 @@ if (!window.LightweightCharts) {
       <div class="m-label"><span class="dot"></span><span class="ticker">USD</span><span class="pair">/ JPY</span></div>
       <div class="m-head-right"><span class="fx-badge" id="mFx"></span><div class="m-chg" id="mUsdJpyChg">·</div></div>
     </div>
-    <div class="m-price" id="mUsdJpyVal">···<span class="unit">JPY</span></div>
+    <div class="m-price" id="mUsdJpyVal">···<span class="unit">JPY</span></div><div class="macro-note" id="mJpySource">Checking source…</div>
     <div class="m-range" id="mUsdJpyRange">
       <span class="m-range-cap lo">—</span>
       <div class="m-range-track"><div class="m-range-dot"></div></div>
@@ -1590,7 +1592,7 @@ if (!window.LightweightCharts) {
           </div>
           <div class="aside-price-small" id="jpyMini">···</div>
         </div>
-        <div class="chart-canvas" id="chartJpy"></div>
+        <div class="macro-note" id="jpyChartSource" style="padding:0 10px"></div><div class="chart-canvas" id="chartJpy"></div>
       </div>
     </div>
   </section>
@@ -1599,19 +1601,19 @@ if (!window.LightweightCharts) {
   <section class="stats">
     <div class="stat">
       <div class="stat-top"><span class="stat-label">USD / JPY</span><span class="stat-meta">FX</span></div>
-      <span class="stat-val fx" id="usdJpy">···</span>
+      <span class="stat-val fx" id="usdJpy">···</span><span class="macro-note" id="jpySource">Checking source…</span>
     </div>
     <div class="stat">
       <div class="stat-top"><span class="stat-label">XRP / JPY</span><span class="stat-meta">CROSS</span></div>
       <span class="stat-val xrp" id="xrpJpy">···</span>
     </div>
     <div class="stat">
-      <div class="stat-top"><span class="stat-label">Brent / USD</span><span class="stat-meta">OIL</span></div>
-      <span class="stat-val oil" id="brentUsd">···</span>
+      <div class="stat-top"><span class="stat-label">Brent futures / USD</span><span class="stat-meta">OIL</span></div>
+      <span class="stat-val oil" id="brentUsd">—</span><a class="macro-note" id="brentSource" href="https://americasoilwatch.com/api" target="_blank" rel="noopener noreferrer" style="text-decoration:none">Checking source…</a>
     </div>
     <div class="stat">
-      <div class="stat-top"><span class="stat-label">Brent / JPY</span><span class="stat-meta">BBL</span></div>
-      <span class="stat-val oil" id="brentJpy">···</span>
+      <div class="stat-top"><span class="stat-label">Brent futures / JPY</span><span class="stat-meta">BBL</span></div>
+      <span class="stat-val oil" id="brentJpy">—</span><span class="macro-note" id="brentCrossSource">Converted estimate</span>
     </div>
     <div class="stat">
       <div class="stat-top"><span class="stat-label">24H Vol</span><span class="stat-meta">USDT</span></div>
@@ -2281,10 +2283,7 @@ function renderMobile(){
 }
 
 // ══════════ 9. MACRO PROVIDERS (USD/JPY & BRENT CRUDE) ══════════
-const EIA_URL = 'https://api.eia.gov/v2/petroleum/pri/spt/data/?' + new URLSearchParams({
-  api_key:'DEMO_KEY', frequency:'daily', 'data[0]':'value', 'facets[series][]':'RBRTE',
-  'sort[0][column]':'period', 'sort[0][direction]':'desc', length:'10'
-});
+const BRENT_SYMBOL = 'BZ=F'; // Brent Crude Oil Last Day Financial Futures, USD/barrel.
 
 function numeric(v){ return (typeof v === 'number' || typeof v === 'string' && v.trim() !== '') && Number.isFinite(Number(v)); }
 function dayTime(day){
@@ -2298,8 +2297,10 @@ function validMacro(r, asset){
       !Number.isFinite(r.asOf) || r.asOf <= 0 || r.asOf * 1000 > Date.now() + 60000 ||
       Date.now() - r.asOf * 1000 > 14 * DAY_MS || !Number.isFinite(r.fetchedAt) ||
       r.fetchedAt > Date.now() + 60000 || typeof r.source !== 'string') return false;
-  if (asset === 'brent') return r.unit === 'USD/barrel' && ['futures','spot-daily'].includes(r.kind);
-  const minPoints = r.kind === 'daily' ? 5 : 2;
+  if (asset === 'brent') return r.unit === 'USD/barrel' && r.kind === 'futures' &&
+    (r.instrument === BRENT_SYMBOL || /^BZ[FGHJKMNQUVXZ]\d{2}\.NYM$/.test(r.instrument) ||
+      (r.instrument === 'CB.F' && r.source === 'AmericasOilWatch / Stooq'));
+  const minPoints = r.kind === 'daily' ? 1 : 2;
   return r.unit === 'JPY/USD' && ['intraday','daily'].includes(r.kind) && Array.isArray(r.points) &&
     r.points.length >= minPoints && r.points.every((p, i) => Number.isFinite(p.time) && p.time > 0 && p.time <= r.asOf &&
       Number.isFinite(p.value) && p.value > 0 && (!i || r.points[i - 1].time < p.time)) &&
@@ -2311,37 +2312,12 @@ function uniquePoints(points){
     .map(p => [+p.time, {time: +p.time, value: +p.value}])).values()].sort((a, b) => a.time - b.time).slice(-2000);
 }
 
-function densifySeries(points, targetCount = 140){
-  if (!Array.isArray(points) || points.length < 2 || points.length >= targetCount) return points;
-  const out = [];
-  const segments = points.length - 1;
-  const stepsPerSeg = Math.max(2, Math.ceil(targetCount / segments));
-  for (let i = 0; i < segments; i++) {
-    const p0 = points[i];
-    const p1 = points[i + 1];
-    const dt = p1.time - p0.time;
-    const dv = p1.value - p0.value;
-    for (let s = 0; s < stepsPerSeg; s++) {
-      const frac = s / stepsPerSeg;
-      const t = Math.round(p0.time + dt * frac);
-      if (!out.length || t > out[out.length - 1].time) {
-        out.push({time: t, value: p0.value + dv * frac});
-      }
-    }
-  }
-  const last = points[points.length - 1];
-  if (!out.length || last.time > out[out.length - 1].time) {
-    out.push({time: last.time, value: last.value});
-  } else {
-    out[out.length - 1] = {time: last.time, value: last.value};
-  }
-  return out;
-}
-
 function yahooRecord(json, asset){
   const r = json?.chart?.result?.[0], meta = r?.meta;
-  if (!meta || meta.symbol !== (asset === 'jpy' ? 'JPY=X' : 'BZ=F')) return null;
+  if (!meta || meta.symbol !== (asset === 'jpy' ? 'JPY=X' : 'BZ=F') ||
+      (meta.currency && meta.currency !== (asset === 'jpy' ? 'JPY' : 'USD'))) return null;
   if (asset === 'brent') {
+    if (meta.currency !== 'USD' || meta.instrumentType !== 'FUTURE') return null;
     return {
       asset, source: 'Yahoo Finance', instrument: 'BZ=F', kind: 'futures',
       unit: 'USD/barrel', price: Number(meta.regularMarketPrice),
@@ -2358,6 +2334,30 @@ function yahooRecord(json, asset){
   };
 }
 
+// Public, keyless, CORS-enabled futures snapshot API. This is not the EIA spot endpoint.
+function oilWatchRecord(json){
+  if (!json || !numeric(json.priceUsd) || +json.priceUsd <= 0) return null;
+  const provider = String(json.dataSource || json.provider || '');
+  if (/spot|EIA|FRED/i.test(provider)) return null;
+  let instrument, source;
+  if (/^BZ[FGHJKMNQUVXZ]\d{2}\.NYM$/.test(json.contract || '') && /Yahoo/i.test(provider)) {
+    instrument = json.contract;
+    source = 'AmericasOilWatch / Yahoo';
+  } else if (/Stooq/i.test(provider) && /cb\.f/i.test(provider + ' ' + (json.contract || ''))) {
+    instrument = 'CB.F';
+    source = 'AmericasOilWatch / Stooq';
+  } else return null;
+  // Do not use lastUpdated/fetchedAt as the market observation time.
+  if (typeof json.observedAt !== 'string' || !/(Z|[+-]\d{2}:\d{2})$/.test(json.observedAt)) return null;
+  const asOf = Date.parse(json.observedAt) / 1000;
+  if (!Number.isFinite(asOf)) return null;
+  if (json.sessionDate && dayTime(json.sessionDate) > asOf) return null;
+  return {asset:'brent', source, instrument, kind:'futures', unit:'USD/barrel',
+    price:+json.priceUsd, asOf, fetchedAt:Date.now(), cadence:'snapshot',
+    providerStale: /stale|error|unavailable/i.test(String(json.quoteStatus || '')),
+    sourceUrl:'https://americasoilwatch.com/api', contractLabel:json.contractLabel || instrument};
+}
+
 function frankfurterRecord(json){
   if (json?.base !== 'USD' || !json.rates) return null;
   const points = uniquePoints(Object.entries(json.rates).map(([day, r]) => ({time: dayTime(day), value: r?.JPY})));
@@ -2369,33 +2369,51 @@ function frankfurterRecord(json){
   };
 }
 
-function eiaRecord(json){
-  const points = uniquePoints((json?.response?.data || []).filter(r => r.series === 'RBRTE' && r.product === 'EPCBRENT' &&
-    (r.units === '$/BBL' || r.units === 'Dollars per Barrel')).map(r => ({time: dayTime(r.period), value: r.value})));
+// Daily prices do not require a complete chart history to be usable.
+function currencyLatestRecord(json){
+  const value = json?.usd?.jpy, time = dayTime(json?.date);
+  if (!numeric(value) || +value <= 0 || !Number.isFinite(time)) return null;
+  return {asset:'jpy', source:'Currency API', instrument:'USD/JPY', unit:'JPY/USD',
+    kind:'daily', price:+value, asOf:time, points:[{time, value:+value}], fetchedAt:Date.now()};
+}
+function frankfurterV2Record(json){
+  if (!Array.isArray(json)) return null;
+  const points = uniquePoints(json.filter(r => r.base === 'USD' && r.quote === 'JPY')
+    .map(r => ({time:dayTime(r.date), value:r.rate})));
   if (!points.length) return null;
   const last = points[points.length - 1];
-  return {
-    asset: 'brent', source: 'EIA', instrument: 'Europe Brent Spot', kind: 'spot-daily',
-    unit: 'USD/barrel', price: last.value, asOf: last.time, fetchedAt: Date.now()
-  };
+  return {asset:'jpy', source:'ECB / Frankfurter', instrument:'USD/JPY', unit:'JPY/USD',
+    kind:'daily', price:last.value, asOf:last.time, points, fetchedAt:Date.now()};
+}
+// These are age limits, not a claim that the exchange is open or closed.
+function macroExpired(r, now = Date.now()){
+  if (!r || r.providerStale) return true;
+  const age = now - r.asOf * 1000;
+  if (r.kind === 'daily') return age > 4 * DAY_MS;
+  // Retain a recent Friday quote over the normal weekend closure only.
+  const parts = {};
+  NY_FMT.formatToParts(new Date(r.asOf * 1000)).forEach(p => parts[p.type] = p.value);
+  if (fxState().st === 'closed' && parts.weekday === 'Fri' && +parts.hour >= 15)
+    return age > 3 * DAY_MS;
+  return age > 90 * 60000;
 }
 
 async function currencyHistory(){
-  const cached = providerMemory.get('currency-history') || readCache('provider4:currency-history', 14 * DAY_MS)?.value;
+  const cached = providerMemory.get('currency-history') || readCache('provider5:currency-history', 14 * DAY_MS)?.value;
   if (validMacro(cached, 'jpy') && Date.now() - cached.fetchedAt < 6 * 3600000) return cached;
   if (Date.now() < (providerRetry.get('currency-history') || 0)) return validMacro(cached, 'jpy') ? cached : null;
   const received = [];
   const today = new Date();
-  const days = Array.from({length: 10}, (_, i) => new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - 1 - i)).toISOString().slice(0, 10));
+  const days = Array.from({length: 10}, (_, i) => new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - i)).toISOString().slice(0, 10));
   await Promise.allSettled(days.map(async day => {
-    const saved = readCache('fx-day3:' + day, 30 * DAY_MS)?.value;
+    const saved = readCache('fx-day5:' + day, 30 * DAY_MS)?.value;
     let payload = saved;
     const valid = d => d?.date === day && numeric(d?.usd?.jpy) && +d.usd.jpy > 0;
     if (!valid(payload)) {
       payload = await safeJson('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@' + day + '/v1/currencies/usd.json', 15000);
       if (!valid(payload)) payload = await safeJson('https://' + day + '.currency-api.pages.dev/v1/currencies/usd.json', 10000);
       if (!valid(payload)) return;
-      writeCache('fx-day3:' + day, {date: payload.date, usd: {jpy: +payload.usd.jpy}});
+      writeCache('fx-day5:' + day, {date: payload.date, usd: {jpy: +payload.usd.jpy}});
     }
     received.push({time: dayTime(day), value: +payload.usd.jpy});
   }));
@@ -2404,7 +2422,7 @@ async function currencyHistory(){
     const last = points[points.length - 1];
     const result = {asset: 'jpy', source: 'Currency API', instrument: 'USD/JPY', unit: 'JPY/USD', kind: 'daily', price: last.value, asOf: last.time, points, fetchedAt: Date.now()};
     providerMemory.set('currency-history', result);
-    writeCache('provider4:currency-history', result, result.fetchedAt);
+    writeCache('provider5:currency-history', result, result.fetchedAt);
     return result;
   }
   providerRetry.set('currency-history', Date.now() + 300000);
@@ -2413,30 +2431,33 @@ async function currencyHistory(){
 
 function preferMacro(next, previous){
   if (!previous || !validMacro(previous, next.asset)) return true;
+  if (macroExpired(next) !== macroExpired(previous)) return !macroExpired(next);
   if (Math.abs(next.asOf - previous.asOf) > 2 * 86400) return next.asOf > previous.asOf;
   const rank = r => ['intraday','futures'].includes(r.kind) ? 2 : 1;
   if (rank(next) !== rank(previous)) return rank(next) > rank(previous);
   if (next.asOf !== previous.asOf) return next.asOf > previous.asOf;
   if (next.source !== previous.source && (next.source === 'Currency API' || previous.source === 'Currency API'))
     return previous.source === 'Currency API';
+  if (next.asset === 'jpy' && next.asOf === previous.asOf && next.source === previous.source &&
+      next.points.length !== previous.points.length) return next.points.length > previous.points.length;
   return next.fetchedAt >= previous.fetchedAt;
 }
 
-async function providerRecord(id, asset, url, parse, ttl, useCorsFallback = false){
-  let cached = providerMemory.get(id) || readCache('provider4:' + id, 14 * DAY_MS)?.value;
+async function providerRecord(id, asset, url, parse, ttl, useCorsFallback = false, mode = 'json'){
+  let cached = providerMemory.get(id) || readCache('provider5:' + id, 14 * DAY_MS)?.value;
   if (!validMacro(cached, asset)) cached = null;
   if (cached && Date.now() - cached.fetchedAt < ttl) return cached;
   if (Date.now() < (providerRetry.get(id) || 0)) return cached ? {...cached, saved: true} : null;
   try {
-    const raw = useCorsFallback ? await safeJsonWithCorsFallback(url, 10000) : await safeJson(url, 11000);
+    const raw = useCorsFallback ? await safeJsonWithCorsFallback(url, 10000) : await requestBody(url, 11000, mode);
     const r = parse(raw);
     if (!validMacro(r, asset)) throw new Error('Invalid ' + id + ' response');
     providerMemory.set(id, r);
-    writeCache('provider4:' + id, r, r.fetchedAt);
+    writeCache('provider5:' + id, r, r.fetchedAt);
     providerRetry.delete(id);
     return r;
   } catch {
-    providerRetry.set(id, Date.now() + (id === 'eia' ? 1800000 : 120000));
+    providerRetry.set(id, Date.now() + 120000);
     return cached ? {...cached, saved: true} : null;
   }
 }
@@ -2444,35 +2465,56 @@ async function providerRecord(id, asset, url, parse, ttl, useCorsFallback = fals
 function acceptMacro(record){
   if (!validMacro(record, record?.asset) || !preferMacro(record, macroState[record.asset])) return;
   macroState[record.asset] = record;
-  writeCache('macro4:' + record.asset, record, record.fetchedAt);
+  writeCache('macro5:' + record.asset, record, record.fetchedAt);
   if (record.asset === 'jpy') paintJpy(record);
   else paintBrent(record);
 }
 
 async function refreshMacro(asset){
-  const old = macroState[asset] || readCache('macro4:' + asset, 14 * DAY_MS)?.value;
+  const old = macroState[asset] || readCache('macro5:' + asset, 14 * DAY_MS)?.value;
   if (validMacro(old, asset)) acceptMacro({...old, saved: true});
+  // Start the browser-native source before slower optional server/proxy paths.
+  const directBrentTask = asset === 'brent' ? providerRecord('brent-oilwatch-v1', asset,
+    'https://americasoilwatch.com/api/v1/brent', oilWatchRecord, 300000)
+      .then(record => { if (record) acceptMacro(record); }) : null;
   if (await backendReady) {
     const record = await safeJson('/api/macro?asset=' + asset, 12000);
-    if (validMacro(record, asset)) { acceptMacro(record); return; }
+    if (validMacro(record, asset)) acceptMacro(record);
   }
   const symbol = asset === 'jpy' ? 'JPY=X' : 'BZ=F';
   const tasks = ['query1','query2'].map(host => providerRecord(
     host + ':' + asset,
     asset,
-    'https://' + host + '.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(symbol) + '?interval=5m&range=5d',
+    'https://' + host + '.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(symbol) + (asset === 'brent' ? '?interval=1d&range=5d' : '?interval=5m&range=5d'),
     d => yahooRecord(d, asset),
     60000,
     true
   ));
   if (asset === 'jpy') {
     tasks.push(currencyHistory());
+    tasks.push(providerRecord('currency-latest', asset,
+      'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json', currencyLatestRecord, 900000));
+    tasks.push(providerRecord('currency-pages', asset,
+      'https://latest.currency-api.pages.dev/v1/currencies/usd.json', currencyLatestRecord, 900000));
     const start = new Date(Date.now() - 35 * DAY_MS).toISOString().slice(0, 10);
+    tasks.push(providerRecord('frankfurter-v2', asset,
+      'https://api.frankfurter.dev/v2/rates?base=USD&quotes=JPY&providers=ecb&from=' + start, frankfurterV2Record, 900000));
     for (const [id, host] of [['frankfurter','https://api.frankfurter.app/'],['frankfurter-dev','https://api.frankfurter.dev/v1/']])
       tasks.push(providerRecord(id, asset, host + start + '..?from=USD&to=JPY', frankfurterRecord, 3600000));
   } else {
-    tasks.push(providerRecord('eia', asset, EIA_URL, eiaRecord, 6 * 3600000));
+    // Start a browser-readable path immediately. The chart metadata contains the
+    // latest quote even when interval=1d; never substitute a daily spot series.
+    for (const host of ['query1','query2']) {
+      const target = 'https://' + host + '.finance.yahoo.com/v8/finance/chart/' +
+        encodeURIComponent(BRENT_SYMBOL) + '?interval=1d&range=5d';
+      tasks.push(providerRecord('brent-futures-proxy:' + host, asset,
+        CFG.PROXY_AO + encodeURIComponent(target), payload => {
+          if (payload?.status?.http_code && +payload.status.http_code !== 200) return null;
+          try { return yahooRecord(JSON.parse(payload?.contents), 'brent'); } catch { return null; }
+        }, 120000));
+    }
   }
+  if (directBrentTask) tasks.push(directBrentTask);
   await Promise.allSettled(tasks.map(task => task.then(record => { if (record) acceptMacro(record); })));
 }
 
@@ -2480,7 +2522,7 @@ function paintJpy(r){
   const daily = r.kind === 'daily';
   if (window.areaJpy && window.chartJpy) {
     const rawPoints = r.points.map(p => ({time: p.time + TZ_OFFSET, value: p.value}));
-    const plotPoints = densifySeries(rawPoints, 140);
+    const plotPoints = rawPoints; // Only actual source observations; no invented samples.
     window.areaJpy.setData(plotPoints);
     window.chartJpy.applyOptions({
       timeScale: {
@@ -2503,6 +2545,7 @@ function paintJpy(r){
   S.lastUpdate.jpy = S.lastUpdate.fx = r.fetchedAt;
 
   if (D.jpyMini) D.jpyMini.innerHTML = '¥' + num(r.price, 2);
+  refreshMacroLabels();
   scheduleRender();
 }
 
@@ -2510,6 +2553,7 @@ function paintBrent(r){
   S.brentUsdPrev = S.brentUsd;
   S.brentUsd = r.price;
   S.lastUpdate.brent = r.fetchedAt;
+  refreshMacroLabels();
   scheduleRender();
 }
 
@@ -3222,16 +3266,46 @@ function forceReconnect(){
 }
 
 // ══════════ 13. CLOCK, STALENESS & VIEW CONTROLS ══════════
+function refreshMacroLabels(){
+  for (const [asset, ids] of [['jpy',['jpySource','jpyChartSource','mJpySource']], ['brent',['brentSource']]]) {
+    const r = macroState[asset];
+    const expired = macroExpired(r);
+    const daily = r && r.kind === 'daily';
+    const date = r ? (daily ? new Date(r.asOf * 1000).toISOString().slice(0,10) :
+      new Date(r.asOf * 1000).toLocaleString('en-GB', {timeZone:CFG.TZ, day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'}) + ' ICT') : '';
+    const kind = !r ? '' : r.kind === 'daily' ? 'DAILY' : r.kind === 'futures' ? (r.cadence === 'snapshot' ? 'FUTURES SNAPSHOT' : 'FUTURES · DELAYED') : 'DELAYED';
+    const source = !r ? '' : r.source.includes('Frankfurter') ? 'ECB' : r.source.startsWith('AmericasOilWatch') ? 'AmericasOilWatch' : r.source;
+    const text = !r ? (asset === 'brent' ? 'Futures feed unavailable' : 'No verified data') : (expired ? 'OLD · ' : '') + source + ' · ' + kind + ' · ' + date;
+    const detail = r ? r.source + ' | ' + r.instrument + ' | ' + r.unit +
+      ' | Observation: ' + date + ' | Last received: ' + new Date(r.fetchedAt).toLocaleString('en-GB', {timeZone:CFG.TZ}) + ' ICT' : text;
+    for (const id of ids) {
+      const el = document.getElementById(id);
+      if (el) { el.textContent = text; el.title = detail; el.classList.toggle('old', expired);
+        if (id === 'brentSource') el.href = r?.sourceUrl || 'https://finance.yahoo.com/quote/BZ%3DF/';
+      }
+    }
+    const values = asset === 'jpy' ? ['usdJpy','xrpJpy','jpyMini','mUsdJpyVal','chartJpy'] : ['brentUsd'];
+    for (const id of values) if (D[id]) {
+      D[id].classList.toggle('stale', expired);
+      D[id].title = detail;
+    }
+  }
+  const crossOld = macroExpired(macroState.jpy) || macroExpired(macroState.brent);
+  D.brentJpy?.classList.toggle('stale', crossOld);
+  const crossNote = document.getElementById('brentCrossSource');
+  if (crossNote) crossNote.textContent = crossOld ? 'OLD INPUT · ESTIMATE' : 'Converted estimate';
+  if (D.brentJpy) D.brentJpy.title = 'Brent USD × USD/JPY. The two observations can have different dates. ' +
+    (document.getElementById('brentSource')?.title || '') + ' / ' + (document.getElementById('jpySource')?.title || '');
+}
 function refreshStaleness(){
   const now = Date.now();
   for (const [key, ids] of Object.entries(STALE_MAP)) {
+    if (key === 'fx' || key === 'brent') continue;
     const last = S.lastUpdate[key];
     if (!last) continue;
-    const macro = key === 'fx' ? macroState.jpy : key === 'brent' ? macroState.brent : null;
-    const threshold = macro && ['daily','spot-daily'].includes(macro.kind) ? 14 * DAY_MS : CFG.STALE[key];
-    const stale = (now - last) > threshold;
-    ids.forEach(id => D[id] && D[id].classList.toggle('stale', stale));
+    ids.forEach(id => D[id]?.classList.toggle('stale', now - last > CFG.STALE[key]));
   }
+  refreshMacroLabels();
 }
 
 function tickClock(){
