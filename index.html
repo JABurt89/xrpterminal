@@ -1314,20 +1314,20 @@ if (!window.LightweightCharts) {
 
 
   .hero-aside { position:relative; }
-  .hero-aside > .loan-panel { margin:0; align-self:stretch; min-height:0; overflow:auto; }
+  .hero-aside > .loan-panel { margin:0; align-self:stretch; min-height:0; padding:7px 9px; overflow:visible; }
   .hero-aside > .loan-panel[open] .loan-detail { position:absolute; top:100%; right:0; width:min(520px,90vw); padding:12px; border:1px solid var(--border-hi); border-radius:8px; background:var(--bg); z-index:30; max-height:45vh; overflow:auto; }
-  .hero-aside .loan-grid strong { font-size:clamp(13px,1.3vw,21px); }
-  .hero-aside .loan-grid { gap:7px; }
+  .hero-aside .loan-grid strong { font-size:clamp(11px,1.05vw,20px); line-height:1.1; white-space:nowrap; }
+  .hero-aside .loan-grid { grid-template-columns:repeat(6,minmax(0,1fr)); gap:6px; }
+  .hero-aside .loan-grid small { font-size:clamp(7px,.55vw,10px); white-space:nowrap; margin-bottom:5px; }
+  .loan-grid > div { min-width:0; }
   .dash > :nth-child(5) { animation-delay:200ms; }
   .loan-panel { margin-top:8px; padding:9px 12px; border:1px solid var(--green-border); border-radius:10px; background:var(--surface); min-width:0; }
-  .loan-saved { display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin-top:8px; padding-top:6px; border-top:1px solid var(--border-hi); font-size:9px; color:var(--text-dim); }
-  .loan-saved strong { font:700 clamp(13px,1.2vw,19px) "Outfit",sans-serif; font-variant-numeric:tabular-nums; }
-  .loan-saved .positive { color:var(--green); }
-  .loan-saved .negative { color:var(--red); }
+  .loan-grid .positive { color:var(--green); }
+  .loan-grid .negative { color:var(--red); }
   .loan-panel summary { cursor:pointer; list-style:none; }
   .loan-panel summary::-webkit-details-marker { display:none; }
-  .loan-head { display:flex; justify-content:space-between; gap:8px; color:var(--text-dim); font-size:9px; letter-spacing:1px; margin-bottom:7px; }
-  .loan-grid { display:grid; grid-template-columns:1.15fr 1fr 1fr .7fr; gap:10px; }
+  .loan-head { line-height:1.1; display:flex; justify-content:space-between; gap:8px; color:var(--text-dim); font-size:9px; letter-spacing:1px; margin-bottom:7px; }
+  .loan-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
   .loan-grid small { display:block; color:var(--text-dim); font-size:9px; margin-bottom:4px; }
   .loan-grid strong { font:700 clamp(13px,1.35vw,21px) 'Outfit',sans-serif; font-variant-numeric:tabular-nums; }
   @media(max-width:600px) { .loan-grid { grid-template-columns:1fr 1fr; row-gap:10px; } }
@@ -1392,8 +1392,8 @@ if (!window.LightweightCharts) {
   </div>
 
 <details class="loan-panel" data-loan-panel>
-<summary><div class="loan-head"><span>MORPHO · FXRP / RLUSD</span><span data-loan="status">CHECKING</span></div>
-<div class="loan-grid"><div><small>LOAN BALANCE</small><strong data-loan="debt">—</strong> <em>RLUSD</em></div><div><small>INTEREST ACCRUED</small><strong data-loan="interest">—</strong> <em>RLUSD</em></div><div><small>XRP LIQ. EST.</small><strong data-loan="liquidation">—</strong> <em>USD</em></div><div><small>LTV / 77%</small><strong data-loan="ltv">—</strong></div></div><div class="loan-saved"><span>XRP SAVED · EST.</span><strong data-loan="saved-xrp">—</strong><strong data-loan="saved-usd">—</strong></div></summary>
+<summary><div class="loan-head"><span>MORPHO · FXRP / RLUSD</span></div>
+<div class="loan-grid"><div><small>DEBT · RLUSD</small><strong data-loan="debt">—</strong></div><div><small>INTEREST · RLUSD</small><strong data-loan="interest">—</strong></div><div><small>XRP LIQ. · USD</small><strong data-loan="liquidation">—</strong></div><div><small>LTV / 77%</small><strong data-loan="ltv">—</strong></div><div><small>XRP SAVED</small><strong data-loan="saved-xrp">—</strong></div><div><small>USD SAVED</small><strong data-loan="saved-usd">—</strong></div></div></summary>
 <div class="loan-detail"><div data-loan="detail">Loading the loan from Morpho…</div>
 <div>Liquidation uses the market oracle. USD estimate assumes 1 FXRP represents 1 XRP and uses the RLUSD/USD quote. It is not an exchange price trigger.</div>
 <div data-loan="saved-detail">Loading borrow history and XRP prices…</div>
@@ -1432,7 +1432,7 @@ if (!window.LightweightCharts) {
       <div class="m-label"><span class="dot"></span><span class="ticker">USD</span><span class="pair">/ JPY</span></div>
       <div class="m-head-right"><span class="fx-badge" id="mFx"></span><div class="m-chg" id="mUsdJpyChg">·</div></div>
     </div>
-    <div class="m-price" id="mUsdJpyVal">···<span class="unit">JPY</span></div><div class="macro-note" id="mJpySource">Checking source…</div>
+    <div class="m-price" id="mUsdJpyVal">···<span class="unit">JPY</span></div>
     <div class="m-range" id="mUsdJpyRange">
       <span class="m-range-cap lo">—</span>
       <div class="m-range-track"><div class="m-range-dot"></div></div>
@@ -1622,8 +1622,8 @@ if (!window.LightweightCharts) {
       </div>
 
 <details class="loan-panel" data-loan-panel>
-<summary><div class="loan-head"><span>MORPHO · FXRP / RLUSD</span><span data-loan="status">CHECKING</span></div>
-<div class="loan-grid"><div><small>LOAN BALANCE</small><strong data-loan="debt">—</strong> <em>RLUSD</em></div><div><small>INTEREST ACCRUED</small><strong data-loan="interest">—</strong> <em>RLUSD</em></div><div><small>XRP LIQ. EST.</small><strong data-loan="liquidation">—</strong> <em>USD</em></div><div><small>LTV / 77%</small><strong data-loan="ltv">—</strong></div></div><div class="loan-saved"><span>XRP SAVED · EST.</span><strong data-loan="saved-xrp">—</strong><strong data-loan="saved-usd">—</strong></div></summary>
+<summary><div class="loan-head"><span>MORPHO · FXRP / RLUSD</span></div>
+<div class="loan-grid"><div><small>DEBT · RLUSD</small><strong data-loan="debt">—</strong></div><div><small>INTEREST · RLUSD</small><strong data-loan="interest">—</strong></div><div><small>XRP LIQ. · USD</small><strong data-loan="liquidation">—</strong></div><div><small>LTV / 77%</small><strong data-loan="ltv">—</strong></div><div><small>XRP SAVED</small><strong data-loan="saved-xrp">—</strong></div><div><small>USD SAVED</small><strong data-loan="saved-usd">—</strong></div></div></summary>
 <div class="loan-detail"><div data-loan="detail">Loading the loan from Morpho…</div>
 <div>Liquidation uses the market oracle. USD estimate assumes 1 FXRP represents 1 XRP and uses the RLUSD/USD quote. It is not an exchange price trigger.</div>
 <div data-loan="saved-detail">Loading borrow history and XRP prices…</div>
@@ -1639,7 +1639,7 @@ if (!window.LightweightCharts) {
   <section class="stats">
     <div class="stat">
       <div class="stat-top"><span class="stat-label">USD / JPY</span><span class="stat-meta">FX</span></div>
-      <span class="stat-val fx" id="usdJpy">···</span><span class="macro-note" id="jpySource">Checking source…</span>
+      <span class="stat-val fx" id="usdJpy">···</span>
     </div>
     <div class="stat">
       <div class="stat-top"><span class="stat-label">XRP / JPY</span><span class="stat-meta">CROSS</span></div>
@@ -1647,11 +1647,11 @@ if (!window.LightweightCharts) {
     </div>
     <div class="stat">
       <div class="stat-top"><span class="stat-label">Brent futures / USD</span><span class="stat-meta">OIL</span></div>
-      <span class="stat-val oil" id="brentUsd">—</span><a class="macro-note" id="brentSource" href="https://americasoilwatch.com/api" target="_blank" rel="noopener noreferrer" style="text-decoration:none">Checking source…</a>
+      <span class="stat-val oil" id="brentUsd">—</span>
     </div>
     <div class="stat">
       <div class="stat-top"><span class="stat-label">Brent futures / JPY</span><span class="stat-meta">BBL</span></div>
-      <span class="stat-val oil" id="brentJpy">—</span><span class="macro-note" id="brentCrossSource">Converted estimate</span>
+      <span class="stat-val oil" id="brentJpy">—</span>
     </div>
     <div class="stat">
       <div class="stat-top"><span class="stat-label">24H Vol</span><span class="stat-meta">USDT</span></div>
@@ -1662,7 +1662,7 @@ if (!window.LightweightCharts) {
       <span class="stat-val" id="mcap">···</span>
     </div>
     <div class="stat">
-      <div class="stat-top"><span class="stat-label">RLUSD Cap</span><span class="stat-meta">RIPPLE</span></div>
+      <div class="stat-top"><span class="stat-label">RLUSD Cap</span></div>
       <span class="stat-val xrp" id="rlusdCap">···</span>
     </div>
     <div class="stat">
@@ -1678,7 +1678,7 @@ if (!window.LightweightCharts) {
         <div class="chart-header-left">
           <div class="chart-label">
             <span class="live-dot"></span>
-            <span>XRP / USDT · <span id="mainIntervalLabel">15M</span> · Binance</span>
+            <span>XRP / USDT · <span id="mainIntervalLabel">15M</span></span>
           </div>
           <div class="tf-group" id="tfGroup">
             <button type="button" class="tf-btn" data-tf="1m">1M</button>
@@ -3297,35 +3297,11 @@ function forceReconnect(){
 
 // ══════════ 13. CLOCK, STALENESS & VIEW CONTROLS ══════════
 function refreshMacroLabels(){
-  for (const [asset, ids] of [['jpy',['jpySource','jpyChartSource','mJpySource']], ['brent',['brentSource']]]) {
-    const r = macroState[asset];
-    const expired = macroExpired(r);
-    const daily = r && r.kind === 'daily';
-    const date = r ? (daily ? new Date(r.asOf * 1000).toISOString().slice(0,10) :
-      new Date(r.asOf * 1000).toLocaleString('en-GB', {timeZone:CFG.TZ, day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'}) + ' ICT') : '';
-    const kind = !r ? '' : r.kind === 'daily' ? 'DAILY' : r.kind === 'futures' ? (r.cadence === 'snapshot' ? 'FUTURES SNAPSHOT' : 'FUTURES · DELAYED') : 'DELAYED';
-    const source = !r ? '' : r.source.includes('Frankfurter') ? 'ECB' : r.source.startsWith('AmericasOilWatch') ? 'AmericasOilWatch' : r.source;
-    const text = !r ? (asset === 'brent' ? 'Futures feed unavailable' : 'No verified data') : (expired ? 'OLD · ' : '') + source + ' · ' + kind + ' · ' + date;
-    const detail = r ? r.source + ' | ' + r.instrument + ' | ' + r.unit +
-      ' | Observation: ' + date + ' | Last received: ' + new Date(r.fetchedAt).toLocaleString('en-GB', {timeZone:CFG.TZ}) + ' ICT' : text;
-    for (const id of ids) {
-      const el = document.getElementById(id);
-      if (el) { el.textContent = text; el.title = detail; el.classList.toggle('old', expired);
-        if (id === 'brentSource') el.href = r?.sourceUrl || 'https://finance.yahoo.com/quote/BZ%3DF/';
-      }
-    }
-    const values = asset === 'jpy' ? ['usdJpy','xrpJpy','jpyMini','mUsdJpyVal','chartJpy'] : ['brentUsd'];
-    for (const id of values) if (D[id]) {
-      D[id].classList.toggle('stale', expired);
-      D[id].title = detail;
-    }
+  for (const [asset, ids] of [['jpy',['usdJpy','xrpJpy','jpyMini','mUsdJpyVal']], ['brent',['brentUsd']]]) {
+    const expired = macroExpired(macroState[asset]);
+    for (const id of ids) D[id]?.classList.toggle('stale', expired);
   }
-  const crossOld = macroExpired(macroState.jpy) || macroExpired(macroState.brent);
-  D.brentJpy?.classList.toggle('stale', crossOld);
-  const crossNote = document.getElementById('brentCrossSource');
-  if (crossNote) crossNote.textContent = crossOld ? 'OLD INPUT · ESTIMATE' : 'Converted estimate';
-  if (D.brentJpy) D.brentJpy.title = 'Brent USD × USD/JPY. The two observations can have different dates. ' +
-    (document.getElementById('brentSource')?.title || '') + ' / ' + (document.getElementById('jpySource')?.title || '');
+  D.brentJpy?.classList.toggle('stale', macroExpired(macroState.jpy) || macroExpired(macroState.brent));
 }
 function refreshStaleness(){
   const now = Date.now();
@@ -3580,11 +3556,11 @@ function paintSavings(){
  const quoteGood=r.usdFresh&&Date.now()-r.usdTime<3600000;
  const result=savingsMath(h.borrowedXrp,h.repaidXrp,r.debt,quoteGood?r.usd:1,xrpSpot.price);
  const signed=(n,d)=>(n>=0?'+':'−')+fmt(Math.abs(n),d);
- put('saved-xrp',signed(result.savedXrp,2)+' XRP');
+ put('saved-xrp',signed(result.savedXrp,2));
  put('saved-usd',(result.savedUsd>=0?'+$':'−$')+fmt(Math.abs(result.savedUsd),2));
  const old=!!savingsError||Date.now()-h.checkedAt>120000||Date.now()-xrpSpot.timestamp>45000||failed||Date.now()-r.timestamp>600000;
  for(const key of ['saved-xrp','saved-usd'])document.querySelectorAll('[data-loan="'+key+'"]').forEach(el=>{el.className=result.savedXrp>=0?'positive':'negative';el.style.opacity=old?'.5':'';});
- put('saved-detail',fmt(h.borrowedXrp,4)+' XRP sale avoided − '+fmt(h.repaidXrp,4)+' XRP equivalent of earlier repayments − '+fmt(result.repaymentXrp,4)+' XRP to repay now. '+h.count+' borrow transaction(s). Historical XRP prices use each transaction minute’s opening price (Binance XRP/USDT); historical RLUSD and USDT are treated as $1. Current XRP/USDT: $'+fmt(xrpSpot.price,4)+'. '+(!quoteGood?'Current RLUSD is also estimated at $1. ':'')+'Includes current debt interest. Excludes fees, taxes, and slippage. Negative means borrowing is behind selling.'+(old?' OLD INPUT — estimate may be delayed.':''));
+ put('saved-detail',fmt(h.borrowedXrp,4)+' XRP sale avoided − '+fmt(h.repaidXrp,4)+' XRP equivalent of earlier repayments − '+fmt(result.repaymentXrp,4)+' XRP to repay now. '+h.count+' borrow transaction(s). Historical XRP prices use each transaction minute’s opening price; historical RLUSD and USDT are treated as $1. Current XRP/USDT: $'+fmt(xrpSpot.price,4)+'. '+(!quoteGood?'Current RLUSD is also estimated at $1. ':'')+'Includes current debt interest. Excludes fees, taxes, and slippage. Negative means borrowing is behind selling.'+(old?' Data may be delayed.':''));
 }
 window.addEventListener('terminal-xrp-price',e=>{
  if(e.detail?.price>0&&Number.isFinite(e.detail.price)&&Number.isFinite(e.detail.timestamp)){xrpSpot=e.detail;paintSavings();}
