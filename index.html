@@ -179,7 +179,7 @@ if (!window.LightweightCharts) {
     position: relative;
     z-index: 3;
     display: grid;
-    grid-template-rows: auto minmax(172px, 27vh) auto minmax(0, 1fr);
+    grid-template-rows: auto minmax(172px, 27vh) auto auto minmax(180px, 1fr);
     height: 100vh;
     padding: var(--sp-2) var(--sp-4);
     gap: var(--sp-2);
@@ -1094,11 +1094,11 @@ if (!window.LightweightCharts) {
     .topbar { grid-template-columns: auto 1fr; }
     .env-strip { grid-column: 1 / -1; justify-content: flex-start; order: 3; }
     .stats { grid-template-columns: repeat(4, 1fr); }
-    .dash { grid-template-rows: auto minmax(170px, 28vh) auto minmax(0, 1fr); }
+    .dash { grid-template-rows: auto minmax(170px, 28vh) auto auto minmax(180px, 1fr); }
   }
   @media (max-width: 760px) {
     body:not(.mobile) { overflow-y: auto; }
-    body:not(.mobile) .dash { height: auto; min-height: 100vh; grid-template-rows: auto auto auto minmax(320px, 1fr); }
+    body:not(.mobile) .dash { height: auto; min-height: 100vh; grid-template-rows: auto auto auto auto minmax(320px, 1fr); }
     .hero { grid-template-columns: 1fr; }
     .jpy-panel .chart-canvas { min-height: 150px; }
     .stats { grid-template-columns: repeat(2, 1fr); }
@@ -1312,6 +1312,9 @@ if (!window.LightweightCharts) {
     .bg-orbs .orb, .status-dot, .chart-label .live-dot { animation: none; }
   }
 
+  body:not(.mobile) { overflow-y:auto; }
+  .dash > .loan-panel { margin-top:0; }
+  .dash > :nth-child(5) { animation-delay:200ms; }
   .loan-panel { margin-top:8px; padding:9px 12px; border:1px solid var(--green-border); border-radius:10px; background:var(--surface); min-width:0; }
   .loan-panel summary { cursor:pointer; list-style:none; }
   .loan-panel summary::-webkit-details-marker { display:none; }
@@ -1576,14 +1579,7 @@ if (!window.LightweightCharts) {
           <span class="pill fl portfolio-pnl" id="portfolioPnl">·</span>
         </div>
       </div>
-<details class="loan-panel" data-loan-panel>
-<summary><div class="loan-head"><span>MORPHO · FXRP / RLUSD</span><span data-loan="status">CHECKING</span></div>
-<div class="loan-grid"><div><small>LOAN BALANCE</small><strong data-loan="debt">—</strong> <em>RLUSD</em></div><div><small>INTEREST ACCRUED</small><strong data-loan="interest">—</strong> <em>RLUSD</em></div><div><small>XRP LIQ. EST.</small><strong data-loan="liquidation">—</strong> <em>USD</em></div><div><small>LTV / 77%</small><strong data-loan="ltv">—</strong></div></div></summary>
-<div class="loan-detail"><div data-loan="detail">Loading the loan from Morpho…</div>
-<div>Liquidation uses the market oracle. USD estimate assumes 1 FXRP represents 1 XRP and uses the RLUSD/USD quote. It is not an exchange price trigger.</div>
-<div data-loan="interest-detail">Loading accrued interest…</div>
-<div>Debt includes interest reported by Morpho. Data refreshes every 30 seconds while visible. Old data is faded.</div>
-<a href="https://app.morpho.org/ethereum/variable/0x4fa31e3f8ba345227d44e1cf48559eea53a90dd5311dc006984c060f2f311d96/rlusd-fxrp" target="_blank" rel="noopener noreferrer">Open market</a> · <span>Wallet 0x8A44…f246</span></div></details>
+
     </div>
 
     <!-- Right Cross-Asset & USD/JPY Carry Column -->
@@ -1631,6 +1627,15 @@ if (!window.LightweightCharts) {
       </div>
     </div>
   </section>
+
+<details class="loan-panel" data-loan-panel>
+<summary><div class="loan-head"><span>MORPHO · FXRP / RLUSD</span><span data-loan="status">CHECKING</span></div>
+<div class="loan-grid"><div><small>LOAN BALANCE</small><strong data-loan="debt">—</strong> <em>RLUSD</em></div><div><small>INTEREST ACCRUED</small><strong data-loan="interest">—</strong> <em>RLUSD</em></div><div><small>XRP LIQ. EST.</small><strong data-loan="liquidation">—</strong> <em>USD</em></div><div><small>LTV / 77%</small><strong data-loan="ltv">—</strong></div></div></summary>
+<div class="loan-detail"><div data-loan="detail">Loading the loan from Morpho…</div>
+<div>Liquidation uses the market oracle. USD estimate assumes 1 FXRP represents 1 XRP and uses the RLUSD/USD quote. It is not an exchange price trigger.</div>
+<div data-loan="interest-detail">Loading accrued interest…</div>
+<div>Debt includes interest reported by Morpho. Data refreshes every 30 seconds while visible. Old data is faded.</div>
+<a href="https://app.morpho.org/ethereum/variable/0x4fa31e3f8ba345227d44e1cf48559eea53a90dd5311dc006984c060f2f311d96/rlusd-fxrp" target="_blank" rel="noopener noreferrer">Open market</a> · <span>Wallet 0x8A44…f246</span></div></details>
 
   <!-- 3. MACRO TELEMETRY RIBBON -->
   <section class="stats">
