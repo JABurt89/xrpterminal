@@ -1320,6 +1320,10 @@ if (!window.LightweightCharts) {
   .hero-aside .loan-grid { gap:7px; }
   .dash > :nth-child(5) { animation-delay:200ms; }
   .loan-panel { margin-top:8px; padding:9px 12px; border:1px solid var(--green-border); border-radius:10px; background:var(--surface); min-width:0; }
+  .loan-saved { display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin-top:8px; padding-top:6px; border-top:1px solid var(--border-hi); font-size:9px; color:var(--text-dim); }
+  .loan-saved strong { font:700 clamp(13px,1.2vw,19px) "Outfit",sans-serif; font-variant-numeric:tabular-nums; }
+  .loan-saved .positive { color:var(--green); }
+  .loan-saved .negative { color:var(--red); }
   .loan-panel summary { cursor:pointer; list-style:none; }
   .loan-panel summary::-webkit-details-marker { display:none; }
   .loan-head { display:flex; justify-content:space-between; gap:8px; color:var(--text-dim); font-size:9px; letter-spacing:1px; margin-bottom:7px; }
@@ -1389,9 +1393,10 @@ if (!window.LightweightCharts) {
 
 <details class="loan-panel" data-loan-panel>
 <summary><div class="loan-head"><span>MORPHO · FXRP / RLUSD</span><span data-loan="status">CHECKING</span></div>
-<div class="loan-grid"><div><small>LOAN BALANCE</small><strong data-loan="debt">—</strong> <em>RLUSD</em></div><div><small>INTEREST ACCRUED</small><strong data-loan="interest">—</strong> <em>RLUSD</em></div><div><small>XRP LIQ. EST.</small><strong data-loan="liquidation">—</strong> <em>USD</em></div><div><small>LTV / 77%</small><strong data-loan="ltv">—</strong></div></div></summary>
+<div class="loan-grid"><div><small>LOAN BALANCE</small><strong data-loan="debt">—</strong> <em>RLUSD</em></div><div><small>INTEREST ACCRUED</small><strong data-loan="interest">—</strong> <em>RLUSD</em></div><div><small>XRP LIQ. EST.</small><strong data-loan="liquidation">—</strong> <em>USD</em></div><div><small>LTV / 77%</small><strong data-loan="ltv">—</strong></div></div><div class="loan-saved"><span>XRP SAVED · EST.</span><strong data-loan="saved-xrp">—</strong><strong data-loan="saved-usd">—</strong></div></summary>
 <div class="loan-detail"><div data-loan="detail">Loading the loan from Morpho…</div>
 <div>Liquidation uses the market oracle. USD estimate assumes 1 FXRP represents 1 XRP and uses the RLUSD/USD quote. It is not an exchange price trigger.</div>
+<div data-loan="saved-detail">Loading borrow history and XRP prices…</div>
 <div data-loan="interest-detail">Loading accrued interest…</div>
 <div>Debt uses the current block and Morpho’s variable-rate contract. Morpho API is the fallback. Data refreshes every 30 seconds while visible. Old data is faded.</div>
 <a href="https://app.morpho.org/ethereum/variable/0x4fa31e3f8ba345227d44e1cf48559eea53a90dd5311dc006984c060f2f311d96/rlusd-fxrp" target="_blank" rel="noopener noreferrer">Open market</a> · <span>Wallet 0x8A44…f246</span></div></details>
@@ -1618,9 +1623,10 @@ if (!window.LightweightCharts) {
 
 <details class="loan-panel" data-loan-panel>
 <summary><div class="loan-head"><span>MORPHO · FXRP / RLUSD</span><span data-loan="status">CHECKING</span></div>
-<div class="loan-grid"><div><small>LOAN BALANCE</small><strong data-loan="debt">—</strong> <em>RLUSD</em></div><div><small>INTEREST ACCRUED</small><strong data-loan="interest">—</strong> <em>RLUSD</em></div><div><small>XRP LIQ. EST.</small><strong data-loan="liquidation">—</strong> <em>USD</em></div><div><small>LTV / 77%</small><strong data-loan="ltv">—</strong></div></div></summary>
+<div class="loan-grid"><div><small>LOAN BALANCE</small><strong data-loan="debt">—</strong> <em>RLUSD</em></div><div><small>INTEREST ACCRUED</small><strong data-loan="interest">—</strong> <em>RLUSD</em></div><div><small>XRP LIQ. EST.</small><strong data-loan="liquidation">—</strong> <em>USD</em></div><div><small>LTV / 77%</small><strong data-loan="ltv">—</strong></div></div><div class="loan-saved"><span>XRP SAVED · EST.</span><strong data-loan="saved-xrp">—</strong><strong data-loan="saved-usd">—</strong></div></summary>
 <div class="loan-detail"><div data-loan="detail">Loading the loan from Morpho…</div>
 <div>Liquidation uses the market oracle. USD estimate assumes 1 FXRP represents 1 XRP and uses the RLUSD/USD quote. It is not an exchange price trigger.</div>
+<div data-loan="saved-detail">Loading borrow history and XRP prices…</div>
 <div data-loan="interest-detail">Loading accrued interest…</div>
 <div>Debt uses the current block and Morpho’s variable-rate contract. Morpho API is the fallback. Data refreshes every 30 seconds while visible. Old data is faded.</div>
 <a href="https://app.morpho.org/ethereum/variable/0x4fa31e3f8ba345227d44e1cf48559eea53a90dd5311dc006984c060f2f311d96/rlusd-fxrp" target="_blank" rel="noopener noreferrer">Open market</a> · <span>Wallet 0x8A44…f246</span></div></details>
@@ -3157,6 +3163,7 @@ function handleWsMessage(evt){
 
   if (s === 'xrpusdt@ticker') {
     S.xrpPrev = S.xrpUsd; S.xrpUsd = +d.c; S.xrp24hPct = +d.P;
+    window.dispatchEvent(new CustomEvent('terminal-xrp-price',{detail:{price:S.xrpUsd,timestamp:+d.E}}));
     S.xrp24hHi = +d.h; S.xrp24hLo = +d.l;
     D.xrpPrice.textContent = num(S.xrpUsd, 4);
     if (S.xrpPrev != null && S.xrpPrev !== S.xrpUsd) {
@@ -3467,7 +3474,7 @@ startApp();
 'use strict';
 const WALLET='0x8A449393Ce741a3CeaBd9373008be53dB12Bf246';
 const MARKET='0x4fa31e3f8ba345227d44e1cf48559eea53a90dd5311dc006984c060f2f311d96';
-const QUERY=`{ marketPositions(first:100, where:{userAddress_in:["${WALLET}"],chainId_in:[1]}) { items { market { marketId lltv collateralAsset {symbol decimals address} loanAsset {symbol decimals address price {usd timestamp}} state {price borrowApy timestamp} } state {borrowAssets collateral} } } }`;
+const QUERY=`{ marketPositions(first:100, where:{userAddress_in:["${WALLET}"],chainId_in:[1]}) { items { market { marketId lltv collateralAsset {symbol decimals address} loanAsset {symbol decimals address price {usd timestamp}} state {price borrowApy timestamp} } state {borrowAssets collateral borrowShares} } } }`;
 let latest=null,failed=false,busy=false;
 let rpcPreferred=0;
 let interest=null,interestFailed=false,interestBusy=false;
@@ -3521,7 +3528,7 @@ async function readChain(url){
  const rate=words(rh,1)[0],oracleRaw=words(oh,1)[0];
  if(oracleRaw<=0n)throw Error('Invalid oracle');
  const debtRaw=accruedDebt(m,position,rate,BigInt(block.timestamp));
- const r=calculate({market:{marketId:MARKET,lltv:params[4].toString(),collateralAsset:{address:address(params[1]),decimals:6},loanAsset:{address:address(params[0]),decimals:18,price:usdQuote},state:{price:oracleRaw.toString(),timestamp:timestamp/1000,borrowApy:null}},state:{borrowAssets:debtRaw.toString(),collateral:position[2].toString()}});
+ const r=calculate({market:{marketId:MARKET,lltv:params[4].toString(),collateralAsset:{address:address(params[1]),decimals:6},loanAsset:{address:address(params[0]),decimals:18,price:usdQuote},state:{price:oracleRaw.toString(),timestamp:timestamp/1000,borrowApy:null}},state:{borrowAssets:debtRaw.toString(),collateral:position[2].toString(),borrowShares:position[1].toString()}});
  r.source='CHAIN';r.block=BigInt(block.number).toString();r.receivedAt=Date.now();
  return r;
 }
@@ -3547,11 +3554,80 @@ function calculate(p) {
  if(![debt,collateral,oracle,timestamp].every(Number.isFinite)||oracle<=0||timestamp<=0||timestamp>Date.now()+60000) throw Error('Invalid market data');
  const usd=Number(m.loanAsset.price?.usd),usdTime=Number(m.loanAsset.price?.timestamp)*1000;
  const usdFresh=usd>0 && Number.isFinite(usd) && usdTime>0 && Date.now()-usdTime<3600000 && usdTime<Date.now()+60000;
- return {debt,collateral,oracle,threshold,timestamp,usdFresh,usdTime,usd,apy:m.state.borrowApy,
+ return {borrowShares:st.borrowShares,debt,collateral,oracle,threshold,timestamp,usdFresh,usdTime,usd,apy:m.state.borrowApy,
  ltv:collateral>0?debt/(collateral*oracle):debt>0?Infinity:0,
  trigger:collateral>0?debt/(collateral*threshold):null};
 }
+
+let savingsHistory=null,savingsError='',savingsBusy=false,xrpSpot=null;
+const entryPrices=new Map([[1792372440000,1.3096],[1792380300000,1.3116]]);
+// Initial cache entries verified against Binance XRPUSDT one-minute candle opens.
+// RLUSD and USDT are treated as USD at historical transaction times (estimate).
+function savingsMath(borrowedXrp,repaidXrp,debtRlusd,rlusdUsd,xrpUsd){
+ const repaymentXrp=debtRlusd*rlusdUsd/xrpUsd;
+ const savedXrp=borrowedXrp-repaidXrp-repaymentXrp;
+ return {repaymentXrp,savedXrp,savedUsd:savedXrp*xrpUsd};
+}
+function paintSavings(){
+ if(!savingsHistory||!latest||!xrpSpot){
+  put('saved-xrp','—');put('saved-usd','—');
+  put('saved-detail',savingsError||'Loading borrow history and XRP prices…');return;
+ }
+ const h=savingsHistory,r=latest;
+ if(h.liquidated||!/^\d+$/.test(String(r.borrowShares))||h.netShares!==BigInt(r.borrowShares)){
+  put('saved-xrp','—');put('saved-usd','—');put('saved-detail',h.liquidated?'XRP saved is unavailable after a liquidation.':'Matching transaction history to the current loan…');return;
+ }
+ const quoteGood=r.usdFresh&&Date.now()-r.usdTime<3600000;
+ const result=savingsMath(h.borrowedXrp,h.repaidXrp,r.debt,quoteGood?r.usd:1,xrpSpot.price);
+ const signed=(n,d)=>(n>=0?'+':'−')+fmt(Math.abs(n),d);
+ put('saved-xrp',signed(result.savedXrp,2)+' XRP');
+ put('saved-usd',(result.savedUsd>=0?'+$':'−$')+fmt(Math.abs(result.savedUsd),2));
+ const old=!!savingsError||Date.now()-h.checkedAt>120000||Date.now()-xrpSpot.timestamp>45000||failed||Date.now()-r.timestamp>600000;
+ for(const key of ['saved-xrp','saved-usd'])document.querySelectorAll('[data-loan="'+key+'"]').forEach(el=>{el.className=result.savedXrp>=0?'positive':'negative';el.style.opacity=old?'.5':'';});
+ put('saved-detail',fmt(h.borrowedXrp,4)+' XRP sale avoided − '+fmt(h.repaidXrp,4)+' XRP equivalent of earlier repayments − '+fmt(result.repaymentXrp,4)+' XRP to repay now. '+h.count+' borrow transaction(s). Historical XRP prices use each transaction minute’s opening price (Binance XRP/USDT); historical RLUSD and USDT are treated as $1. Current XRP/USDT: $'+fmt(xrpSpot.price,4)+'. '+(!quoteGood?'Current RLUSD is also estimated at $1. ':'')+'Includes current debt interest. Excludes fees, taxes, and slippage. Negative means borrowing is behind selling.'+(old?' OLD INPUT — estimate may be delayed.':''));
+}
+window.addEventListener('terminal-xrp-price',e=>{
+ if(e.detail?.price>0&&Number.isFinite(e.detail.price)&&Number.isFinite(e.detail.timestamp)){xrpSpot=e.detail;paintSavings();}
+});
+async function historicalXrp(timestamp){
+ const minute=Math.floor(timestamp/60)*60000;
+ if(entryPrices.has(minute))return entryPrices.get(minute);
+ for(const host of ['https://data-api.binance.vision','https://api.binance.com']){
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),8000);
+  try{
+   const r=await fetch(host+'/api/v3/klines?symbol=XRPUSDT&interval=1m&startTime='+minute+'&limit=1',{signal:controller.signal});
+   if(!r.ok)continue;const rows=await r.json(),row=rows?.[0];
+   if(Array.isArray(row)&&Number(row[0])===minute&&Number(row[1])>0&&Number.isFinite(Number(row[1]))){const price=Number(row[1]);entryPrices.set(minute,price);return price;}
+  }catch{}finally{clearTimeout(timer);}
+ }
+ throw Error('Historical XRP price unavailable');
+}
+async function refreshSavings(){
+ if(savingsBusy||document.hidden)return;savingsBusy=true;
+ const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
+ try{
+  const query=`{ marketTransactions(first:1000,orderBy:Timestamp,orderDirection:Asc,where:{chainId_in:[1],userAddress_in:["${WALLET}"],marketUniqueKey_in:["${MARKET}"],type_in:[Borrow,Repay,Liquidation]}) { items {txHash timestamp logIndex type data {... on MarketTransactionTransferData {assets shares}}} } }`;
+  const r=await fetch('https://api.morpho.org/graphql',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query}),signal:controller.signal,cache:'no-store'});
+  if(!r.ok)throw Error('Borrow history unavailable');const j=await r.json();if(j.errors)throw Error('Borrow history unavailable');
+  const items=j.data?.marketTransactions?.items;
+  if(!Array.isArray(items)||!items.length||items.length>=1000)throw Error('Complete borrow history unavailable');
+  const h={borrowedXrp:0,repaidXrp:0,netShares:0n,count:0,checkedAt:Date.now(),liquidated:false};const seen=new Set();
+  for(const t of items){
+   const key=t.txHash+':'+t.logIndex;if(seen.has(key))throw Error('Duplicate transaction');seen.add(key);
+   if(t.type==='Liquidation'){h.liquidated=true;continue;}
+   if(!['Borrow','Repay'].includes(t.type)||!/^\d+$/.test(t.data?.assets)||!/^\d+$/.test(t.data?.shares)||!(Number(t.timestamp)>0))throw Error('Invalid transaction');
+   const amount=Number(t.data.assets)/1e18;if(!Number.isFinite(amount))throw Error('Invalid amount');
+   const price=await historicalXrp(Number(t.timestamp));
+   if(t.type==='Borrow'){h.borrowedXrp+=amount/price;h.netShares+=BigInt(t.data.shares);h.count++;}
+   else {h.repaidXrp+=amount/price;h.netShares-=BigInt(t.data.shares);}
+  }
+  savingsHistory=h;savingsError='';
+ }catch(error){savingsError=error.message;}
+ finally{clearTimeout(timer);savingsBusy=false;paintSavings();}
+}
+
 function paint(){
+ paintSavings();
  const interestOld=interestFailed || (interest && Date.now()-interest.receivedAt>120000);
  put('interest',interest?fmt(interest.amount,6):'—');
  document.querySelectorAll('[data-loan="interest"]').forEach(el=>el.style.opacity=interestOld?'.5':'');
@@ -3607,10 +3683,11 @@ async function refreshInterest(){
  }catch(error){interestFailed=true;console.warn('Morpho interest:',error.message);}
  finally{clearTimeout(timer);interestBusy=false;paint();}
 }
+refreshSavings();setInterval(refreshSavings,30000);
 updateUsdQuote();setInterval(updateUsdQuote,300000);
 refresh();refreshInterest();setInterval(refresh,30000);setInterval(refreshInterest,30000);setInterval(paint,1000);
-document.addEventListener('visibilitychange',()=>{if(!document.hidden){refresh();refreshInterest();}});
-window.addEventListener('online',()=>{refresh();refreshInterest();});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){refresh();refreshInterest();refreshSavings();}});
+window.addEventListener('online',()=>{refresh();refreshInterest();refreshSavings();});
 })();
 </script>
 </body>
