@@ -1311,6 +1311,25 @@ if (!window.LightweightCharts) {
   @media (prefers-reduced-motion: reduce) {
     .bg-orbs .orb, .status-dot, .chart-label .live-dot { animation: none; }
   }
+
+  .loan-panel { margin-top:8px; padding:9px 12px; border:1px solid var(--green-border); border-radius:10px; background:var(--surface); min-width:0; }
+  .loan-panel summary { cursor:pointer; list-style:none; }
+  .loan-panel summary::-webkit-details-marker { display:none; }
+  .loan-head { display:flex; justify-content:space-between; gap:8px; color:var(--text-dim); font-size:9px; letter-spacing:1px; margin-bottom:7px; }
+  .loan-grid { display:grid; grid-template-columns:1.15fr 1fr 1fr .7fr; gap:10px; }
+  .loan-grid small { display:block; color:var(--text-dim); font-size:9px; margin-bottom:4px; }
+  .loan-grid strong { font:700 clamp(13px,1.35vw,21px) 'Outfit',sans-serif; font-variant-numeric:tabular-nums; }
+  @media(max-width:600px) { .loan-grid { grid-template-columns:1fr 1fr; row-gap:10px; } }
+  .loan-grid em { font-size:9px; color:var(--text-dim); font-style:normal; }
+  .loan-panel[data-risk="warning"] { border-color:var(--amber); }
+  .loan-panel[data-risk="danger"] { border-color:var(--red); }
+  .loan-panel[data-risk="danger"] strong { color:var(--red); }
+  .loan-panel.loan-old strong { opacity:.5; }
+  .loan-detail { font-size:10px; line-height:1.7; color:var(--text-dim); margin-top:9px; overflow-wrap:anywhere; }
+  .loan-detail a { color:var(--cyan); }
+  .mobile-view>.loan-panel { grid-column:1/-1; margin-top:0; }
+  body.mobile .mobile-view { grid-template-rows:auto auto auto minmax(145px,1fr) minmax(145px,1fr); }
+  @media (orientation:portrait) { body.mobile .mobile-view { grid-template-rows:auto auto auto repeat(4,minmax(160px,1fr)); } }
 </style>
 </head>
 <body>
@@ -1361,6 +1380,14 @@ if (!window.LightweightCharts) {
     <span class="m-chg fl" id="mPortPnl">·</span>
   </div>
 
+<details class="loan-panel" data-loan-panel>
+<summary><div class="loan-head"><span>MORPHO · FXRP / RLUSD</span><span data-loan="status">CHECKING</span></div>
+<div class="loan-grid"><div><small>LOAN BALANCE</small><strong data-loan="debt">—</strong> <em>RLUSD</em></div><div><small>INTEREST ACCRUED</small><strong data-loan="interest">—</strong> <em>RLUSD</em></div><div><small>XRP LIQ. EST.</small><strong data-loan="liquidation">—</strong> <em>USD</em></div><div><small>LTV / 77%</small><strong data-loan="ltv">—</strong></div></div></summary>
+<div class="loan-detail"><div data-loan="detail">Loading the loan from Morpho…</div>
+<div>Liquidation uses the market oracle. USD estimate assumes 1 FXRP represents 1 XRP and uses the RLUSD/USD quote. It is not an exchange price trigger.</div>
+<div data-loan="interest-detail">Loading accrued interest…</div>
+<div>Debt includes interest reported by Morpho. Data refreshes every 30 seconds while visible. Old data is faded.</div>
+<a href="https://app.morpho.org/ethereum/variable/0x4fa31e3f8ba345227d44e1cf48559eea53a90dd5311dc006984c060f2f311d96/rlusd-fxrp" target="_blank" rel="noopener noreferrer">Open market</a> · <span>Wallet 0x8A44…f246</span></div></details>
   <!-- 4 Core Asset Cards -->
   <div class="m-card fl" id="mXrpUsd">
     <div class="m-card-head">
@@ -1549,6 +1576,14 @@ if (!window.LightweightCharts) {
           <span class="pill fl portfolio-pnl" id="portfolioPnl">·</span>
         </div>
       </div>
+<details class="loan-panel" data-loan-panel>
+<summary><div class="loan-head"><span>MORPHO · FXRP / RLUSD</span><span data-loan="status">CHECKING</span></div>
+<div class="loan-grid"><div><small>LOAN BALANCE</small><strong data-loan="debt">—</strong> <em>RLUSD</em></div><div><small>INTEREST ACCRUED</small><strong data-loan="interest">—</strong> <em>RLUSD</em></div><div><small>XRP LIQ. EST.</small><strong data-loan="liquidation">—</strong> <em>USD</em></div><div><small>LTV / 77%</small><strong data-loan="ltv">—</strong></div></div></summary>
+<div class="loan-detail"><div data-loan="detail">Loading the loan from Morpho…</div>
+<div>Liquidation uses the market oracle. USD estimate assumes 1 FXRP represents 1 XRP and uses the RLUSD/USD quote. It is not an exchange price trigger.</div>
+<div data-loan="interest-detail">Loading accrued interest…</div>
+<div>Debt includes interest reported by Morpho. Data refreshes every 30 seconds while visible. Old data is faded.</div>
+<a href="https://app.morpho.org/ethereum/variable/0x4fa31e3f8ba345227d44e1cf48559eea53a90dd5311dc006984c060f2f311d96/rlusd-fxrp" target="_blank" rel="noopener noreferrer">Open market</a> · <span>Wallet 0x8A44…f246</span></div></details>
     </div>
 
     <!-- Right Cross-Asset & USD/JPY Carry Column -->
@@ -3436,6 +3471,84 @@ jobs.forEach(([fn, interval]) => scheduleJob(fn, interval));
 }
 
 startApp();
+</script>
+
+<script>
+// Independent read-only loan monitor. No wallet connection or signing.
+(() => {
+'use strict';
+const WALLET='0x8A449393Ce741a3CeaBd9373008be53dB12Bf246';
+const MARKET='0x4fa31e3f8ba345227d44e1cf48559eea53a90dd5311dc006984c060f2f311d96';
+const QUERY=`{ marketPositions(first:100, where:{userAddress_in:["${WALLET}"],chainId_in:[1]}) { items { market { marketId lltv collateralAsset {symbol decimals address} loanAsset {symbol decimals address price {usd timestamp}} state {price borrowApy timestamp} } state {borrowAssets collateral} } } }`;
+let latest=null,failed=false,busy=false;
+let interest=null,interestFailed=false,interestBusy=false;
+const put=(key,value)=>document.querySelectorAll('[data-loan="'+key+'"]').forEach(el=>el.textContent=value);
+const fmt=(v,d=2)=>v.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+function calculate(p) {
+ const m=p.market, st=p.state;
+ if(m.marketId!==MARKET || m.collateralAsset.address.toLowerCase()!=='0xce6170ea245dc8d1f275a710a062b70f125f0110' || m.loanAsset.address.toLowerCase()!=='0x8292bb45bf1ee4d140127049757c2e0ff06317ed' || m.collateralAsset.decimals!==6 || m.loanAsset.decimals!==18 || m.lltv!=='770000000000000000') throw Error('Market settings do not match');
+ for(const v of [st.borrowAssets,st.collateral,m.state.price]) if(!/^\d+$/.test(String(v))) throw Error('Invalid amount');
+ const debt=Number(st.borrowAssets)/1e18, collateral=Number(st.collateral)/1e6;
+ // Oracle uses raw token units: 1e36 * 10^(loan decimals - collateral decimals).
+ const oracle=Number(m.state.price)/1e48;
+ const threshold=Number(m.lltv)/1e18;
+ const timestamp=Number(m.state.timestamp)*1000;
+ if(![debt,collateral,oracle,timestamp].every(Number.isFinite)||oracle<=0||timestamp<=0||timestamp>Date.now()+60000) throw Error('Invalid market data');
+ const usd=Number(m.loanAsset.price?.usd),usdTime=Number(m.loanAsset.price?.timestamp)*1000;
+ const usdFresh=usd>0 && Number.isFinite(usd) && usdTime>0 && Date.now()-usdTime<3600000 && usdTime<Date.now()+60000;
+ return {debt,collateral,oracle,threshold,timestamp,usdFresh,usdTime,usd,apy:m.state.borrowApy,
+ ltv:collateral>0?debt/(collateral*oracle):debt>0?Infinity:0,
+ trigger:collateral>0?debt/(collateral*threshold):null};
+}
+function paint(){
+ const interestOld=interestFailed || (interest && Date.now()-interest.receivedAt>120000);
+ put('interest',interest?fmt(interest.amount,6):'—');
+ document.querySelectorAll('[data-loan="interest"]').forEach(el=>el.style.opacity=interestOld?'.5':'');
+ put('interest-detail',interest ? 'Interest accrued: '+fmt(interest.amount,6)+' RLUSD. Total borrowing interest for this wallet and market, including paid and unpaid interest; not an extra charge on top of the loan balance. Morpho indexed block '+interest.block+'.'+(interestOld?' OLD DATA — refresh failed or delayed.':'') : interestFailed?'Interest data unavailable. Retrying…':'Loading accrued interest…');
+ if(!latest) {put('status',failed?'DATA UNAVAILABLE':'CHECKING');return;}
+ const r=latest,old=failed||Date.now()-r.timestamp>600000;
+ const usdFresh=r.usdFresh&&Date.now()-r.usdTime<3600000;
+ put('status',(old?'OLD DATA · ':'')+new Date(r.timestamp).toLocaleTimeString('en-GB',{hour12:false,hour:'2-digit',minute:'2-digit',timeZone:'Asia/Bangkok'})+' ICT');
+ put('debt',fmt(r.debt));
+ put('liquidation',r.debt===0?'None':r.trigger!==null&&usdFresh?'$'+fmt(r.trigger*r.usd,4):'—');
+ put('ltv',Number.isFinite(r.ltv)?fmt(r.ltv*100)+'%':'≥77%');
+ const apy=typeof r.apy==='number'&&Number.isFinite(r.apy)?fmt(r.apy*100)+'%':'—';
+ put('detail',fmt(r.collateral)+' FXRP collateral · Borrow APY '+apy+' · Oracle '+fmt(r.oracle,4)+' RLUSD/FXRP. '+(r.trigger!==null&&r.debt>0?'Liquidation threshold: '+fmt(r.trigger,6)+' RLUSD/FXRP. ':'')+(!usdFresh?'USD quote unavailable or old. ':'')+(failed?'Refresh failed. Last received data shown. ':''));
+ document.querySelectorAll('[data-loan-panel]').forEach(el=>{el.classList.toggle('loan-old',old);el.dataset.risk=r.ltv>=r.threshold?'danger':r.ltv>=r.threshold*.9?'warning':'normal';});
+}
+async function refresh(){
+ if(busy||document.hidden)return;
+ busy=true;const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
+ try {
+ const response=await fetch('https://api.morpho.org/graphql',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:QUERY}),signal:controller.signal,cache:'no-store'});
+ if(!response.ok)throw Error('HTTP '+response.status);
+ const json=await response.json();if(json.errors)throw Error('Morpho API error');
+ const items=json.data?.marketPositions?.items;if(!Array.isArray(items))throw Error('Missing positions');
+ const p=items.find(p=>p.market?.marketId===MARKET);
+ if(!p)throw Error('Loan position not returned');
+ latest=calculate(p);failed=false;
+ }catch(error){failed=true;console.warn('Morpho loan:',error.message);}
+ finally{clearTimeout(timer);busy=false;paint();}
+}
+async function refreshInterest(){
+ if(interestBusy||document.hidden)return;
+ interestBusy=true;
+ const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
+ try{
+ const response=await fetch(`https://api.morpho.org/v0/blue/markets/1:${MARKET}/users/${WALLET}/position/performance`,{signal:controller.signal,cache:'no-store'});
+ if(!response.ok)throw Error('HTTP '+response.status);
+ const d=(await response.json()).data;
+ if(!d||d.chain_id!==1||d.market_id!==MARKET||d.user_address.toLowerCase()!==WALLET.toLowerCase()||d.accounting_method!=='average_cost'||!/^\d+$/.test(d.borrow_net_cost_assets)||!/^\d+$/.test(d.last_indexed_block))throw Error('Invalid interest data');
+ const amount=Number(d.borrow_net_cost_assets)/1e18;
+ if(!Number.isFinite(amount))throw Error('Invalid interest amount');
+ interest={amount,block:d.last_indexed_block,receivedAt:Date.now()};interestFailed=false;
+ }catch(error){interestFailed=true;console.warn('Morpho interest:',error.message);}
+ finally{clearTimeout(timer);interestBusy=false;paint();}
+}
+refresh();refreshInterest();setInterval(refresh,30000);setInterval(refreshInterest,30000);setInterval(paint,1000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){refresh();refreshInterest();}});
+window.addEventListener('online',()=>{refresh();refreshInterest();});
+})();
 </script>
 </body>
 </html>
