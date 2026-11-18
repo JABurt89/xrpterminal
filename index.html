@@ -1341,7 +1341,7 @@ function loadChartLibrary() {
     background: #121d24; border-color: #35434b; backdrop-filter: none; -webkit-backdrop-filter: none;
   }
   .dash { padding: clamp(9px, 1.1vw, 22px); gap: clamp(8px, .72vw, 14px);
-    grid-template-rows: auto minmax(min-content, 28vh) auto minmax(220px, 1fr); }
+    grid-template-rows: auto auto auto minmax(0, 1fr); }
   body:not(.mobile) { overflow-y: auto; }
   .topbar { border-width: 0 0 1px; border-radius: 0; background: transparent; padding: 0 0 10px; }
   .brand-icon { height: 36px; width: 36px; border-radius: 9px; box-shadow: none; }
@@ -1365,11 +1365,7 @@ function loadChartLibrary() {
   .hero-aside .loan-grid { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 6px 10px; }
   .hero-aside .loan-grid small { font-size: 9px; margin-bottom: 2px; }
   .hero-aside .loan-grid strong { font-size: clamp(13px,1.08vw,20px); }
-  .loan-margin { display: flex; justify-content: space-between; margin: 9px 0 4px; color: var(--text-dim); font: 12px 'Outfit',sans-serif; }
-  .loan-track { height: 4px; border-radius: 2px; overflow: hidden; background: #32424a; }
-  .loan-track i { display:block; height:100%; width:var(--buffer,0%); background:var(--green); }
-  [data-risk=warning] .loan-track i { background: var(--amber); }
-  [data-risk=danger] .loan-margin b, .loan-old [data-loan=status] { color: var(--amber); }
+  .loan-old [data-loan=status] { color: var(--amber); }
   .stats { border-radius: var(--r-lg); }
   .chart-header { padding: 8px 12px; background:#162229; }
   .chart-header-left { flex-wrap: wrap; }
@@ -1430,6 +1426,32 @@ function loadChartLibrary() {
     .m-status.feed-trigger { font-size:10px; }
     .m-port .portfolio-compact { white-space:normal; flex-wrap:wrap; }
   }
+  /* Reserve the remaining viewport height for the price chart. */
+  body:not(.mobile) { overflow: hidden; }
+  body:not(.mobile) .dash {
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    grid-template-rows: auto auto auto minmax(0, 1fr);
+  }
+  @media (orientation: landscape) {
+    body:not(.mobile) .hero { grid-template-columns: minmax(0,1.05fr) minmax(0,1fr); }
+    body:not(.mobile) .stats { grid-template-columns: repeat(8,minmax(0,1fr)); }
+  }
+  @media (orientation: landscape) and (max-height: 780px) {
+    .dash { padding: 6px 8px; gap: 5px; }
+    .hero-main, .aside-metric, .hero-aside > .loan-panel { padding: 6px 10px; }
+    .hero-main { gap: 3px; }
+    .price-big { font-size: clamp(30px, 6vh, 48px); }
+    .hero-aside, .aside-row { gap: 4px; }
+    .topbar { padding-bottom: 4px; }
+    .chart-header { padding-block: 3px; }
+  }
+  @media (orientation: landscape) and (max-height: 600px) {
+    .dash > .hero, .dash > .stats, .dash > .topbar { zoom: .76; }
+    .dash .topbar { grid-template-columns: auto minmax(0,1fr) auto; }
+    .dash .env-strip { grid-column:auto; order:0; }
+  }
 </style>
 </head>
 <body>
@@ -1445,10 +1467,9 @@ function loadChartLibrary() {
 <template id="loanTemplate">
 <details class="loan-panel" data-loan-panel>
 <summary><div class="loan-head"><span>MORPHO · FXRP / RLUSD</span><span data-loan="status">Checking</span></div>
-<div class="loan-grid"><div><small>DEBT · RLUSD</small><strong data-loan="debt">—</strong></div><div><small>INTEREST · RLUSD</small><strong data-loan="interest">—</strong></div><div><small>XRP LIQ. · USD</small><strong data-loan="liquidation">—</strong></div><div><small>LTV / 77%</small><strong data-loan="ltv">—</strong></div><div><small>XRP SAVED</small><strong data-loan="saved-xrp">—</strong></div><div><small>USD SAVED</small><strong data-loan="saved-usd">—</strong></div></div><div class="loan-margin"><span>Oracle price buffer</span><b data-loan="buffer">—</b></div><div class="loan-track"><i></i></div></summary>
+<div class="loan-grid"><div><small>DEBT · RLUSD</small><strong data-loan="debt">—</strong></div><div><small>INTEREST · RLUSD</small><strong data-loan="interest">—</strong></div><div><small>XRP LIQ. · USD</small><strong data-loan="liquidation">—</strong></div><div><small>LTV / 77%</small><strong data-loan="ltv">—</strong></div><div><small>XRP SAVED</small><strong data-loan="saved-xrp">—</strong></div><div><small>USD SAVED</small><strong data-loan="saved-usd">—</strong></div></div></summary>
 <div class="loan-detail"><div data-loan="detail">Loading the loan from Morpho…</div>
 <div>Liquidation uses the market oracle. USD estimate assumes 1 FXRP represents 1 XRP and uses the RLUSD/USD quote. It is not an exchange price trigger.</div>
-<div>The buffer shows how far the oracle price can fall before liquidation if debt and collateral stay constant.</div>
 <div data-loan="saved-detail">Loading borrow history and XRP prices…</div>
 <div data-loan="interest-detail">Loading accrued interest…</div>
 <div>Debt uses the current block and Morpho’s variable-rate contract. Morpho API is the fallback. Data refreshes every 30 seconds while visible. Old data is faded.</div>
@@ -3853,9 +3874,9 @@ async function refreshSavings(){
 function paint(){
  paintSavings();
  const interestOld=interestFailed || (interest && Date.now()-interest.receivedAt>120000);
- put('interest',interest?fmt(interest.amount,6):'—');
+ put('interest',interest?fmt(interest.amount,2):'—');
  document.querySelectorAll('[data-loan="interest"]').forEach(el=>el.style.opacity=interestOld?'.5':'');
- put('interest-detail',interest ? 'Interest accrued: '+fmt(interest.amount,6)+' RLUSD. Total borrowing interest for this wallet and market, including paid and unpaid interest; not an extra charge on top of the loan balance. Morpho indexed block '+interest.block+'.'+(interestOld?' OLD DATA — refresh failed or delayed.':'') : interestFailed?'Interest data unavailable. Retrying…':'Loading accrued interest…');
+ put('interest-detail',interest ? 'Interest accrued: '+fmt(interest.amount,2)+' RLUSD. Total borrowing interest for this wallet and market, including paid and unpaid interest; not an extra charge on top of the loan balance. Morpho indexed block '+interest.block+'.'+(interestOld?' OLD DATA — refresh failed or delayed.':'') : interestFailed?'Interest data unavailable. Retrying…':'Loading accrued interest…');
  if (!latest) {
    put('status', failed ? 'Unavailable' : 'Checking');
    if (failed) put('detail', 'Loan data unavailable. The terminal will retry.');
@@ -3869,12 +3890,9 @@ function paint(){
  put('ltv',Number.isFinite(r.ltv)?fmt(r.ltv*100)+'%':'≥77%');
  const apy=typeof r.apy==='number'&&Number.isFinite(r.apy)?fmt(r.apy*100)+'%':'—';
  put('detail',fmt(r.collateral)+' FXRP collateral · '+(r.source==='CHAIN'?'Variable rate checked at block '+r.block:'Borrow APY '+apy)+' · Oracle '+fmt(r.oracle,4)+' RLUSD/FXRP. '+(r.trigger!==null&&r.debt>0?'Liquidation threshold: '+fmt(r.trigger,6)+' RLUSD/FXRP. ':'')+(!usdFresh?'USD estimate uses RLUSD = $1; live USD quote unavailable. ':'')+(failed?'Refresh failed. Last received data shown. ':''));
- const buffer = r.trigger === null ? null : 1 - r.trigger / r.oracle;
- put('buffer', r.debt === 0 ? 'No debt' : !Number.isFinite(buffer) ? 'Unavailable' : buffer <= 0 ? 'At threshold' : fmt(buffer * 100, 1) + '%');
  for (const el of loanPanels) {
    el.classList.toggle('loan-old', old);
    el.dataset.risk = r.ltv >= r.threshold ? 'danger' : r.ltv >= r.threshold * .9 ? 'warning' : 'normal';
-   el.style.setProperty('--buffer', (r.debt > 0 && Number.isFinite(buffer) ? Math.max(0, Math.min(100, buffer * 100)) : 0) + '%');
  }
 }
 async function refresh(){
