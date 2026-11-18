@@ -10,37 +10,52 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%2304060b'/><path d='M8 9 L16 17 L24 9 M8 23 L16 15 L24 23' stroke='%2300e87b' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Azeret+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Azeret+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 
-<!-- Synchronous Primary Load + Automatic Fallback for TradingView Lightweight Charts v4.1.3 -->
-<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 <script>
-if (!window.LightweightCharts) {
-  const s = document.createElement('script');
-  s.src = 'https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js';
-  s.onload = () => window.dispatchEvent(new Event('chartsReady'));
-  s.onerror = () => window.dispatchEvent(new Event('chartsFailed'));
-  document.head.appendChild(s);
+function loadChartLibrary() {
+  if (window.LightweightCharts || loadChartLibrary.pending) return;
+  loadChartLibrary.pending = true;
+  const sources = ['https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js',
+    'https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js'];
+  function next() {
+    const url = sources.shift();
+    if (!url) {
+      loadChartLibrary.pending = false;
+      window.dispatchEvent(new Event('chartsFailed'));
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = url;
+    script.onload = () => {
+      if (!window.LightweightCharts) { next(); return; }
+      loadChartLibrary.pending = false;
+      window.dispatchEvent(new Event('chartsReady'));
+    };
+    script.onerror = next;
+    document.head.append(script);
+  }
+  next();
 }
 </script>
 
 <style>
   /* ══════════ DESIGN TOKENS ══════════ */
   :root {
-    --bg:            #04060b;
+    --bg:            #0a1116;
     --surface:       rgba(9, 13, 24, 0.74);
     --surface-2:     rgba(13, 19, 34, 0.82);
     --surface-inset: rgba(4, 6, 12, 0.55);
     --border:        rgba(255, 255, 255, 0.06);
     --border-hi:     rgba(255, 255, 255, 0.11);
     --specular:      inset 0 1px 0 rgba(255, 255, 255, 0.07);
-    --card-shadow:   0 10px 32px rgba(0, 0, 0, 0.48), var(--specular);
+    --card-shadow:   none;
 
     --text:          #eef2fa;
-    --text-dim:      #94a1c2;
-    --text-ghost:    #586484;
+    --text-dim:      #a7b7be;
+    --text-ghost:    #91a4ad;
 
-    --green:         #00e87b;
+    --green:         #78e6b9;
     --green-2:       #5cffb0;
     --green-bg:      rgba(0, 232, 123, 0.12);
     --green-border:  rgba(0, 232, 123, 0.28);
@@ -60,10 +75,10 @@ if (!window.LightweightCharts) {
     --btc-bg:        rgba(255, 165, 48, 0.12);
     --flat-bg:       rgba(255, 255, 255, 0.05);
 
-    --fs-micro: clamp(8px, 0.58vw, 10px);
-    --fs-xs:    clamp(9px, 0.70vw, 11px);
+    --fs-micro: clamp(10px, 0.72vw, 13px);
+    --fs-xs:    clamp(11px, 0.84vw, 14px);
     --fs-sm:    clamp(11px, 0.85vw, 13px);
-    --fs-md:    clamp(12px, 1.05vw, 16px);
+    --fs-md:    clamp(14px, 1.12vw, 20px);
     --fs-lg:    clamp(14px, 1.35vw, 21px);
     --fs-xl:    clamp(17px, 1.75vw, 28px);
     --fs-price: clamp(34px, 4.3vw, 74px);
@@ -76,7 +91,7 @@ if (!window.LightweightCharts) {
 
     --r-sm: 6px;
     --r-md: 10px;
-    --r-lg: 14px;
+    --r-lg: 12px;
 
     --t-fast:   140ms ease;
     --t-med:    280ms ease;
@@ -161,19 +176,6 @@ if (!window.LightweightCharts) {
     pointer-events: none;
   }
 
-  .bg-orbs { position: fixed; inset: 0; z-index: 1; overflow: hidden; pointer-events: none; }
-  .bg-orbs .orb { position: absolute; border-radius: 50%; filter: blur(130px); animation: orb-drift 24s ease-in-out infinite alternate; }
-  .bg-orbs .orb.a { width: 620px; height: 620px; background: var(--green); top: -14%; left: -6%; opacity: 0.045; animation-duration: 26s; }
-  .bg-orbs .orb.b { width: 520px; height: 520px; background: var(--cyan);  bottom: -14%; right: -6%; opacity: 0.045; animation-duration: 32s; animation-delay: -12s; }
-  .bg-orbs .orb.c { width: 380px; height: 380px; background: var(--btc);   top: 28%; right: 12%; opacity: 0.025; animation-duration: 20s; animation-delay: -6s; }
-  @keyframes orb-drift { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(45px, 30px) scale(1.1); } }
-
-  .bg-noise {
-    position: fixed; inset: 0; z-index: 2; pointer-events: none; opacity: 0.022;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    background-size: 128px;
-  }
-
   /* ══════════ DESKTOP / TV SHELL ══════════ */
   .dash {
     position: relative;
@@ -185,13 +187,6 @@ if (!window.LightweightCharts) {
     gap: var(--sp-2);
     min-height: 0;
   }
-
-  .dash > * { opacity: 0; animation: fade-in 0.45s ease forwards; }
-  .dash > :nth-child(1) { animation-delay: 0ms; }
-  .dash > :nth-child(2) { animation-delay: 50ms; }
-  .dash > :nth-child(3) { animation-delay: 100ms; }
-  .dash > :nth-child(4) { animation-delay: 150ms; }
-  @keyframes fade-in { to { opacity: 1; } }
 
   /* ══════════ 1. COMMAND TOPBAR ══════════ */
   .topbar {
@@ -874,8 +869,6 @@ if (!window.LightweightCharts) {
     display: flex;
     flex-direction: column;
   }
-  .jpy-panel { flex: 1 1 auto; min-height: 82px; }
-  .jpy-panel .live-dot { background: var(--cyan) !important; box-shadow: 0 0 6px var(--cyan) !important; }
   .chart-label em.jpy-em { font-style: normal; color: var(--cyan); font-weight: 700; }
 
   .chart-header {
@@ -1100,8 +1093,7 @@ if (!window.LightweightCharts) {
     body:not(.mobile) { overflow-y: auto; }
     body:not(.mobile) .dash { height: auto; min-height: 100vh; grid-template-rows: auto auto auto minmax(320px, 1fr); }
     .hero { grid-template-columns: 1fr; }
-    .jpy-panel .chart-canvas { min-height: 150px; }
-    .stats { grid-template-columns: repeat(2, 1fr); }
+      .stats { grid-template-columns: repeat(2, 1fr); }
   }
 
   /* ══════════ MOBILE MODE (body.mobile) ══════════ */
@@ -1320,7 +1312,6 @@ if (!window.LightweightCharts) {
   .hero-aside .loan-grid { grid-template-columns:repeat(6,minmax(0,1fr)); gap:6px; }
   .hero-aside .loan-grid small { font-size:clamp(7px,.55vw,10px); white-space:nowrap; margin-bottom:5px; }
   .loan-grid > div { min-width:0; }
-  .dash > :nth-child(5) { animation-delay:200ms; }
   .loan-panel { margin-top:8px; padding:9px 12px; border:1px solid var(--green-border); border-radius:10px; background:var(--surface); min-width:0; }
   .loan-grid .positive { color:var(--green); }
   .loan-grid .negative { color:var(--red); }
@@ -1341,19 +1332,128 @@ if (!window.LightweightCharts) {
   .mobile-view>.loan-panel { grid-column:1/-1; margin-top:0; }
   body.mobile .mobile-view { grid-template-rows:auto auto auto minmax(145px,1fr) minmax(145px,1fr); }
   @media (orientation:portrait) { body.mobile .mobile-view { grid-template-rows:auto auto auto repeat(4,minmax(160px,1fr)); } }
+  /* Display layout and controls */
+  body { background: radial-gradient(ellipse at top left, #192b30, transparent 58%), var(--bg); }
+  button { cursor: pointer; }
+  button:disabled { cursor: default; opacity: .55; }
+  :focus-visible { outline: 2px solid #8bdbff; outline-offset: 3px; }
+  .glass-card, .topbar, .m-card, .m-port, .m-bar, .stats, .loan-panel {
+    background: #121d24; border-color: #35434b; backdrop-filter: none; -webkit-backdrop-filter: none;
+  }
+  .dash { padding: clamp(9px, 1.1vw, 22px); gap: clamp(8px, .72vw, 14px);
+    grid-template-rows: auto minmax(min-content, 28vh) auto minmax(220px, 1fr); }
+  body:not(.mobile) { overflow-y: auto; }
+  .topbar { border-width: 0 0 1px; border-radius: 0; background: transparent; padding: 0 0 10px; }
+  .brand-icon { height: 36px; width: 36px; border-radius: 9px; box-shadow: none; }
+  .brand-name { text-transform: none; letter-spacing: -.7px; font-size: clamp(17px, 1.5vw, 26px); }
+  .brand-sub { margin-top: 4px; letter-spacing: 1px; }
+  .brand-cluster { gap: 12px; }
+  .icon-btn { width: auto; min-width: 32px; padding-inline: 8px; font: 600 12px 'Outfit', sans-serif; }
+  .hero { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: inherit; }
+  .hero-main { background: linear-gradient(115deg,#19332e,#122329 62%,#132128); padding: clamp(12px, 1.2vw, 22px); gap: 8px; }
+  .hero-main::before { display: none; }
+  .hero:has(details[open]) { position: relative; z-index: 5; }
+  .price-big { color: #eef9f5; text-shadow: none; letter-spacing: -.055em; }
+  .portfolio-card { background: #101e23; border-color: #344b4c; }
+  .aside-metric { padding: 10px 14px; }
+  .aside-row, .hero-aside { gap: 8px; }
+  .hero-aside > .loan-panel { padding: 10px 14px; position: relative; }
+  .loan-head { font-size: 10px; font-weight: 600; align-items: center; }
+  .loan-head::after { content: '⌄'; font: 16px/1 sans-serif; }
+  .loan-panel[open] .loan-head::after { transform: rotate(180deg); }
+  .loan-head [data-loan=status] { margin-left: auto; color: #b4cabe; font-size: 9px; letter-spacing: .2px; }
+  .hero-aside .loan-grid { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 6px 10px; }
+  .hero-aside .loan-grid small { font-size: 9px; margin-bottom: 2px; }
+  .hero-aside .loan-grid strong { font-size: clamp(13px,1.08vw,20px); }
+  .loan-margin { display: flex; justify-content: space-between; margin: 9px 0 4px; color: var(--text-dim); font: 12px 'Outfit',sans-serif; }
+  .loan-track { height: 4px; border-radius: 2px; overflow: hidden; background: #32424a; }
+  .loan-track i { display:block; height:100%; width:var(--buffer,0%); background:var(--green); }
+  [data-risk=warning] .loan-track i { background: var(--amber); }
+  [data-risk=danger] .loan-margin b, .loan-old [data-loan=status] { color: var(--amber); }
+  .stats { border-radius: var(--r-lg); }
+  .chart-header { padding: 8px 12px; background:#162229; }
+  .chart-header-left { flex-wrap: wrap; }
+  .ccy-tab, .tf-btn, .reset-chart { min-height: 26px; }
+  .reset-chart, .feed-actions button, .feed-head button {
+    background: #22323a; border: 1px solid #43565f; color: var(--text); border-radius: 6px; padding: 4px 9px; font: 600 12px 'Outfit',sans-serif;
+  }
+  .feed-trigger { color: var(--text); }
+  .feed-trigger::after { content: '⌄'; font-size: 12px; }
+  #feedDialog { width: min(460px, calc(100vw - 28px)); margin: auto; padding: 18px; border: 1px solid #45606a;
+    border-radius: 14px; color: var(--text); background: #122027; box-shadow: 0 20px 60px #0009; }
+  #feedDialog::backdrop { background: #050b10bc; }
+  .feed-head, .feed-actions, .mobile-portfolio-head { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .feed-head h2 { font: 600 22px 'Outfit',sans-serif; }
+  .feed-head button { font-size:20px; line-height:1; min-height:32px; }
+  #feedDialog table { border-collapse:collapse; width:100%; margin:16px 0; font-size:12px; }
+  #feedDialog th, #feedDialog td { text-align:left; padding:8px 4px; border-bottom:1px solid #33454d; }
+  #feedDialog th { color:var(--text-dim); font-weight:500; }
+  #feedDialog td:last-child { font-variant-numeric:tabular-nums; }
+  .feed-actions { font:14px 'Outfit',sans-serif; }
+  .feed-actions label { display:flex; align-items:center; gap:6px; }
+  .feed-actions button { min-height:34px; }
+  .mobile-portfolio-head { width:100%; flex-wrap:wrap; }
+  .m-port { position:relative; }
+  .m-port:has(details[open]) { z-index:4; }
+  .m-port .portfolio-expand { position:static; }
+  .m-port .income-details { top:100%; width:100%; }
+  .m-price { text-shadow:none; }
+  .loan-detail { font-size:12px; }
+  [hidden] { display:none !important; }
+  .m-card:has(.m-price .unit:only-child) .m-range-dot { opacity:.7; }
+  .mobile-view .loan-panel { padding:12px 14px; }
+  .mobile-view .loan-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .mobile-view .loan-grid strong { font-size:clamp(13px,3.8vw,19px); overflow-wrap:anywhere; }
+  @media(max-width:760px) {
+    .hero { grid-template-columns:minmax(0,1fr); }
+    .chart-header-right { display:none; }
+    .dash { padding:8px; }
+  }
+  @media (orientation:portrait) {
+    body.mobile .mobile-view { grid-template-rows: auto auto auto repeat(4,minmax(112px,1fr)); }
+  }
+  @media (prefers-reduced-motion:reduce) {
+    *, *::before, *::after { animation-duration:.01ms !important; transition-duration:.01ms !important; }
+  }
+  #basicChart { position:absolute; inset:0; width:100%; height:100%; }
+  #basicLabel { font: 12px 'Outfit',sans-serif; color:var(--text-dim); }
+  .m-status.feed-trigger { background:#15272a; border:1px solid #3c5557; border-radius:6px; padding:5px 7px; }
+  .m-bar { gap:6px; }
+  .m-right { gap:5px; }
+  .m-port-val, .portfolio-val { font-family:'Outfit',system-ui,sans-serif; }
+  .mobile-view .loan-grid small { white-space:normal; }
+  @media (max-width:420px) {
+    .m-bar { padding:7px 6px; }
+    .m-brand { gap:4px; }
+    .m-brand span { letter-spacing:.3px; }
+    .m-clock { font-size:10px; }
+    .m-status.feed-trigger { font-size:10px; }
+    .m-port .portfolio-compact { white-space:normal; flex-wrap:wrap; }
+  }
 </style>
 </head>
 <body>
 
 <!-- AMBIENT RAIN VIDEO BACKGROUND -->
-<div class="bg-video">
-  <video autoplay muted loop playsinline disablepictureinpicture preload="auto" id="bgVideo">
-    <source src="217379_medium.mp4" type="video/mp4">
+<div class="bg-video" hidden>
+  <video muted loop playsinline disablepictureinpicture preload="none" id="bgVideo">
+    
   </video>
 </div>
-<div class="bg-orbs"><div class="orb a"></div><div class="orb b"></div><div class="orb c"></div></div>
-<div class="bg-noise"></div>
 
+
+<template id="loanTemplate">
+<details class="loan-panel" data-loan-panel>
+<summary><div class="loan-head"><span>MORPHO · FXRP / RLUSD</span><span data-loan="status">Checking</span></div>
+<div class="loan-grid"><div><small>DEBT · RLUSD</small><strong data-loan="debt">—</strong></div><div><small>INTEREST · RLUSD</small><strong data-loan="interest">—</strong></div><div><small>XRP LIQ. · USD</small><strong data-loan="liquidation">—</strong></div><div><small>LTV / 77%</small><strong data-loan="ltv">—</strong></div><div><small>XRP SAVED</small><strong data-loan="saved-xrp">—</strong></div><div><small>USD SAVED</small><strong data-loan="saved-usd">—</strong></div></div><div class="loan-margin"><span>Oracle price buffer</span><b data-loan="buffer">—</b></div><div class="loan-track"><i></i></div></summary>
+<div class="loan-detail"><div data-loan="detail">Loading the loan from Morpho…</div>
+<div>Liquidation uses the market oracle. USD estimate assumes 1 FXRP represents 1 XRP and uses the RLUSD/USD quote. It is not an exchange price trigger.</div>
+<div>The buffer shows how far the oracle price can fall before liquidation if debt and collateral stay constant.</div>
+<div data-loan="saved-detail">Loading borrow history and XRP prices…</div>
+<div data-loan="interest-detail">Loading accrued interest…</div>
+<div>Debt uses the current block and Morpho’s variable-rate contract. Morpho API is the fallback. Data refreshes every 30 seconds while visible. Old data is faded.</div>
+<a href="https://app.morpho.org/ethereum/variable/0x4fa31e3f8ba345227d44e1cf48559eea53a90dd5311dc006984c060f2f311d96/rlusd-fxrp" target="_blank" rel="noopener noreferrer">Open market</a> · <span>Wallet 0x8A44…f246</span></div></details>
+</template>
 <!-- ══════════ MOBILE VIEW ══════════ -->
 <div class="mobile-view">
   <div class="m-bar">
@@ -1365,14 +1465,14 @@ if (!window.LightweightCharts) {
     </div>
     <div class="m-clock" id="mClk">--:--</div>
     <div class="m-right">
-      <div class="m-status"><div class="dot" id="mDot"></div><span id="mLabel">LIVE</span></div>
-      <button type="button" class="icon-btn" id="btnDeskSwitch" title="Switch to Desktop View">TV</button>
+      <button class="m-status feed-trigger" data-open-feeds aria-label="Open data feed status"><span class="dot off" id="mDot"></span><span id="mLabel">SYNCING</span></button>
+      <button type="button" class="icon-btn" id="btnDeskSwitch" title="Switch to desktop view">Desktop</button>
     </div>
   </div>
 
   <!-- 1M XRP Portfolio Strip -->
   <div class="m-port fl" id="mPort">
-    <div class="m-port-label">1M XRP · 24H</div>
+    <div class="mobile-portfolio-head"><div class="m-port-label">1M XRP portfolio · 24h</div><div class="ccy-tabs" id="mobileCcyTabs"></div></div>
     <details class="portfolio-expand">
       <summary class="portfolio-compact">
         <span class="m-port-val" id="mPortVal">···</span>
@@ -1385,28 +1485,20 @@ if (!window.LightweightCharts) {
         <p>Estimated monthly income before tax.</p>
         <p data-treasury-status>Checking the latest completed Treasury auction…</p>
         <p>Annual investment yield, not compound APY. <a href="https://fiscaldata.treasury.gov/datasets/treasury-securities-auctions-data/" target="_blank" rel="noopener noreferrer">US Treasury auction data</a>. Checked on open and every 15 minutes while this page is visible.</p>
-        <p>Assumes sale of all 1M XRP, then investment of the full USD value. Monthly average = value × annual yield ÷ 12. Bills pay at maturity. Excludes taxes and fees.</p>
+        <p>Values use the XRP/USDT quote and assume 1 USDT = 1 USD. Assumes sale of all 1M XRP and investment of the proceeds. Monthly average = value × annual yield ÷ 12. Bills pay at maturity. Excludes taxes and fees.</p>
       </div>
     </details>
     <span class="m-chg fl" id="mPortPnl">·</span>
   </div>
 
-<details class="loan-panel" data-loan-panel>
-<summary><div class="loan-head"><span>MORPHO · FXRP / RLUSD</span></div>
-<div class="loan-grid"><div><small>DEBT · RLUSD</small><strong data-loan="debt">—</strong></div><div><small>INTEREST · RLUSD</small><strong data-loan="interest">—</strong></div><div><small>XRP LIQ. · USD</small><strong data-loan="liquidation">—</strong></div><div><small>LTV / 77%</small><strong data-loan="ltv">—</strong></div><div><small>XRP SAVED</small><strong data-loan="saved-xrp">—</strong></div><div><small>USD SAVED</small><strong data-loan="saved-usd">—</strong></div></div></summary>
-<div class="loan-detail"><div data-loan="detail">Loading the loan from Morpho…</div>
-<div>Liquidation uses the market oracle. USD estimate assumes 1 FXRP represents 1 XRP and uses the RLUSD/USD quote. It is not an exchange price trigger.</div>
-<div data-loan="saved-detail">Loading borrow history and XRP prices…</div>
-<div data-loan="interest-detail">Loading accrued interest…</div>
-<div>Debt uses the current block and Morpho’s variable-rate contract. Morpho API is the fallback. Data refreshes every 30 seconds while visible. Old data is faded.</div>
-<a href="https://app.morpho.org/ethereum/variable/0x4fa31e3f8ba345227d44e1cf48559eea53a90dd5311dc006984c060f2f311d96/rlusd-fxrp" target="_blank" rel="noopener noreferrer">Open market</a> · <span>Wallet 0x8A44…f246</span></div></details>
+<div data-loan-slot></div>
   <!-- 4 Core Asset Cards -->
   <div class="m-card fl" id="mXrpUsd">
     <div class="m-card-head">
-      <div class="m-label"><span class="dot"></span><span class="ticker">XRP</span><span class="pair">/ USD</span></div>
+      <div class="m-label"><span class="dot"></span><span class="ticker">XRP</span><span class="pair">/ USDT</span></div>
       <div class="m-chg" id="mXrpUsdChg">·</div>
     </div>
-    <div class="m-price" id="mXrpUsdVal">···<span class="unit">USD</span></div>
+    <div class="m-price" id="mXrpUsdVal">···<span class="unit">USDT</span></div>
     <div class="m-range" id="mXrpUsdRange">
       <span class="m-range-cap lo">—</span>
       <div class="m-range-track"><div class="m-range-dot"></div></div>
@@ -1442,10 +1534,10 @@ if (!window.LightweightCharts) {
 
   <div class="m-card fl" id="mBtcUsd">
     <div class="m-card-head">
-      <div class="m-label"><span class="dot"></span><span class="ticker">BTC</span><span class="pair">/ USD</span></div>
+      <div class="m-label"><span class="dot"></span><span class="ticker">BTC</span><span class="pair">/ USDT</span></div>
       <div class="m-chg" id="mBtcUsdChg">·</div>
     </div>
-    <div class="m-price" id="mBtcUsdVal">···<span class="unit">USD</span></div>
+    <div class="m-price" id="mBtcUsdVal">···<span class="unit">USDT</span></div>
     <div class="m-range" id="mBtcUsdRange">
       <span class="m-range-cap lo">—</span>
       <div class="m-range-track"><div class="m-range-dot"></div></div>
@@ -1467,14 +1559,14 @@ if (!window.LightweightCharts) {
           </svg>
         </div>
         <div class="brand-title-wrap">
-          <div class="brand-name"><em>XRP</em> Terminal</div>
-          <div class="brand-sub">Chiang Mai · Telemetry</div>
+          <h1 class="brand-name"><em>XRP</em> Terminal</h1>
+          <div class="brand-sub">Chiang Mai</div>
         </div>
       </div>
-      <div class="status-pill">
-        <div class="status-dot" id="wsDot"></div>
-        <span id="wsLabel">CONNECTING</span>
-      </div>
+      <button class="status-pill feed-trigger" data-open-feeds aria-label="Open data feed status">
+        <span class="status-dot off" id="wsDot"></span>
+        <span id="wsLabel">SYNCING</span>
+      </button>
     </div>
 
     <div class="env-strip">
@@ -1515,8 +1607,8 @@ if (!window.LightweightCharts) {
         <span class="clock-date" id="clkDate">—</span>
       </div>
       <div class="top-actions">
-        <button type="button" class="icon-btn" id="btnMobileSwitch" title="Switch to Mobile Grid View">📱</button>
-        <button type="button" class="icon-btn" id="btnFullscreen" title="Toggle Fullscreen [F]">⛶</button>
+        <button type="button" class="icon-btn" id="btnMobileSwitch" title="Switch to Mobile Grid View">Mobile</button>
+        <button type="button" class="icon-btn" id="btnFullscreen" aria-label="Toggle full screen" title="Toggle Fullscreen [F]">⛶</button>
       </div>
     </div>
   </header>
@@ -1528,16 +1620,16 @@ if (!window.LightweightCharts) {
       <div class="hero-top-row">
         <div class="pair-badge">
           <span class="dot"></span>
-          <span>XRP / USD</span>
+          <span>XRP / USDT</span>
           <span class="venueTag">BINANCE SPOT</span>
         </div>
-        <span class="ath-note" id="xrpAth">ATH <span class="val">—</span></span>
+        <span class="ath-note" id="xrpAth">From ATH <span class="val">—</span></span>
       </div>
 
       <div class="price-cluster">
         <div class="price-line">
           <span class="price-big" id="xrpPrice">···</span>
-          <span class="price-unit">USD</span>
+          <span class="price-unit">USDT</span>
         </div>
         <span class="pill fl chg-pill" id="xrpChg">·</span>
       </div>
@@ -1560,7 +1652,7 @@ if (!window.LightweightCharts) {
       <div class="portfolio-card">
         <div class="portfolio-head">
           <div class="portfolio-label">
-            <span>1M XRP Vault · 24H PnL &amp; T-Bill Yield</span>
+            <span>1M XRP portfolio · 24h P&amp;L</span>
           </div>
           <div class="ccy-tabs" id="ccyTabs" title="Click a currency to pin/unpin">
             <button type="button" class="ccy-tab" data-ccy="thb">THB</button>
@@ -1582,7 +1674,7 @@ if (!window.LightweightCharts) {
               <p>Estimated monthly passive income before tax on 1,000,000 XRP equivalent.</p>
               <p data-treasury-status>Checking the latest completed Treasury auction…</p>
               <p>Annual investment yield, not compound APY. <a href="https://fiscaldata.treasury.gov/datasets/treasury-securities-auctions-data/" target="_blank" rel="noopener noreferrer">US Treasury auction data</a>. Checked on open and every 15 minutes while visible.</p>
-              <p>Assumes sale of all 1M XRP, then investment of the full USD value. Monthly average = value × annual yield ÷ 12. Bills pay at maturity. THB, TWD and CAD amounts convert the USD income at live terminal FX rates.</p>
+              <p>Values use the XRP/USDT quote and assume 1 USDT = 1 USD. Assumes sale of all 1M XRP and investment of the proceeds. Monthly average = value × annual yield ÷ 12. Bills pay at maturity. THB, TWD and CAD amounts convert the USD income at live terminal FX rates.</p>
             </div>
           </details>
           <span class="pill fl portfolio-pnl" id="portfolioPnl">·</span>
@@ -1596,7 +1688,7 @@ if (!window.LightweightCharts) {
       <div class="aside-row">
         <div class="aside-metric glass-card">
           <div class="aside-head">
-            <div class="aside-label"><span class="dot btc"></span>BTC / USD</div>
+            <div class="aside-label"><span class="dot btc"></span>BTC / USDT</div>
             <span class="aside-chg s-fl" id="btcChg">·</span>
           </div>
           <div class="aside-val btc" id="btcPrice">···</div>
@@ -1621,15 +1713,7 @@ if (!window.LightweightCharts) {
         </div>
       </div>
 
-<details class="loan-panel" data-loan-panel>
-<summary><div class="loan-head"><span>MORPHO · FXRP / RLUSD</span></div>
-<div class="loan-grid"><div><small>DEBT · RLUSD</small><strong data-loan="debt">—</strong></div><div><small>INTEREST · RLUSD</small><strong data-loan="interest">—</strong></div><div><small>XRP LIQ. · USD</small><strong data-loan="liquidation">—</strong></div><div><small>LTV / 77%</small><strong data-loan="ltv">—</strong></div><div><small>XRP SAVED</small><strong data-loan="saved-xrp">—</strong></div><div><small>USD SAVED</small><strong data-loan="saved-usd">—</strong></div></div></summary>
-<div class="loan-detail"><div data-loan="detail">Loading the loan from Morpho…</div>
-<div>Liquidation uses the market oracle. USD estimate assumes 1 FXRP represents 1 XRP and uses the RLUSD/USD quote. It is not an exchange price trigger.</div>
-<div data-loan="saved-detail">Loading borrow history and XRP prices…</div>
-<div data-loan="interest-detail">Loading accrued interest…</div>
-<div>Debt uses the current block and Morpho’s variable-rate contract. Morpho API is the fallback. Data refreshes every 30 seconds while visible. Old data is faded.</div>
-<a href="https://app.morpho.org/ethereum/variable/0x4fa31e3f8ba345227d44e1cf48559eea53a90dd5311dc006984c060f2f311d96/rlusd-fxrp" target="_blank" rel="noopener noreferrer">Open market</a> · <span>Wallet 0x8A44…f246</span></div></details>
+<div data-loan-slot></div>
     </div>
   </section>
 
@@ -1687,13 +1771,15 @@ if (!window.LightweightCharts) {
             <button type="button" class="tf-btn active" data-tf="15m">15M</button>
             <button type="button" class="tf-btn" data-tf="1h">1H</button>
           </div>
+          <button type="button" class="reset-chart" id="resetChart" disabled title="Show the most recent candles">Reset zoom</button>
           <div class="ohlc-bar" id="ohlcBar"></div>
         </div>
-        <div class="chart-header-right">
+        <div class="chart-header-right"><span id="basicLabel" hidden>Basic chart</span>
           <div class="aside-price-small" id="xrpUsdtMini">···</div>
         </div>
       </div>
       <div class="chart-canvas" id="chartMain">
+        <canvas id="basicChart" role="img" aria-label="Recent XRP / USDT candles"></canvas>
         <div class="wick-overlay">
           <div class="wick-callout hi side-r" id="wickHi" hidden>
             <div class="wick-dot"></div>
@@ -1710,7 +1796,17 @@ if (!window.LightweightCharts) {
 
 </div>
 
+<dialog id="feedDialog" aria-labelledby="feedTitle">
+  <div class="feed-head"><h2 id="feedTitle">Data feeds</h2><button type="button" id="closeFeeds" aria-label="Close data feeds">×</button></div>
+  <table><thead><tr><th scope="col">Feed</th><th scope="col">Source</th><th scope="col">Time · ICT</th></tr></thead><tbody id="feedRows"></tbody></table>
+  <div class="feed-actions"><label><input type="checkbox" id="ambientRain"> Rain background</label><button type="button" id="refreshFeeds">Refresh now</button></div>
+</dialog>
 <script>
+for (const slot of document.querySelectorAll('[data-loan-slot]')) {
+  slot.replaceWith(document.getElementById('loanTemplate').content.cloneNode(true));
+}
+document.getElementById('mobileCcyTabs').append(...Array.from(
+  document.getElementById('ccyTabs').children, button => button.cloneNode(true)));
 // ══════════ MOBILE MODE DETECTION ══════════
 (function detectMobile(){
   const qs = new URLSearchParams(location.search);
@@ -1719,7 +1815,7 @@ if (!window.LightweightCharts) {
   const smallScreen = Math.min(window.innerWidth, window.innerHeight) < 600;
   const coarsePointer = matchMedia('(pointer: coarse)').matches && matchMedia('(hover: none)').matches;
   const uaPhone = /iPhone|iPod|Android.*Mobile|Mobile.*Firefox|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-  if (uaPhone || (smallScreen && coarsePointer)) document.body.classList.add('mobile');
+  if (uaPhone || window.innerWidth <= 600 || (smallScreen && coarsePointer)) document.body.classList.add('mobile');
 })();
 let IS_MOBILE = document.body.classList.contains('mobile');
 
@@ -1735,7 +1831,7 @@ const CFG = {
   TZ_OFFSET_SEC: 7 * 3600,
   LAT: 18.8088,
   LON: 98.9717,
-  IQAIR_KEY: '8a58e160-a04e-44d6-8902-c83fc42021c1',
+  IQAIR_KEY: window.XRP_TERMINAL_IQAIR_KEY || '',
   PROXY_CP: 'https://corsproxy.io/?',
   PROXY_AO: 'https://api.allorigins.win/get?url=',
   MAX_CANDLES: 2000,
@@ -1790,6 +1886,7 @@ const D = {};
 ].forEach(id => D[id] = document.getElementById(id));
 
 const tickerTimes = {};
+const tickerSources = {};
 const S = {
   xrpUsd: null, xrpPrev: null, xrp24hPct: null,
   btcUsd: null, btcPrev: null, btc24hPct: null, btc24hHi: null, btc24hLo: null,
@@ -1797,7 +1894,7 @@ const S = {
   usdJpy: null, usdJpyPrev: null, jpy24hHi: null, jpy24hLo: null,
   brentUsd: null, brentUsdPrev: null,
   xrp24hHi: null, xrp24hLo: null,
-  xrpSupply: 60.88e9,
+  xrpSupply: null,
   xrpAth: null,
   rlusdMcap: null,
   klineInterval: '15m',
@@ -1822,8 +1919,7 @@ let loPriceLine       = null;
 let midPriceLine      = null;
 let visibleHiPrice    = -Infinity;
 let visibleLoPrice    = Infinity;
-let historyAt         = 0;
-let candleAt          = 0;
+let chartGeneration = 0;
 let framed            = false;
 let candleVersion     = 0;
 
@@ -1832,7 +1928,6 @@ let wsWatchdog        = null;
 let lastWsMsg         = 0;
 let currentWs         = null;
 let wsReconnectTimer  = null;
-let restTickerAt      = 0;
 let wsHost            = 0;
 let connectTimer      = null;
 
@@ -1849,7 +1944,7 @@ const STALE_MAP = {
   rlusd:   ['rlusdCap'],
 };
 
-let treasuryRate   = { annualYield: 0.04211, date: '2026-09-28', checkedAt: 0 };
+let treasuryRate = null;
 let treasuryStatus = 'checking';
 
 const PORTFOLIO_CCY = [
@@ -1859,14 +1954,21 @@ const PORTFOLIO_CCY = [
   { code: 'cad', sym: 'C$',  label: 'CAD' },
 ];
 const USD_INDEX = PORTFOLIO_CCY.findIndex(c => c.code === 'usd');
-let ccyIndex  = USD_INDEX;
-let ccyPinned = false;
+const savedCurrency = readCache('pinnedCurrency', Infinity)?.value;
+const preferredIndex = PORTFOLIO_CCY.findIndex(c => c.code === savedCurrency);
+let ccyIndex = preferredIndex >= 0 ? preferredIndex : USD_INDEX;
+let ccyPinned = preferredIndex >= 0;
 
 // ══════════ 2. FORMATTING HELPERS ══════════
 const fmtTime   = s => new Date(s * 1000).toLocaleTimeString('en-GB', {hour12:false, hour:'2-digit', minute:'2-digit', timeZone: CFG.TZ});
 const fmtFull   = s => new Date(s * 1000).toLocaleString('en-GB', {hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit', day:'2-digit', month:'short', timeZone: CFG.TZ});
 const toTzSec   = ms => Math.floor(Number(ms) / 1000) + TZ_OFFSET;
-const num       = (v, d) => v == null || !Number.isFinite(+v) ? '—' : (+v).toLocaleString('en-US', {minimumFractionDigits:d, maximumFractionDigits:d});
+const numberFormats = new Map();
+function num(value, digits) {
+  if (value == null || !Number.isFinite(+value)) return '—';
+  if (!numberFormats.has(digits)) numberFormats.set(digits, new Intl.NumberFormat('en-US', {minimumFractionDigits:digits, maximumFractionDigits:digits}));
+  return numberFormats.get(digits).format(+value);
+}
 const fmtBtcK   = v => v == null || !Number.isFinite(+v) ? '···' : '$' + (+v / 1000).toFixed(1) + 'K';
 const compact   = v => {
   if (v == null || !Number.isFinite(+v)) return '—';
@@ -1877,7 +1979,7 @@ const compact   = v => {
   if (n >= 1e3)  return (n / 1e3 ).toFixed(1) + 'K';
   return n.toFixed(0);
 };
-const money      = (v, sym) => sym + Math.abs(v).toLocaleString('en-US', {maximumFractionDigits:0});
+const money      = (v, sym) => sym + num(Math.abs(v), 0);
 const signMoney  = (v, sym) => (v >= 0 ? '+' : '−') + money(v, sym);
 const stateClass = pct => pct > 0 ? 'up' : pct < 0 ? 'dn' : 'fl';
 
@@ -1956,7 +2058,7 @@ function chartStatus(id, message){
     badge.setAttribute('role', 'status');
     target.appendChild(badge);
   }
-  badge.textContent = message;
+  if (badge.textContent !== message) badge.textContent = message;
   badge.hidden = !message;
 }
 
@@ -1975,7 +2077,7 @@ function renderNow(){
   if (S.usdJpy && S.xrpUsd)   D.xrpJpy.textContent   = '¥' + num(S.xrpUsd * S.usdJpy, 2);
   if (S.brentUsd)             D.brentUsd.textContent = '$' + num(S.brentUsd, 2);
   if (S.brentUsd && S.usdJpy) D.brentJpy.textContent = '¥' + num(S.brentUsd * S.usdJpy, 0);
-  if (S.xrpUsd)               D.mcap.textContent     = '$' + compact(S.xrpUsd * S.xrpSupply);
+  if (S.xrpUsd && S.xrpSupply) D.mcap.textContent     = '$' + compact(S.xrpUsd * S.xrpSupply);
   if (S.rlusdMcap)            D.rlusdCap.textContent = '$' + compact(S.rlusdMcap);
   if (S.xrpBtc)               D.xrpSats.textContent  = Math.round(S.xrpBtc * 1e8).toLocaleString('en-US') + ' sat';
   if (S.xrpAth && S.xrpUsd) {
@@ -2025,8 +2127,15 @@ function validTreasuryRate(r){
 }
 
 function paintTreasuryStatus(){
+  if (!treasuryRate) {
+    document.querySelectorAll('[data-treasury-summary]').forEach(el => { el.textContent = '13-week Treasury bill yield unavailable'; });
+    document.querySelectorAll('[data-treasury-status]').forEach(el => {
+      el.textContent = treasuryStatus === 'checking' ? 'Checking the latest auction…' : 'Waiting for a verified auction rate.';
+    });
+    return;
+  }
   const stale = Date.now() - Date.parse(treasuryRate.date) > 10 * 86400000;
-  const label = treasuryStatus === 'live' ? (stale ? 'recent auction' : 'latest auction')
+  const label = treasuryStatus === 'live' ? (stale ? 'older auction' : 'latest auction')
     : treasuryStatus === 'checking' ? 'checking' : 'cached rate';
   const percent = (treasuryRate.annualYield * 100).toFixed(3);
   document.querySelectorAll('[data-treasury-summary]').forEach(el => {
@@ -2042,7 +2151,7 @@ function paintTreasuryStatus(){
 
 async function fetchTreasuryRate(){
   const cached = readCache('treasury13week', 365 * 86400000)?.value;
-  if (validTreasuryRate(cached) && cached.date >= treasuryRate.date) treasuryRate = cached;
+  if (validTreasuryRate(cached) && (!treasuryRate || cached.date >= treasuryRate.date)) treasuryRate = cached;
   treasuryStatus = 'checking';
   paintTreasuryStatus();
   paintPortfolio();
@@ -2055,7 +2164,7 @@ async function fetchTreasuryRate(){
     .filter(validTreasuryRate)
     .sort((a, b) => b.date.localeCompare(a.date));
   const latest = candidates[0];
-  if (latest && latest.date >= treasuryRate.date) {
+  if (latest && (!treasuryRate || latest.date >= treasuryRate.date)) {
     treasuryRate = latest;
     treasuryStatus = 'live';
     writeCache('treasury13week', treasuryRate);
@@ -2075,20 +2184,22 @@ function activeCcy(){
   return ccyRate(chosen.code) ? chosen : PORTFOLIO_CCY[USD_INDEX];
 }
 
+const currencyButtons = [...document.querySelectorAll('.ccy-tab')];
 function updateCcyTabsUI(){
-  if (!D.ccyTabs) return;
   const active = activeCcy().code;
-  D.ccyTabs.querySelectorAll('.ccy-tab').forEach(btn => {
+  currencyButtons.forEach(btn => {
     const isAct = btn.dataset.ccy === active;
     btn.classList.toggle('active', isAct);
-    btn.classList.toggle('pinned', isAct && ccyPinned);
+    const pinned = ccyPinned && btn.dataset.ccy === PORTFOLIO_CCY[ccyIndex].code;
+    btn.classList.toggle('pinned', pinned);
+    btn.disabled = !ccyRate(btn.dataset.ccy);
+    btn.setAttribute('aria-pressed', String(pinned));
+    btn.title = pinned ? 'Resume currency rotation' : 'Pin ' + btn.textContent;
   });
 }
 
-if (D.ccyTabs) {
-  D.ccyTabs.addEventListener('click', e => {
-    const btn = e.target.closest('.ccy-tab');
-    if (!btn) return;
+for (const btn of currencyButtons) {
+  btn.addEventListener('click', () => {
     const code = btn.dataset.ccy;
     const idx = PORTFOLIO_CCY.findIndex(c => c.code === code);
     if (idx === -1 || !ccyRate(code)) return;
@@ -2098,6 +2209,7 @@ if (D.ccyTabs) {
       ccyIndex = idx;
       ccyPinned = true;
     }
+    writeCache('pinnedCurrency', ccyPinned ? code : null);
     updateCcyTabsUI();
     paintPortfolio();
   });
@@ -2110,8 +2222,7 @@ function paintPortfolio(){
   const rate  = ccyRate(ccy.code) || 1;
   const value = p.usdValue * rate;
   const pnl   = p.usdPnl   * rate;
-  const monthlyIncome = value * treasuryRate.annualYield / 12;
-  const incomeText = '(' + money(monthlyIncome, ccy.sym) + '/MO)';
+  const incomeText = treasuryRate ? '(' + money(value * treasuryRate.annualYield / 12, ccy.sym) + '/MO)' : '(—/MO)';
 
   if (D.portfolioIncome) D.portfolioIncome.textContent = incomeText;
   if (D.mPortIncome)     D.mPortIncome.textContent     = incomeText;
@@ -2172,6 +2283,7 @@ function applyRates(rates, live){
     if (Number.isFinite(value) && value > 0) { S.rates[code] = value; changed = true; }
   }
   if (!changed) return false;
+  updateCcyTabsUI();
   if (live) S.lastUpdate.rates = Date.now();
   paintPortfolio();
   return true;
@@ -2226,13 +2338,14 @@ async function fetchRlusd(){
   }
 }
 
+const flashTimers = new WeakMap();
 function flash(el, dir){
-  if (!el) return;
+  if (!el || document.hidden) return;
+  clearTimeout(flashTimers.get(el));
   const cls = dir === 'up' ? 'flash-up' : 'flash-dn';
   el.classList.remove('flash-up','flash-dn');
-  void el.offsetWidth;
   el.classList.add(cls);
-  setTimeout(() => el.classList.remove(cls), 380);
+  flashTimers.set(el, setTimeout(() => el.classList.remove(cls), 380));
 }
 
 // ══════════ 7. FX MARKET HOURS ══════════
@@ -2298,7 +2411,7 @@ function setRange(wrap, lo, hi, cur, dec, fmtFn){
 function renderMobile(){
   if (!IS_MOBILE) return;
   if (S.xrpUsd != null) {
-    D.mXrpUsdVal.innerHTML = '$' + num(S.xrpUsd, 4) + '<span class="unit">USD</span>';
+    D.mXrpUsdVal.innerHTML = '$' + num(S.xrpUsd, 4) + '<span class="unit">USDT</span>';
     if (S.xrp24hPct != null) setCardPct(D.mXrpUsd, D.mXrpUsdChg, S.xrp24hPct);
     setRange(D.mXrpUsdRange, S.xrp24hLo, S.xrp24hHi, S.xrpUsd, 4);
   }
@@ -2314,7 +2427,7 @@ function renderMobile(){
     setRange(D.mUsdJpyRange, S.jpy24hLo, S.jpy24hHi, S.usdJpy, 2);
   }
   if (S.btcUsd != null) {
-    D.mBtcUsdVal.innerHTML = fmtBtcK(S.btcUsd) + '<span class="unit">USD</span>';
+    D.mBtcUsdVal.innerHTML = fmtBtcK(S.btcUsd) + '<span class="unit">USDT</span>';
     if (S.btc24hPct != null) setCardPct(D.mBtcUsd, D.mBtcUsdChg, S.btc24hPct);
     setRange(D.mBtcUsdRange, S.btc24hLo, S.btc24hHi, S.btcUsd, 0, fmtBtcK);
   }
@@ -2558,23 +2671,6 @@ async function refreshMacro(asset){
 
 function paintJpy(r){
   const daily = r.kind === 'daily';
-  if (window.areaJpy && window.chartJpy) {
-    const rawPoints = r.points.map(p => ({time: p.time + TZ_OFFSET, value: p.value}));
-    const plotPoints = rawPoints; // Only actual source observations; no invented samples.
-    window.areaJpy.setData(plotPoints);
-    window.chartJpy.applyOptions({
-      timeScale: {
-        rightOffset: 0,
-        fixLeftEdge: true,
-        fixRightEdge: true,
-        timeVisible: !daily,
-        tickMarkFormatter: t => daily
-          ? new Date((t - TZ_OFFSET) * 1000).toLocaleDateString('en-GB', {day:'numeric', month:'short', timeZone:'UTC'})
-          : fmtTime(t - TZ_OFFSET)
-      }
-    });
-    window.chartJpy.timeScale().fitContent();
-  }
   S.usdJpyPrev = S.usdJpy;
   S.usdJpy = r.price;
   S.jpy24hHi = daily ? null : Math.max(...r.points.map(p => p.value));
@@ -2676,7 +2772,7 @@ async function fetchAqi(){
     const cached = readCache('aqi', 3600000);
     if (cached) { applyAqi(cached.value.aqi, cached.value.src, false); S.lastUpdate.aqi = cached.at; }
   }
-  const d = await safeJson(`https://api.airvisual.com/v2/nearest_city?lat=${CFG.LAT}&lon=${CFG.LON}&key=${CFG.IQAIR_KEY}`, 9000);
+  const d = CFG.IQAIR_KEY && await safeJson(`https://api.airvisual.com/v2/nearest_city?lat=${CFG.LAT}&lon=${CFG.LON}&key=${CFG.IQAIR_KEY}`, 9000);
   const iqAqi = d?.data?.current?.pollution?.aqius;
   if (d?.status === 'success' && Number.isFinite(iqAqi)) {
     writeCache('aqi', {aqi: iqAqi, src: 'IQAir Chiang Mai'});
@@ -2722,7 +2818,7 @@ function focusRecentCandles(){
 
 let extremaRaf = 0;
 function scheduleExtremaSync(){
-  if (extremaRaf) cancelAnimationFrame(extremaRaf);
+  if (extremaRaf) return;
   extremaRaf = requestAnimationFrame(() => {
     extremaRaf = requestAnimationFrame(() => {
       extremaRaf = 0;
@@ -2897,6 +2993,47 @@ function createChart(el, opts = {}){
   return c;
 }
 
+const basicCanvas = document.getElementById('basicChart');
+const basicLabel = document.getElementById('basicLabel');
+function drawBasicChart() {
+  if (IS_MOBILE || candleMain || document.hidden) return;
+  const width = D.chartMain.clientWidth, height = D.chartMain.clientHeight;
+  if (width < 100 || height < 80) return;
+  const ratio = Math.min(window.devicePixelRatio || 1, 2);
+  basicCanvas.width = Math.round(width * ratio);
+  basicCanvas.height = Math.round(height * ratio);
+  const ctx = basicCanvas.getContext('2d');
+  if (!ctx) return;
+  ctx.scale(ratio, ratio);
+  const bars = data.main.candles.slice(-Math.min(CFG.VISIBLE_CANDLES, Math.floor(width / 6)));
+  if (!bars.length) return;
+  const high = Math.max(...bars.map(c => c.high)), low = Math.min(...bars.map(c => c.low));
+  const span = high - low || high * .01;
+  const plotWidth = width - 72, plotHeight = height - 48;
+  const y = price => 16 + (high === low ? .5 : (high - price) / span) * plotHeight;
+  const step = plotWidth / bars.length;
+  ctx.font = '12px monospace';
+  for (let i = 0; i <= 4; i++) {
+    const level = 16 + plotHeight * i / 4;
+    ctx.fillStyle = '#304049';
+    ctx.fillRect(0, level, plotWidth, 1);
+    ctx.fillStyle = '#afc1c9';
+    ctx.fillText(num(high === low ? high + (.5 - i / 4) * span : high - span * i / 4, 4), plotWidth + 6, level + 4);
+  }
+  bars.forEach((bar, i) => {
+    const x = (i + .5) * step, body = Math.max(1, Math.min(step * .7, 20));
+    ctx.fillStyle = bar.close >= bar.open ? '#78e6b9' : '#ff7f94';
+    ctx.fillRect(x, y(bar.high), 1, Math.max(1, y(bar.low) - y(bar.high)));
+    ctx.fillRect(x - body / 2, Math.min(y(bar.open), y(bar.close)), body, Math.max(1, Math.abs(y(bar.open) - y(bar.close))));
+  });
+  ctx.fillStyle = '#afc1c9';
+  for (const i of new Set([0, Math.floor(bars.length / 2), bars.length - 1])) {
+    ctx.fillText(fmtTime(bars[i].time - TZ_OFFSET), Math.max(4, Math.min(plotWidth - 38, i * step)), height - 8);
+  }
+  basicCanvas.setAttribute('aria-label', 'XRP / USDT, ' + S.klineInterval + ' candles. Low ' + num(low, 4) + ', high ' + num(high, 4));
+}
+new ResizeObserver(drawBasicChart).observe(D.chartMain);
+
 const CANDLE_STYLE = {
   upColor: '#00e87b',
   downColor: '#ff2952',
@@ -2910,22 +3047,17 @@ const CANDLE_STYLE = {
   lastValueVisible: true
 };
 
-const AREA_JPY = {
-  lineColor: '#5ec8ff',
-  lineWidth: 2,
-  topColor: 'rgba(94, 200, 255, 0.28)',
-  bottomColor: 'rgba(94, 200, 255, 0.01)',
-  priceFormat: {type: 'price', precision: 2, minMove: 0.01},
-  priceLineColor: 'rgba(94, 200, 255, 0.30)',
-  priceLineWidth: 1,
-  priceLineStyle: 2,
-  lastValueVisible: true,
-  crosshairMarkerBorderColor: '#5ec8ff',
-  crosshairMarkerBackgroundColor: '#5ec8ff'
-};
-
 function initCharts(){
-  if (IS_MOBILE || chartMain || !window.LightweightCharts) return;
+  if (IS_MOBILE || chartMain) return;
+  if (!window.LightweightCharts) {
+    basicLabel.hidden = false;
+    if (!data.main.candles.length) {
+      const cached = readCache('candles:' + S.klineInterval);
+      if (cached) commitRows(cached.value, false);
+    }
+    loadChartLibrary();
+    return;
+  }
   try {
     chartMain = createChart(D.chartMain, {
       barSpacing: 13,
@@ -2947,6 +3079,8 @@ function initCharts(){
         };
       }
     });
+    basicCanvas.hidden = basicLabel.hidden = true;
+    document.getElementById('resetChart').disabled = false;
     candleMain.priceScale().applyOptions({
       autoScale: true,
       scaleMargins: {top: 0.01, bottom: 0.01}
@@ -2975,7 +3109,10 @@ function initCharts(){
     chartStatus('chartMain', 'Loading candles…');
 
     const saved = readCache('candles:' + S.klineInterval);
-    if (saved) {
+    if (data.main.candles.length) {
+      candleMain.setData(data.main.candles);
+      focusRecentCandles();
+    } else if (saved) {
       commitRows(saved.value, false);
       chartStatus('chartMain', '');
     }
@@ -2983,7 +3120,11 @@ function initCharts(){
     runJob(refreshJpy);
   } catch (error) {
     console.error('Chart setup failed', error);
-    chartStatus('chartMain', 'Chart setup failed. Reload to retry.');
+    chartMain?.remove();
+    chartMain = candleMain = null;
+    document.getElementById('resetChart').disabled = true;
+    basicCanvas.hidden = basicLabel.hidden = false;
+    drawBasicChart();
   }
 }
 
@@ -2994,6 +3135,16 @@ if (D.tfGroup) {
     const tf = btn.dataset.tf;
     if (!tf || tf === S.klineInterval) return;
     S.klineInterval = tf;
+    chartGeneration++;
+    candleMain?.setData([]);
+    basicCanvas.width = basicCanvas.width;
+    for (const line of [hiPriceLine, loPriceLine, midPriceLine]) {
+      if (line) candleMain.removePriceLine(line);
+    }
+    hiPriceLine = loPriceLine = midPriceLine = null;
+    D.wickHi.hidden = D.wickLo.hidden = true;
+    D.ohlcBar.textContent = '';
+    chartStatus('chartMain', 'Loading candles…');
     D.tfGroup.querySelectorAll('.tf-btn').forEach(b => b.classList.toggle('active', b === btn));
     if (D.mainIntervalLabel) D.mainIntervalLabel.textContent = tf.toUpperCase();
     data.main.candles = [];
@@ -3003,6 +3154,7 @@ if (D.tfGroup) {
     visibleLoPrice = Infinity;
     const saved = readCache('candles:' + tf);
     if (saved) commitRows(saved.value, false);
+    if (!candleMain) initCharts();
     runJob(refreshCandles);
     forceReconnect();
   });
@@ -3013,7 +3165,9 @@ function trimChart(kind, series){
   if (arr.candles.length > CFG.MAX_CANDLES) {
     const n = arr.candles.length - CFG.MAX_CANDLES;
     arr.candles.splice(0, n);
-    series.candles.setData(arr.candles);
+    series.candles?.setData(arr.candles);
+    const oldest = (arr.candles[0].time - TZ_OFFSET) * 1000;
+    for (const t of streamVersions.keys()) if (t < oldest) streamVersions.delete(t);
   }
 }
 
@@ -3034,7 +3188,6 @@ function rowsFromMemory(){
 }
 
 function commitRows(rows, merge = true, version = candleVersion){
-  if (!candleMain) return;
   let result = normalizeRows(rows);
   if (merge) {
     const old = rowsFromMemory();
@@ -3043,6 +3196,8 @@ function commitRows(rows, merge = true, version = candleVersion){
   }
   if (!result.length) return;
   data.main.candles = result.map(([t, o, h, l, c]) => ({time: toTzSec(t), open: o, high: h, low: l, close: c}));
+  for (const t of streamVersions.keys()) if (t < result[0][0]) streamVersions.delete(t);
+  if (!candleMain) { drawBasicChart(); return; }
   candleMain.setData(data.main.candles);
   chartMain.priceScale('right').applyOptions({ autoScale: true });
   if (!framed) {
@@ -3051,36 +3206,32 @@ function commitRows(rows, merge = true, version = candleVersion){
   } else {
     scheduleExtremaSync();
   }
-  for (const t of streamVersions.keys()) if (t < result[0][0]) streamVersions.delete(t);
+
 }
 
 async function refreshCandles(){
-  if (IS_MOBILE || !candleMain) return;
+  if (IS_MOBILE) return;
   const tf = S.klineInterval;
   const version = candleVersion;
+  const generation = chartGeneration;
   const rows = await marketJson(`/klines?symbol=XRPUSDT&interval=${tf}&limit=500`, r => normalizeRows(r).length > 0);
+  if (generation !== chartGeneration || IS_MOBILE) return;
   if (!rows) {
     chartStatus('chartMain', data.main.candles.length ? '' : 'Candle feed unavailable · Retrying…');
     return;
   }
-  if (tf !== S.klineInterval) return;
   commitRows(rows, true, version);
-  const checked = normalizeRows(rows);
-  historyAt = Date.now();
-  candleAt = Math.max(candleAt, checked[checked.length - 1][0]);
   writeCache('candles:' + tf, rowsFromMemory());
   refreshMarketStatus();
 }
 
 async function refreshTickers(){
   if (['xrpusdt@ticker','btcusdt@ticker','xrpbtc@ticker'].every(s => Date.now() - (tickerTimes[s] || 0) < 10000)) return;
-  const started = Date.now();
   const rows = await marketJson('/ticker/24hr?symbols=' + encodeURIComponent(JSON.stringify(['XRPUSDT','BTCUSDT','XRPBTC'])), r => Array.isArray(r) && r.length === 3 && r.every(t => Number.isFinite(+t.lastPrice) && +t.lastPrice > 0));
-  if (!rows || lastWsMsg > started) return;
+  if (!rows) return;
   for (const t of rows) {
-    handleWsMessage({data: JSON.stringify({stream: t.symbol.toLowerCase() + '@ticker', data: {c: t.lastPrice, P: t.priceChangePercent, h: t.highPrice, l: t.lowPrice, q: t.quoteVolume, E: t.closeTime}})});
+    acceptMarketMessage({stream: t.symbol.toLowerCase() + '@ticker', data: {c: t.lastPrice, P: t.priceChangePercent, h: t.highPrice, l: t.lowPrice, q: t.quoteVolume, E: t.closeTime}}, 'REST');
   }
-  restTickerAt = Math.min(...rows.map(t => Number(t.closeTime) || 0));
   refreshMarketStatus();
 }
 
@@ -3120,7 +3271,7 @@ function updateMainMini(pct){
 }
 
 function applyKline(kind, series, k){
-  if (IS_MOBILE || !candleMain || !k) return;
+  if (IS_MOBILE || !k) return;
   const rows = normalizeRows([[k.t, k.o, k.h, k.l, k.c]]);
   if (!rows.length) return;
   const [ms, o, h, l, c] = rows[0], t = toTzSec(ms);
@@ -3133,16 +3284,16 @@ function applyKline(kind, series, k){
   } else {
     arr.candles.push(candle);
   }
-  series.candles.update(candle);
+  series.candles?.update(candle);
+  streamVersions.set(ms, ++candleVersion);
   trimChart(kind, series);
+  if (!candleMain) { drawBasicChart(); return; }
 
   // If a new high or new low breaks out (or a new bar opens), ensure autoScale adjusts immediately
   if (isNewBar || h >= visibleHiPrice || l <= visibleLoPrice) {
     chartMain.priceScale('right').applyOptions({ autoScale: true });
   }
   scheduleExtremaSync();
-  streamVersions.set(ms, ++candleVersion);
-  candleAt = Date.now();
 }
 
 function setConn(live){
@@ -3150,15 +3301,16 @@ function setConn(live){
   if (D.mDot) D.mDot.classList.toggle('off', !live);
 }
 
-function handleWsMessage(evt){
-  let msg; try { msg = JSON.parse(evt.data); } catch { return; }
+function acceptMarketMessage(msg, source){
   const d = msg.data, s = msg.stream;
   if (!d || typeof s !== 'string') return;
   if (s.endsWith('@ticker') && ![d.c, d.P, d.h, d.l, d.q].every(v => v != null && v !== '' && Number.isFinite(+v))) return;
-  if (s.endsWith('@ticker') && (+d.c <= 0 || +d.h < +d.l)) return;
+  if (s.endsWith('@ticker') && (+d.c <= 0 || +d.l <= 0 || +d.h < +d.l || +d.P <= -100 || +d.q < 0)) return;
   if (s.endsWith('@ticker')) {
     if (!Number.isFinite(+d.E) || +d.E <= 0 || +d.E > Date.now() + 60000 || +d.E < (tickerTimes[s] || 0)) return;
+    if (source === 'REST' && +d.E === tickerTimes[s]) return;
     tickerTimes[s] = +d.E;
+    tickerSources[s] = source;
   }
 
   if (s === 'xrpusdt@ticker') {
@@ -3176,7 +3328,7 @@ function handleWsMessage(evt){
     D.vol24.textContent = '$' + compact(+d.q);
     scheduleRender();
   }
-  else if (s.startsWith('xrpusdt@kline_')) {
+  else if (s === 'xrpusdt@kline_' + S.klineInterval) {
     applyKline('main', {candles: candleMain}, d.k);
   }
   else if (s === 'btcusdt@ticker') {
@@ -3198,7 +3350,8 @@ function handleWsMessage(evt){
       flash(D.mXrpBtcVal, S.xrpBtc > S.xrpBtcPrev ? 'up' : 'down');
     }
     scheduleRender();
-  }
+  } else { return false; }
+  return true;
 }
 
 // ══════════ 12. RESILIENT WEBSOCKET ENGINE ══════════
@@ -3209,23 +3362,30 @@ function getWsStreams(){
 }
 
 function refreshMarketStatus(){
-  const live = !!lastWsMsg && Date.now() - lastWsMsg < WS_SILENT_MS;
-  const polled = !!restTickerAt && Date.now() - restTickerAt < 45000;
-  setConn(live || polled);
-  const label = live ? 'LIVE' : polled ? 'POLLING' : navigator.onLine === false ? 'OFFLINE' : 'SYNCING';
+  const streams = ['xrpusdt@ticker', 'btcusdt@ticker', 'xrpbtc@ticker'];
+  const age = stream => Date.now() - (tickerTimes[stream] || 0);
+  const live = !!lastWsMsg && streams.every(stream => tickerSources[stream] === 'Stream' && age(stream) < WS_SILENT_MS);
+  const polled = streams.every(stream => age(stream) < 45000);
+  setConn(navigator.onLine !== false && (live || polled));
+  const label = navigator.onLine === false ? 'OFFLINE' : live ? 'LIVE' : polled ? 'POLLING' : Object.keys(tickerTimes).length ? 'DELAYED' : 'SYNCING';
   D.wsLabel.textContent = label;
   if (D.mLabel) D.mLabel.textContent = label;
   for (const [stream, ids] of Object.entries({
-    'xrpusdt@ticker': ['xrpPrice','mXrpUsd'],
+    'xrpusdt@ticker': ['xrpPrice','mXrpUsd','mPortVal','portfolioVal','xrpUsdtMini','portfolioPnl','mPortPnl'],
     'btcusdt@ticker': ['btcPrice','mBtcUsd'],
     'xrpbtc@ticker':  ['xrpBtcPrice','mXrpBtc']
   })) {
     const ts = tickerTimes[stream];
     for (const id of ids) D[id]?.classList.toggle('stale', !!ts && Date.now() - ts > 45000);
   }
-  if (candleMain) {
+  if (!IS_MOBILE) {
     if (!data.main.candles.length) chartStatus('chartMain', 'Waiting for candle data…');
-    else chartStatus('chartMain', '');
+    else {
+      const last = data.main.candles[data.main.candles.length - 1];
+      const period = parseInt(S.klineInterval, 10) * (S.klineInterval.endsWith('h') ? 3600000 : 60000);
+      const openTime = (last.time - TZ_OFFSET) * 1000;
+      chartStatus('chartMain', Date.now() > openTime + period + 45000 ? 'Delayed candle data' : '');
+    }
   }
 }
 
@@ -3242,7 +3402,7 @@ function closeSocket(){
 function connectWs(){
   clearTimeout(wsReconnectTimer);
   closeSocket();
-  if (navigator.onLine === false) { scheduleReconnect(); return; }
+  if (navigator.onLine === false || document.hidden) return;
   let ws;
   try {
     ws = new WebSocket(WS_HOSTS[wsHost++ % WS_HOSTS.length] + '/stream?streams=' + getWsStreams());
@@ -3270,8 +3430,8 @@ function connectWs(){
     try {
       const parsed = JSON.parse(evt.data);
       if (!parsed?.data || typeof parsed.stream !== 'string') return;
-      handleWsMessage(evt);
-      if (parsed.stream.endsWith('@ticker') && +parsed.data.c > 0 && Number.isFinite(+parsed.data.E) && Math.abs(Date.now() - parsed.data.E) < 60000) {
+      const accepted = acceptMarketMessage(parsed, 'Stream');
+      if (accepted && parsed.stream.endsWith('@ticker') && Math.abs(Date.now() - parsed.data.E) < WS_SILENT_MS) {
         lastWsMsg = Date.now();
         wsBackoff = WS_BACKOFF_MIN;
       }
@@ -3314,18 +3474,21 @@ function refreshStaleness(){
   refreshMacroLabels();
 }
 
+const clockTimeFormat = new Intl.DateTimeFormat('en-GB', {hour12:false, timeZone: CFG.TZ, hour:'2-digit', minute:'2-digit', second:'2-digit'});
+const clockDateFormat = new Intl.DateTimeFormat('en-GB', {weekday:'short', day:'numeric', month:'short', year:'numeric', timeZone: CFG.TZ});
 function tickClock(){
   const now = new Date();
-  const t = now.toLocaleTimeString('en-GB', {hour12:false, timeZone: CFG.TZ});
+  const t = clockTimeFormat.format(now);
   D.clk.textContent     = t;
-  D.clkDate.textContent = now.toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short', year:'numeric', timeZone: CFG.TZ});
+  D.clkDate.textContent = clockDateFormat.format(now);
   if (D.mClk) D.mClk.textContent = t.slice(0, 5) + ' ICT';
   updateFx();
   refreshStaleness();
   refreshMarketStatus();
+  if (feedDialog.open) paintFeedRows();
 }
-tickClock();
-setInterval(tickClock, 1000);
+/* Initial clock update follows feed setup. */
+setInterval(() => { if (!document.hidden) tickClock(); }, 1000);
 
 let idleTimer;
 function resetIdle(){
@@ -3338,11 +3501,12 @@ document.addEventListener('keydown', resetIdle);
 resetIdle();
 
 function toggleFullscreen(){
-  if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen?.()?.catch(() => {});
   else document.exitFullscreen();
 }
 document.addEventListener('keydown', e => {
-  if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+  if (e.defaultPrevented || e.repeat || e.ctrlKey || e.altKey || e.metaKey || e.target.closest?.('input, textarea, select, dialog')) return;
+  if (e.key.toLowerCase() === 'f') toggleFullscreen();
 });
 if (D.btnFullscreen) D.btnFullscreen.addEventListener('click', toggleFullscreen);
 
@@ -3355,10 +3519,6 @@ function setMobileMode(mobile){
       if (chartMain && D.chartMain.clientWidth > 0) {
         chartMain.applyOptions({width: D.chartMain.clientWidth, height: D.chartMain.clientHeight});
         focusRecentCandles();
-      }
-      if (window.chartJpy && D.chartJpy.clientWidth > 0) {
-        window.chartJpy.applyOptions({width: D.chartJpy.clientWidth, height: D.chartJpy.clientHeight});
-        window.chartJpy.timeScale().fitContent();
       }
       for (const fn of [refreshCandles, refreshJpy, fetchBrent, fetchWeather, fetchAqi, fetchXrpMeta, fetchRlusd]) {
         runJob(fn);
@@ -3385,13 +3545,19 @@ acquireWakeLock();
 
 let lastResume = 0;
 function onResume(){
+  if (document.hidden) return;
   acquireWakeLock();
-  if (Date.now() - lastResume < 2000) return;
+  if (currentWs && Date.now() - lastResume < 2000) return;
   lastResume = Date.now();
   if (!currentWs || currentWs.readyState !== 1 || Date.now() - lastWsMsg > 10000) forceReconnect();
   for (const fn of [refreshCandles, refreshTickers, refreshJpy, fetchBrent, fetchRates, fetchTreasuryRate]) runJob(fn);
 }
-const fireResume = () => { if (document.visibilityState === 'visible') onResume(); };
+const fireResume = () => {
+  if (!document.hidden) { onResume(); return; }
+  clearTimeout(wsReconnectTimer);
+  closeSocket();
+  lastWsMsg = 0;
+};
 document.addEventListener('visibilitychange', fireResume);
 window.addEventListener('focus', fireResume);
 window.addEventListener('pageshow', fireResume);
@@ -3400,12 +3566,13 @@ window.addEventListener('offline', () => { closeSocket(); lastWsMsg = 0; refresh
 
 // ══════════ 14. NON-OVERLAPPING JOB SCHEDULER ══════════
 function runJob(fn){
-  if (runningJobs.has(fn)) return runningJobs.get(fn);
+  const key = fn === refreshCandles ? 'candles:' + chartGeneration : fn;
+  if (runningJobs.has(key)) return runningJobs.get(key);
   const task = Promise.resolve()
     .then(fn)
     .catch(err => console.warn(fn.name, err))
-    .finally(() => runningJobs.delete(fn));
-  runningJobs.set(fn, task);
+    .finally(() => runningJobs.delete(key));
+  runningJobs.set(key, task);
   return task;
 }
 
@@ -3430,10 +3597,79 @@ const jobs = [
   [fetchXrpMeta,      CFG.POLL.meta],
 ];
 
+const feedDialog = document.getElementById('feedDialog');
+const feedRows = document.getElementById('feedRows');
+const feedTime = new Intl.DateTimeFormat('en-GB', {timeZone: CFG.TZ, day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit', second:'2-digit', hourCycle:'h23'});
+let lastFeedRows = '';
+function paintFeedRows() {
+  const feeds = [['XRP / USDT', 'xrpusdt'], ['BTC / USDT', 'btcusdt'], ['XRP / BTC', 'xrpbtc']].map(([name, symbol]) => {
+    const stream = symbol + '@ticker';
+    return [name, tickerSources[stream] || 'Binance', tickerTimes[stream]];
+  });
+  for (const [name, key] of [['USD / JPY','jpy'], ['Brent futures','brent']]) {
+    const record = macroState[key];
+    feeds.push([name, record?.source || '—', record?.asOf * 1000]);
+  }
+  feeds.push(['Treasury auction', treasuryRate ? 'US Treasury' : '—', treasuryRate?.date || '—']);
+  const cells = feeds.map(([name, source, time]) => [name, source, typeof time === 'string' ? time : time ? feedTime.format(time) : '—']);
+  const signature = JSON.stringify(cells);
+  if (signature === lastFeedRows) return;
+  lastFeedRows = signature;
+  feedRows.replaceChildren();
+  for (const fields of cells) {
+    const row = feedRows.insertRow();
+    for (const field of fields) row.insertCell().textContent = field;
+  }
+}
+document.querySelectorAll('[data-open-feeds]').forEach(button => button.addEventListener('click', () => {
+  paintFeedRows();
+  feedDialog.showModal();
+}));
+document.getElementById('closeFeeds').addEventListener('click', () => feedDialog.close());
+document.getElementById('refreshFeeds').addEventListener('click', async event => {
+  const button = event.currentTarget;
+  button.disabled = true;
+  button.textContent = 'Refreshing…';
+  try {
+    if (!IS_MOBILE) initCharts();
+    if (!currentWs || currentWs.readyState !== 1) forceReconnect();
+    window.dispatchEvent(new Event('terminal-refresh-loan'));
+    await Promise.all(jobs.map(([fn]) => runJob(fn)));
+    paintFeedRows();
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Refresh now';
+  }
+});
+document.getElementById('resetChart').addEventListener('click', focusRecentCandles);
+const rain = document.getElementById('ambientRain');
+const video = document.getElementById('bgVideo');
+rain.checked = readCache('rain', Infinity)?.value === true;
+function syncRain() {
+  video.parentElement.hidden = !rain.checked;
+  if (rain.checked && !document.hidden) {
+    if (!video.hasAttribute('src')) video.src = '217379_medium.mp4';
+    video.play().catch(() => {});
+  } else video.pause();
+}
+rain.addEventListener('change', () => { writeCache('rain', rain.checked); syncRain(); });
+video.addEventListener('error', () => {
+  rain.checked = false;
+  rain.disabled = true;
+  rain.parentElement.append(' · video unavailable');
+  syncRain();
+});
+document.addEventListener('visibilitychange', syncRain);
+syncRain();
+tickClock();
+updateCcyTabsUI();
+
 initCharts();
 window.addEventListener('chartsReady', initCharts);
 window.addEventListener('chartsFailed', () => {
-  chartStatus('chartMain', 'Chart library unavailable · Live quotes active.');
+  basicLabel.hidden = false;
+  drawBasicChart();
+  refreshMarketStatus();
 });
 connectWs();
 jobs.forEach(([fn, interval]) => scheduleJob(fn, interval));
@@ -3454,7 +3690,18 @@ const QUERY=`{ marketPositions(first:100, where:{userAddress_in:["${WALLET}"],ch
 let latest=null,failed=false,busy=false;
 let rpcPreferred=0;
 let interest=null,interestFailed=false,interestBusy=false;
-const put=(key,value)=>document.querySelectorAll('[data-loan="'+key+'"]').forEach(el=>el.textContent=value);
+const loanPanels = [...document.querySelectorAll('[data-loan-panel]')];
+const loanFields = new Map();
+for (const el of document.querySelectorAll('[data-loan]')) {
+  const key = el.dataset.loan;
+  if (!loanFields.has(key)) loanFields.set(key, []);
+  loanFields.get(key).push(el);
+}
+function put(key, value) {
+  for (const el of loanFields.get(key) || []) {
+    if (el.textContent !== value) el.textContent = value;
+  }
+}
 const fmt=(v,d=2)=>v.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
 
 // Morpho Blue ABI selectors; all calls are read-only and pinned to one block.
@@ -3510,6 +3757,7 @@ async function readChain(url){
 }
 let usdQuote=null;
 async function updateUsdQuote(){
+ if (document.hidden || (usdQuote && Date.now() - Number(usdQuote.timestamp) * 1000 < 240000)) return;
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),10000);
  try{
  const r=await fetch('https://api.morpho.org/v0/tokens/1:0x8292Bb45bf1Ee4d140127049757C2E0fF06317eD/price',{signal:controller.signal,cache:'no-store'});
@@ -3608,7 +3856,11 @@ function paint(){
  put('interest',interest?fmt(interest.amount,6):'—');
  document.querySelectorAll('[data-loan="interest"]').forEach(el=>el.style.opacity=interestOld?'.5':'');
  put('interest-detail',interest ? 'Interest accrued: '+fmt(interest.amount,6)+' RLUSD. Total borrowing interest for this wallet and market, including paid and unpaid interest; not an extra charge on top of the loan balance. Morpho indexed block '+interest.block+'.'+(interestOld?' OLD DATA — refresh failed or delayed.':'') : interestFailed?'Interest data unavailable. Retrying…':'Loading accrued interest…');
- if(!latest) {put('status',failed?'DATA UNAVAILABLE':'CHECKING');return;}
+ if (!latest) {
+   put('status', failed ? 'Unavailable' : 'Checking');
+   if (failed) put('detail', 'Loan data unavailable. The terminal will retry.');
+   return;
+ }
  const r=latest,old=failed||Date.now()-r.timestamp>600000;
  const usdFresh=r.usdFresh&&Date.now()-r.usdTime<3600000;
  put('status',(old?'OLD DATA · ':'')+(r.source||'API')+' · '+new Date(r.timestamp).toLocaleTimeString('en-GB',{hour12:false,hour:'2-digit',minute:'2-digit',timeZone:'Asia/Bangkok'})+' ICT');
@@ -3617,7 +3869,13 @@ function paint(){
  put('ltv',Number.isFinite(r.ltv)?fmt(r.ltv*100)+'%':'≥77%');
  const apy=typeof r.apy==='number'&&Number.isFinite(r.apy)?fmt(r.apy*100)+'%':'—';
  put('detail',fmt(r.collateral)+' FXRP collateral · '+(r.source==='CHAIN'?'Variable rate checked at block '+r.block:'Borrow APY '+apy)+' · Oracle '+fmt(r.oracle,4)+' RLUSD/FXRP. '+(r.trigger!==null&&r.debt>0?'Liquidation threshold: '+fmt(r.trigger,6)+' RLUSD/FXRP. ':'')+(!usdFresh?'USD estimate uses RLUSD = $1; live USD quote unavailable. ':'')+(failed?'Refresh failed. Last received data shown. ':''));
- document.querySelectorAll('[data-loan-panel]').forEach(el=>{el.classList.toggle('loan-old',old);el.dataset.risk=r.ltv>=r.threshold?'danger':r.ltv>=r.threshold*.9?'warning':'normal';});
+ const buffer = r.trigger === null ? null : 1 - r.trigger / r.oracle;
+ put('buffer', r.debt === 0 ? 'No debt' : !Number.isFinite(buffer) ? 'Unavailable' : buffer <= 0 ? 'At threshold' : fmt(buffer * 100, 1) + '%');
+ for (const el of loanPanels) {
+   el.classList.toggle('loan-old', old);
+   el.dataset.risk = r.ltv >= r.threshold ? 'danger' : r.ltv >= r.threshold * .9 ? 'warning' : 'normal';
+   el.style.setProperty('--buffer', (r.debt > 0 && Number.isFinite(buffer) ? Math.max(0, Math.min(100, buffer * 100)) : 0) + '%');
+ }
 }
 async function refresh(){
  if(busy||document.hidden)return;
@@ -3625,7 +3883,7 @@ async function refresh(){
  try{
   const attempts=RPC_URLS.map((_,i)=>(rpcPreferred+i)%RPC_URLS.length);
   for(const i of attempts){
-   try{latest=await readChain(RPC_URLS[i]);rpcPreferred=i;failed=false;paint();return;}
+   try{latest=await readChain(RPC_URLS[i]);rpcPreferred=i;failed=false;return;}
    catch(error){console.warn('Morpho RPC:',error.message);}
   }
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);
@@ -3659,11 +3917,19 @@ async function refreshInterest(){
  }catch(error){interestFailed=true;console.warn('Morpho interest:',error.message);}
  finally{clearTimeout(timer);interestBusy=false;paint();}
 }
-refreshSavings();setInterval(refreshSavings,30000);
-updateUsdQuote();setInterval(updateUsdQuote,300000);
-refresh();refreshInterest();setInterval(refresh,30000);setInterval(refreshInterest,30000);setInterval(paint,1000);
-document.addEventListener('visibilitychange',()=>{if(!document.hidden){refresh();refreshInterest();refreshSavings();}});
-window.addEventListener('online',()=>{refresh();refreshInterest();refreshSavings();});
+function refreshLoanFeeds() {
+  if (document.hidden || navigator.onLine === false) return;
+  updateUsdQuote();
+  refresh();
+  refreshInterest();
+  refreshSavings();
+}
+refreshLoanFeeds();
+setInterval(refreshLoanFeeds, 30000);
+setInterval(() => { if (!document.hidden) paint(); }, 10000);
+document.addEventListener('visibilitychange', refreshLoanFeeds);
+window.addEventListener('online', refreshLoanFeeds);
+window.addEventListener('terminal-refresh-loan', refreshLoanFeeds);
 })();
 </script>
 </body>
