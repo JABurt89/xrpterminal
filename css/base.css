@@ -1,0 +1,333 @@
+/* ═══════════════════════════════════════════════════════════════
+   XRP TERMINAL v3 — BASE STYLES, UTILITIES & SHARED COMPONENTS
+   ═══════════════════════════════════════════════════════════════ */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  background: var(--bg-canvas);
+  color-scheme: dark;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background:
+    radial-gradient(90% 60% at 12% 0%, var(--bg-radial) 0%, transparent 60%),
+    var(--bg-canvas);
+  color: var(--ink-1);
+  font-family: var(--font-ui);
+  line-height: 1.3;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  touch-action: manipulation;
+  overscroll-behavior: none;
+}
+
+body.idle {
+  cursor: none;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+button, input, select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+  border-radius: var(--r-xs);
+}
+
+/* Tabular mono numbers everywhere numeric */
+.mono,
+.tnum {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "zero" 1;
+}
+
+/* Architectural elevated panel */
+.panel {
+  background: var(--surface-panel);
+  border: 1px solid var(--border-subtle);
+  border-top-color: var(--border-mid);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-panel), var(--bevel-top);
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+}
+
+body.rain-on .panel,
+body.rain-on .cmd-strip,
+body.rain-on .macro-ribbon {
+  backdrop-filter: blur(16px) saturate(125%);
+  -webkit-backdrop-filter: blur(16px) saturate(125%);
+}
+
+/* Ambient rain background video */
+.bg-rain {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.bg-rain video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.42;
+  filter: saturate(0.75) brightness(0.58) contrast(1.08);
+}
+
+.bg-rain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(110% 85% at 50% 0%, rgba(6, 9, 15, 0.35) 0%, rgba(6, 9, 15, 0.88) 100%),
+    linear-gradient(180deg, rgba(6, 9, 15, 0.45) 0%, rgba(6, 9, 15, 0.28) 50%, rgba(6, 9, 15, 0.85) 100%);
+}
+
+/* Semantic state text */
+.s-up { color: var(--up); }
+.s-dn { color: var(--dn-bright); }
+.s-fl { color: var(--ink-2); }
+.s-amber { color: var(--amber); }
+.s-cyan { color: var(--cyan); }
+
+/* Delta pill badge */
+.delta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  padding: 0.28em 0.62em;
+  border-radius: var(--r-sm);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast);
+}
+
+.delta-pill.up {
+  background: var(--up-bg);
+  color: var(--up-bright);
+  border-color: var(--up-border);
+}
+
+.delta-pill.dn {
+  background: var(--dn-bg);
+  color: var(--dn-bright);
+  border-color: var(--dn-border);
+}
+
+.delta-pill.fl {
+  background: var(--flat-bg);
+  color: var(--ink-2);
+  border-color: var(--border-subtle);
+}
+
+/* Subtle surgical price tick flash — zero layout shift */
+@keyframes tickUp {
+  0%   { color: var(--up-bright); }
+  100% { color: var(--ink-1); }
+}
+
+@keyframes tickDn {
+  0%   { color: var(--dn-bright); }
+  100% { color: var(--ink-1); }
+}
+
+.flash-up { animation: tickUp 420ms ease-out; }
+.flash-dn { animation: tickDn 420ms ease-out; }
+
+/* Staleness fade */
+.stale {
+  opacity: 0.46 !important;
+  transition: opacity var(--t-med);
+}
+
+/* Status indicator pulse */
+@keyframes livePulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.35; }
+}
+
+.live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--up);
+  flex-shrink: 0;
+  animation: livePulse 2.2s ease-in-out infinite;
+}
+
+.live-dot.warn {
+  background: var(--amber);
+}
+
+.live-dot.off {
+  background: var(--dn);
+  animation: none;
+}
+
+/* Segmented controls (currency tabs, timeframe tabs, mode switcher) */
+.seg-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--r-sm);
+  background: var(--surface-well);
+  border: 1px solid var(--border-subtle);
+}
+
+.seg-btn {
+  padding: 0.25em 0.58em;
+  border-radius: calc(var(--r-sm) - 2px);
+  font-family: var(--font-ui);
+  font-size: var(--fs-label);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--ink-3);
+  line-height: 1.15;
+  white-space: nowrap;
+  transition: color var(--t-fast), background var(--t-fast), box-shadow var(--t-fast);
+}
+
+.seg-btn:hover:not(:disabled) {
+  color: var(--ink-1);
+  background: var(--surface-hover);
+}
+
+.seg-btn.active {
+  background: rgba(255, 255, 255, 0.11);
+  color: var(--ink-1);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+}
+
+.seg-btn.accent-active.active {
+  background: var(--up-bg);
+  color: var(--up-bright);
+  box-shadow: inset 0 0 0 1px var(--up-border);
+}
+
+.seg-btn.pinned::after {
+  content: '·';
+  color: var(--amber);
+  margin-left: 3px;
+  font-weight: 800;
+}
+
+.seg-btn:disabled {
+  opacity: 0.32;
+  cursor: not-allowed;
+}
+
+/* Subtle interactive chip / action button */
+.chip-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0.3em 0.65em;
+  border-radius: var(--r-sm);
+  background: var(--surface-well);
+  border: 1px solid var(--border-subtle);
+  color: var(--ink-2);
+  font-family: var(--font-ui);
+  font-size: var(--fs-label);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  transition: color var(--t-fast), border-color var(--t-fast), background var(--t-fast);
+}
+
+.chip-btn:hover:not(:disabled) {
+  color: var(--ink-1);
+  border-color: var(--border-strong);
+  background: var(--surface-hover);
+}
+
+.chip-btn.is-on {
+  color: var(--cyan);
+  border-color: var(--cyan-border);
+  background: var(--cyan-bg);
+}
+
+.chip-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* FX Market Session badge */
+.fx-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 6px;
+  border-radius: var(--r-xs);
+  font-family: var(--font-mono);
+  font-size: clamp(9px, calc(var(--fs-label) * 0.88), 20px);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.fx-badge:empty { display: none; }
+.fx-badge .fdot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+.fx-badge.open   { background: var(--up-bg); color: var(--up-bright); }
+.fx-badge.open .fdot { background: var(--up); }
+.fx-badge.soon   { background: var(--amber-bg); color: var(--amber); }
+.fx-badge.soon .fdot { background: var(--amber); }
+.fx-badge.closed { background: var(--dn-bg); color: var(--dn-bright); }
+.fx-badge.closed .fdot { background: var(--dn); }
+
+/* Risk badge */
+.risk-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 7px;
+  border-radius: var(--r-xs);
+  font-family: var(--font-mono);
+  font-size: var(--fs-label);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1.15;
+}
+
+.risk-badge.normal  { background: var(--up-bg); color: var(--up-bright); }
+.risk-badge.warning { background: var(--amber-bg); color: var(--amber); }
+.risk-badge.danger  { background: var(--dn-bg); color: var(--dn-bright); }
+.risk-badge.unknown { background: var(--flat-bg); color: var(--ink-3); }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

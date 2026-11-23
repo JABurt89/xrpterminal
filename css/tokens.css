@@ -1,0 +1,109 @@
+/* ═══════════════════════════════════════════════════════════════
+   XRP TERMINAL v3 — DESIGN SYSTEM TOKENS
+   Aesthetic: Precision Obsidian Financial Instrument
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Palette — Deep Obsidian Slate */
+  --bg-canvas:       #06090f;
+  --bg-radial:       #0f1826;
+  --surface-panel:   linear-gradient(180deg, rgba(18, 25, 36, 0.96) 0%, rgba(11, 16, 24, 0.98) 100%);
+  --surface-bar:     linear-gradient(180deg, rgba(16, 23, 34, 0.97) 0%, rgba(10, 14, 22, 0.98) 100%);
+  --surface-well:    rgba(6, 10, 16, 0.72);
+  --surface-hover:   rgba(255, 255, 255, 0.055);
+  --surface-active:  rgba(255, 255, 255, 0.09);
+
+  /* Architectural Hairlines & Elevation */
+  --border-subtle:   rgba(255, 255, 255, 0.075);
+  --border-mid:      rgba(255, 255, 255, 0.12);
+  --border-strong:   rgba(255, 255, 255, 0.2);
+  --bevel-top:       inset 0 1px 0 rgba(255, 255, 255, 0.065);
+  --shadow-panel:    0 10px 28px rgba(0, 0, 0, 0.42);
+  --shadow-dialog:   0 24px 72px rgba(0, 0, 0, 0.78);
+
+  /* Typography Ink Hierarchy (WCAG AA+ on obsidian) */
+  --ink-1:           #f3f6fa;
+  --ink-2:           #9fb0c2;
+  --ink-3:           #6f8194;
+  --ink-4:           #4f6072;
+
+  /* Semantic Data Colors (Surgical, zero garish glow) */
+  --up:              #10d984;
+  --up-bright:       #4ef2ab;
+  --up-bg:           rgba(16, 217, 132, 0.11);
+  --up-border:       rgba(16, 217, 132, 0.28);
+
+  --dn:              #f4435d;
+  --dn-bright:       #ff758a;
+  --dn-bg:           rgba(244, 67, 93, 0.12);
+  --dn-border:       rgba(244, 67, 93, 0.3);
+
+  --amber:           #f0a830;
+  --amber-bg:        rgba(240, 168, 48, 0.12);
+  --amber-border:    rgba(240, 168, 48, 0.3);
+
+  --cyan:            #4cb8f0;
+  --cyan-bg:         rgba(76, 184, 240, 0.11);
+  --cyan-border:     rgba(76, 184, 240, 0.28);
+
+  --flat-bg:         rgba(255, 255, 255, 0.045);
+
+  /* Fonts */
+  --font-ui:         'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono:       'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Radii */
+  --r-xs:            4px;
+  --r-sm:            6px;
+  --r-md:            10px;
+  --r-lg:            12px;
+
+  /* Motion */
+  --t-fast:          140ms cubic-bezier(0.2, 0, 0, 1);
+  --t-med:           260ms cubic-bezier(0.2, 0, 0, 1);
+
+  /* Proportional 16:9 Viewport Unit (19.2px @ 1080p, 12.8px @ 720p, 38.4px @ 4K) */
+  --u:               min(1vw, 1.7778vh);
+  --u:               min(1vw, 1.7778dvh);
+
+  /* Default PC Scale */
+  --pad-x:           clamp(10px, calc(var(--u) * 0.72), 20px);
+  --pad-y:           clamp(8px, calc(var(--u) * 0.56), 16px);
+  --gap:             clamp(8px, calc(var(--u) * 0.55), 14px);
+  --card-px:         clamp(12px, calc(var(--u) * 0.82), 22px);
+  --card-py:         clamp(10px, calc(var(--u) * 0.65), 18px);
+
+  --fs-label:        clamp(10px, calc(var(--u) * 0.58), 12px);
+  --fs-xs:           clamp(10.5px, calc(var(--u) * 0.62), 12.5px);
+  --fs-sm:           clamp(11.5px, calc(var(--u) * 0.7), 14px);
+  --fs-md:           clamp(13px, calc(var(--u) * 0.84), 17px);
+  --fs-lg:           clamp(16px, calc(var(--u) * 1.08), 22px);
+  --fs-xl:           clamp(20px, calc(var(--u) * 1.4), 30px);
+  --fs-clock:        clamp(18px, calc(var(--u) * 1.45), 32px);
+  --fs-hero:         clamp(36px, calc(var(--u) * 3.45), 76px);
+}
+
+/* ══════════ TV 10-FOOT SCALE (PROPORTIONAL 720p -> 4K) ══════════ */
+body[data-mode="tv"] {
+  --pad-x:           clamp(10px, calc(var(--u) * 0.85), 34px);
+  --pad-y:           clamp(8px, calc(var(--u) * 0.65), 26px);
+  --gap:             clamp(7px, calc(var(--u) * 0.6), 22px);
+  --card-px:         clamp(12px, calc(var(--u) * 0.92), 36px);
+  --card-py:         clamp(9px, calc(var(--u) * 0.68), 26px);
+
+  --fs-label:        clamp(10px, calc(var(--u) * 0.65), 24px);
+  --fs-xs:           clamp(10.5px, calc(var(--u) * 0.68), 25px);
+  --fs-sm:           clamp(11.5px, calc(var(--u) * 0.78), 28px);
+  --fs-md:           clamp(13.5px, calc(var(--u) * 0.94), 34px);
+  --fs-lg:           clamp(16px, calc(var(--u) * 1.18), 44px);
+  --fs-xl:           clamp(21px, calc(var(--u) * 1.56), 58px);
+  --fs-clock:        clamp(20px, calc(var(--u) * 1.72), 64px);
+  --fs-hero:         clamp(40px, calc(var(--u) * 3.85), 144px);
+}
+
+/* Translucent obsidian mode when ambient rain video is active */
+body.rain-on {
+  --surface-panel:   linear-gradient(180deg, rgba(15, 22, 33, 0.78) 0%, rgba(9, 13, 20, 0.86) 100%);
+  --surface-bar:     linear-gradient(180deg, rgba(13, 19, 29, 0.82) 0%, rgba(8, 12, 19, 0.9) 100%);
+  --surface-well:    rgba(5, 8, 14, 0.64);
+}

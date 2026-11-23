@@ -1,0 +1,13 @@
+{
+  "name": "xrp-terminal",
+  "version": "3.0.0",
+  "description": "High-precision XRP market, DeFi Morpho loan, macro telemetry, and Chiang Mai environment terminal optimized for TV (zero-scroll), PC, and Phone.",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

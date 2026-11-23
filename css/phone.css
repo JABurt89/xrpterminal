@@ -1,0 +1,344 @@
+/* ═══════════════════════════════════════════════════════════════
+   XRP TERMINAL v3 — THUMB-FIRST PHONE MODE (FULL DATA PARITY)
+   ═══════════════════════════════════════════════════════════════ */
+
+body[data-mode="phone"] {
+  height: auto;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+
+  --pad-x:      12px;
+  --pad-y:      10px;
+  --gap:        10px;
+  --card-px:    14px;
+  --card-py:    13px;
+
+  --fs-label:   10.5px;
+  --fs-xs:      11.5px;
+  --fs-sm:      13px;
+  --fs-md:      15px;
+  --fs-lg:      18px;
+  --fs-xl:      26px;
+  --fs-clock:   14px;
+  --fs-hero:    clamp(36px, 11.5vw, 48px);
+}
+
+body[data-mode="phone"] .shell {
+  display: flex;
+  flex-direction: column;
+  height: auto;
+  max-height: none;
+  overflow: visible;
+  gap: 10px;
+  padding:
+    max(8px, env(safe-area-inset-top))
+    max(12px, env(safe-area-inset-right))
+    max(20px, env(safe-area-inset-bottom))
+    max(12px, env(safe-area-inset-left));
+}
+
+/* Sticky top command bar */
+body[data-mode="phone"] .cmd-bar {
+  order: 0;
+  position: sticky;
+  top: max(6px, env(safe-area-inset-top));
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 11px;
+  border-radius: var(--r-lg);
+  background: rgba(11, 16, 24, 0.92);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid var(--border-mid);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+body[data-mode="phone"] .cmd-left,
+body[data-mode="phone"] .cmd-right {
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  border-radius: 0;
+  gap: 8px;
+}
+
+body[data-mode="phone"] .brand-mark {
+  width: 28px;
+  height: 28px;
+}
+
+body[data-mode="phone"] .brand-sub,
+body[data-mode="phone"] .clock-date,
+body[data-mode="phone"] .clock-tz,
+body[data-mode="phone"] .pc-only,
+body[data-mode="phone"] #btnFullscreen,
+body[data-mode="phone"] #btnShortcuts {
+  display: none;
+}
+
+body[data-mode="phone"] .brand-title {
+  font-size: 13.5px;
+  letter-spacing: 0.08em;
+}
+
+@media (max-width: 460px) {
+  body[data-mode="phone"] .brand-word-term {
+    display: none;
+  }
+}
+
+/* Sticky live XRP mini-price pill — display:none when inactive so it takes zero width */
+body[data-mode="phone"] .sticky-spot {
+  display: none;
+  align-items: baseline;
+  gap: 5px;
+  padding: 3px 7px;
+  border-radius: var(--r-sm);
+  background: var(--surface-well);
+  border: 1px solid var(--border-subtle);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+body[data-mode="phone"].scrolled-past-hero .sticky-spot {
+  display: inline-flex;
+}
+
+body[data-mode="phone"].scrolled-past-hero .brand-text {
+  display: none;
+}
+
+body[data-mode="phone"] .clock-time {
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+body[data-mode="phone"] .status-pill {
+  padding: 4px 7px;
+  font-size: 10px;
+  gap: 5px;
+}
+
+body[data-mode="phone"] .mode-switch .seg-btn {
+  padding: 4px 6px;
+  font-size: 10px;
+}
+
+/* Unwrap hero-deck so cards interleave around the chart naturally */
+body[data-mode="phone"] .hero-deck {
+  display: contents;
+}
+
+body[data-mode="phone"] .card-spot      { order: 1; }
+body[data-mode="phone"] .chart-stage    { order: 2; }
+body[data-mode="phone"] .card-portfolio { order: 3; }
+body[data-mode="phone"] .card-morpho    { order: 4; }
+body[data-mode="phone"] .macro-ribbon   { order: 5; }
+body[data-mode="phone"] .env-bar        { order: 6; }
+
+/* Spot Hero on Phone */
+body[data-mode="phone"] .spot-price-row {
+  align-items: center;
+}
+
+body[data-mode="phone"] .spot-chg-pill {
+  font-size: 14px;
+}
+
+/* Live Interactive Chart on Phone */
+body[data-mode="phone"] .chart-stage {
+  height: 305px;
+  flex-shrink: 0;
+}
+
+body[data-mode="phone"] .chart-toolbar {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 7px;
+  padding: 8px 10px;
+}
+
+body[data-mode="phone"] .chart-tb-left {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  width: 100%;
+}
+
+body[data-mode="phone"] .chart-tb-right {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+
+body[data-mode="phone"] .chart-title {
+  font-size: 12px;
+}
+
+body[data-mode="phone"] .chart-mini-quote {
+  font-size: 12.5px;
+}
+
+body[data-mode="phone"] .tf-group {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  width: 100%;
+}
+
+body[data-mode="phone"] .tf-group .seg-btn {
+  padding: 5px 2px;
+  font-size: 10.5px;
+  text-align: center;
+}
+
+body[data-mode="phone"] #resetChart {
+  padding: 4px 10px;
+  font-size: 10.5px;
+}
+
+body[data-mode="phone"] .ohlc-readout {
+  display: none;
+}
+
+/* Portfolio & Cross Tickers on Phone */
+body[data-mode="phone"] .tbill-bar {
+  padding: 8px 10px;
+}
+
+body[data-mode="phone"] .cross-grid {
+  gap: 10px;
+}
+
+body[data-mode="phone"] .cross-price {
+  font-size: 17px;
+}
+
+/* Morpho Loan on Phone */
+body[data-mode="phone"] .morpho-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px 8px;
+}
+
+body[data-mode="phone"] .morpho-cell strong {
+  font-size: 14px;
+}
+
+/* Macro Ribbon -> Crisp 2-Column Mobile Grid */
+body[data-mode="phone"] .macro-ribbon {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+body[data-mode="phone"] .macro-cell {
+  padding: 11px 12px;
+  gap: 4px;
+}
+
+body[data-mode="phone"] .macro-cell + .macro-cell {
+  border-left: none;
+}
+
+body[data-mode="phone"] .macro-cell:nth-child(even) {
+  border-left: 1px solid var(--border-subtle);
+}
+
+body[data-mode="phone"] .macro-cell:nth-child(n+3) {
+  border-top: 1px solid var(--border-subtle);
+}
+
+body[data-mode="phone"] .macro-val {
+  font-size: 17px;
+}
+
+/* Chiang Mai Weather & AQI Card on Phone */
+body[data-mode="phone"] .env-bar {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  padding: 13px 14px;
+  gap: 10px;
+  container-type: normal;
+  overflow: visible;
+}
+
+body[data-mode="phone"] .env-phone-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+body[data-mode="phone"] .env-current {
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+body[data-mode="phone"] .hourly-strip {
+  display: flex !important;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  gap: 6px;
+  padding-bottom: 2px;
+}
+
+body[data-mode="phone"] .hourly-strip::-webkit-scrollbar {
+  display: none;
+}
+
+body[data-mode="phone"] .hr-cell {
+  display: flex !important;
+  min-width: 56px;
+  padding: 6px 6px;
+}
+
+/* Phone Landscape Optimization */
+@media (orientation: landscape) and (max-height: 520px) {
+  body[data-mode="phone"] .chart-stage {
+    height: 240px;
+  }
+  body[data-mode="phone"] .macro-ribbon {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  body[data-mode="phone"] .macro-cell:nth-child(even) {
+    border-left: none;
+  }
+  body[data-mode="phone"] .macro-cell:not(:nth-child(4n+1)) {
+    border-left: 1px solid var(--border-subtle);
+  }
+  body[data-mode="phone"] .macro-cell:nth-child(n+3) {
+    border-top: none;
+  }
+  body[data-mode="phone"] .macro-cell:nth-child(n+5) {
+    border-top: 1px solid var(--border-subtle);
+  }
+}
+
+/* Extra-small phones (360px wide) */
+@media (max-width: 370px) {
+  body[data-mode="phone"] .morpho-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  body[data-mode="phone"] .mode-switch .seg-btn {
+    padding: 3px 5px;
+    font-size: 9.5px;
+  }
+}
