@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   XRP TERMINAL v3 — MULTI-PROVIDER NETWORK & BACKEND LAYER
+   XRP TERMINAL v4 — MULTI-PROVIDER NETWORK & BACKEND LAYER
    ═══════════════════════════════════════════════════════════════ */
 (function (root) {
   'use strict';
@@ -66,15 +66,21 @@
   const backendCheck = (async () => {
     if (!/^https?:$/.test(location.protocol)) return false;
     const qs = new URLSearchParams(location.search);
+    if (qs.get('backend') === '0') return false;
     if (/\.github\.io$/i.test(location.hostname) && qs.get('backend') !== '1') {
       return false;
     }
     const health = await safeJson('/api/health', 1500);
-    return health?.service === 'xrp-terminal-v3' || health?.service === 'xrp-terminal-v2';
+    return /^xrp-terminal-v[234]$/.test(health?.service || '');
   })();
 
   async function hasBackend() {
     return backendCheck;
+  }
+
+  async function fetchBootstrap(tf) {
+    if (!(await hasBackend())) return null;
+    return safeJson('/api/bootstrap?tf=' + encodeURIComponent(tf || '15m'), 12_000);
   }
 
   async function marketJson(path, valid) {
@@ -101,14 +107,17 @@
     return task;
   }
 
-  function scheduleJob(fn, interval) {
+  function scheduleJob(fn, interval, runImmediately = true) {
+    let timer = null;
     const tick = async () => {
       if (navigator.onLine !== false && !document.hidden) {
         await runJob(fn);
       }
-      setTimeout(tick, interval);
+      timer = setTimeout(tick, interval);
     };
-    tick();
+    if (runImmediately) tick();
+    else timer = setTimeout(tick, interval);
+    return () => clearTimeout(timer);
   }
 
   /* Dynamic TradingView Lightweight Charts loader with multi-CDN failover */
@@ -149,6 +158,7 @@
     safeJson,
     safeJsonWithCorsFallback,
     hasBackend,
+    fetchBootstrap,
     marketJson,
     runJob,
     scheduleJob,

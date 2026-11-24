@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   XRP TERMINAL v3 — LIVE CANDLESTICK, VOLUME & EMA 20 CHART ENGINE
+   XRP TERMINAL v4 — LIVE CANDLESTICK, VOLUME & DUAL-EMA ENGINE
    ═══════════════════════════════════════════════════════════════ */
 (function (root) {
   'use strict';
@@ -13,6 +13,7 @@
   let candleSeries = null;
   let volumeSeries = null;
   let emaSeries = null;
+  let ema50Series = null;
   let hiLine = null;
   let loLine = null;
   let midLine = null;
@@ -29,11 +30,13 @@
   const streamVersions = new Map();
 
   const el = {
+    stage: () => document.getElementById('chartStage'),
     wrap: () => document.getElementById('chartMain'),
     basicCanvas: () => document.getElementById('basicChart'),
     basicLabel: () => document.getElementById('basicLabel'),
     resetBtn: () => document.getElementById('resetChart'),
     ohlcBar: () => document.getElementById('ohlcBar'),
+    countdown: () => document.getElementById('candleCountdown'),
     wickHi: () => document.getElementById('wickHi'),
     wickHiText: () => document.getElementById('wickHiText'),
     wickLo: () => document.getElementById('wickLo'),
@@ -41,7 +44,9 @@
   };
 
   function visibleBarCount() {
-    return state.activeMode === 'phone' ? CFG.VISIBLE_CANDLES_PHONE : CFG.VISIBLE_CANDLES_DESK;
+    if (state.activeMode === 'phone') return CFG.VISIBLE_CANDLES_PHONE;
+    if (state.activeMode === 'tv') return CFG.VISIBLE_CANDLES_TV;
+    return CFG.VISIBLE_CANDLES_PC;
   }
 
   function setStatus(message) {
@@ -63,10 +68,11 @@
     const k = 2 / (period + 1);
     const out = [];
     let ema = candles[0].close;
+    const minIdx = Math.min(period - 1, 4);
     for (let i = 0; i < candles.length; i++) {
       const c = candles[i];
       ema = i === 0 ? c.close : c.close * k + ema * (1 - k);
-      if (i >= Math.min(period - 1, 4)) {
+      if (i >= minIdx) {
         out.push({ time: c.time, value: ema });
       }
     }
@@ -96,6 +102,24 @@
       volHtml;
   }
 
+  function paintCountdown() {
+    const node = el.countdown();
+    if (!node) return;
+    if (!state.candles.length) {
+      node.textContent = '';
+      return;
+    }
+    const periodMs = fmt.tfPeriodMs(state.klineInterval);
+    const now = Date.now();
+    const remSec = Math.max(0, Math.ceil((periodMs - (now % periodMs)) / 1000));
+    const hrs = Math.floor(remSec / 3600);
+    const mins = Math.floor((remSec % 3600) / 60);
+    const secs = remSec % 60;
+    const pad = (n) => String(n).padStart(2, '0');
+    const txt = hrs > 0 ? `${pad(hrs)}:${pad(mins)}:${pad(secs)}` : `${pad(mins)}:${pad(secs)}`;
+    if (node.textContent !== txt) node.textContent = txt;
+  }
+
   function focusRecent() {
     if (!chart || !state.candles.length) return;
     const total = state.candles.length;
@@ -103,7 +127,7 @@
     chart.priceScale('right').applyOptions({ autoScale: true });
     chart.timeScale().setVisibleLogicalRange({
       from: Math.max(0, total - vis),
-      to: total + 1.5,
+      to: total + 1.8,
     });
     scheduleExtremaSync();
   }
@@ -148,35 +172,39 @@
     visibleHi = hiBar.high;
     visibleLo = loBar.low;
 
+    const paneW = chart.timeScale().width() || Math.max(120, wrap.clientWidth - 72);
+    const paneH = Math.max(60, (wrap.clientHeight || 240) - (chart.timeScale().height() || 26));
+    const showAxisTags = paneH >= 280 && state.activeMode !== 'phone';
+
     const hiOpts = {
       price: hiBar.high,
-      color: 'rgba(78, 242, 171, 0.36)',
+      color: 'rgba(79, 242, 172, 0.34)',
       lineWidth: 1,
       lineStyle: root.LightweightCharts.LineStyle.Dashed,
-      axisLabelVisible: true,
+      axisLabelVisible: showAxisTags,
       title: 'HI',
-      axisLabelColor: '#0e2d20',
-      axisLabelTextColor: '#4ef2ab',
+      axisLabelColor: '#0d2b1f',
+      axisLabelTextColor: '#4ff2ac',
     };
     const loOpts = {
       price: loBar.low,
-      color: 'rgba(255, 117, 138, 0.36)',
+      color: 'rgba(255, 120, 141, 0.34)',
       lineWidth: 1,
       lineStyle: root.LightweightCharts.LineStyle.Dashed,
-      axisLabelVisible: true,
+      axisLabelVisible: showAxisTags,
       title: 'LO',
-      axisLabelColor: '#35101a',
-      axisLabelTextColor: '#ff758a',
+      axisLabelColor: '#330f18',
+      axisLabelTextColor: '#ff788d',
     };
     const midOpts = {
       price: (hiBar.high + loBar.low) / 2,
-      color: 'rgba(159, 176, 194, 0.14)',
+      color: 'rgba(168, 184, 202, 0.13)',
       lineWidth: 1,
       lineStyle: root.LightweightCharts.LineStyle.SparseDotted,
-      axisLabelVisible: true,
+      axisLabelVisible: showAxisTags && paneH >= 340,
       title: 'MID',
-      axisLabelColor: '#121926',
-      axisLabelTextColor: '#9fb0c2',
+      axisLabelColor: '#111824',
+      axisLabelTextColor: '#a8b8ca',
     };
 
     if (!hiLine) hiLine = candleSeries.createPriceLine(hiOpts);
@@ -185,9 +213,6 @@
     else loLine.applyOptions(loOpts);
     if (!midLine) midLine = candleSeries.createPriceLine(midOpts);
     else midLine.applyOptions(midOpts);
-
-    const paneW = chart.timeScale().width() || Math.max(120, wrap.clientWidth - 72);
-    const paneH = Math.max(60, (wrap.clientHeight || 240) - (chart.timeScale().height() || 26));
 
     const wickHi = el.wickHi();
     const wickLo = el.wickLo();
@@ -199,22 +224,23 @@
     let hiClampedY = null;
     let loClampedY = null;
 
-    if (wickHi && Number.isFinite(hiX) && Number.isFinite(hiY) && hiX >= 0 && hiX <= paneW) {
+    if (wickHi && Number.isFinite(hiX) && Number.isFinite(hiY) && hiX >= 2 && hiX <= paneW - 2) {
       hiClampedY = Math.max(6, Math.min(paneH - 26, Math.round(hiY)));
     }
-    if (wickLo && Number.isFinite(loX) && Number.isFinite(loY) && loX >= 0 && loX <= paneW) {
+    if (wickLo && Number.isFinite(loX) && Number.isFinite(loY) && loX >= 2 && loX <= paneW - 2) {
       loClampedY = Math.max(26, Math.min(paneH - 6, Math.round(loY)));
     }
 
-    // Avoid vertical tag collision when high and low pins are horizontally close
-    if (hiClampedY != null && loClampedY != null && Math.abs(hiX - loX) < 130 && Math.abs(loClampedY - hiClampedY) < 28) {
-      hiClampedY = Math.max(6, hiClampedY - 10);
-      loClampedY = Math.min(paneH - 6, loClampedY + 10);
+    if (hiClampedY != null && loClampedY != null && Math.abs(hiX - loX) < 140 && Math.abs(loClampedY - hiClampedY) < 30) {
+      hiClampedY = Math.max(6, hiClampedY - 11);
+      loClampedY = Math.min(paneH - 6, loClampedY + 11);
     }
+
+    const rightSafeMargin = Math.min(155, paneW * 0.44);
 
     if (wickHi) {
       if (hiClampedY != null) {
-        const placeLeft = hiX > paneW * 0.64;
+        const placeLeft = hiX > paneW - rightSafeMargin;
         wickHi.classList.toggle('side-l', placeLeft);
         wickHi.classList.toggle('side-r', !placeLeft);
         wickHi.style.transform = `translate3d(${Math.round(hiX)}px, ${hiClampedY}px, 0)`;
@@ -229,7 +255,7 @@
 
     if (wickLo) {
       if (loClampedY != null) {
-        const placeLeft = loX > paneW * 0.64;
+        const placeLeft = loX > paneW - rightSafeMargin;
         wickLo.classList.toggle('side-l', placeLeft);
         wickLo.classList.toggle('side-r', !placeLeft);
         wickLo.style.transform = `translate3d(${Math.round(loX)}px, ${loClampedY}px, 0)`;
@@ -278,7 +304,7 @@
       const level = 12 + ((plotH - 22) * i) / 4;
       ctx.fillStyle = 'rgba(255,255,255,0.06)';
       ctx.fillRect(0, level, plotW, 1);
-      ctx.fillStyle = '#9fb0c2';
+      ctx.fillStyle = '#a8b8ca';
       const price = high === low ? high + (0.5 - i / 4) * span : high - (span * i) / 4;
       ctx.fillText(fmt.num(price, 4), plotW + 6, level + 4);
     }
@@ -289,7 +315,7 @@
       const up = bar.close >= bar.open;
       if (state.showVol && bar.volume > 0) {
         const vh = (bar.volume / maxVol) * (plotH * 0.18);
-        ctx.fillStyle = up ? 'rgba(16, 217, 132, 0.18)' : 'rgba(244, 67, 93, 0.18)';
+        ctx.fillStyle = up ? 'rgba(16, 217, 132, 0.2)' : 'rgba(244, 67, 93, 0.2)';
         ctx.fillRect(x - bodyW / 2, plotH - vh + 10, bodyW, vh);
       }
       ctx.fillStyle = up ? '#10d984' : '#f4435d';
@@ -297,11 +323,12 @@
       ctx.fillRect(x - bodyW / 2, Math.min(y(bar.open), y(bar.close)), bodyW, Math.max(1.5, Math.abs(y(bar.open) - y(bar.close))));
     });
 
-    ctx.fillStyle = '#6f8194';
+    ctx.fillStyle = '#76899e';
+    const fmtTick = state.klineInterval === '1d' ? fmt.fmtDay : fmt.fmtTime;
     for (const idx of new Set([0, Math.floor(bars.length / 2), bars.length - 1])) {
       ctx.fillText(
-        fmt.fmtTime(bars[idx].time - TZ_OFFSET),
-        Math.max(4, Math.min(plotW - 38, idx * step)),
+        fmtTick(bars[idx].time - TZ_OFFSET),
+        Math.max(4, Math.min(plotW - 44, idx * step)),
         height - 7
       );
     }
@@ -315,6 +342,12 @@
       emaSeries.applyOptions({ visible: state.showEma });
       if (state.showEma && state.candles.length) {
         emaSeries.setData(computeEma(state.candles, 20));
+      }
+    }
+    if (ema50Series) {
+      ema50Series.applyOptions({ visible: state.showEma50 });
+      if (state.showEma50 && state.candles.length) {
+        ema50Series.setData(computeEma(state.candles, 50));
       }
     }
     if (!candleSeries) drawBasicChart();
@@ -333,13 +366,16 @@
         candles.map((c) => ({
           time: c.time,
           value: c.volume || 0,
-          color: c.close >= c.open ? 'rgba(16, 217, 132, 0.22)' : 'rgba(244, 67, 93, 0.22)',
+          color: c.close >= c.open ? 'rgba(16, 217, 132, 0.24)' : 'rgba(244, 67, 93, 0.24)',
         }))
       );
     }
 
     if (emaSeries && state.showEma) {
       emaSeries.setData(computeEma(candles, 20));
+    }
+    if (ema50Series && state.showEma50) {
+      ema50Series.setData(computeEma(candles, 50));
     }
 
     chart.priceScale('right').applyOptions({ autoScale: true });
@@ -353,13 +389,23 @@
     if (!isHovering && candles.length) {
       paintOhlc(candles[candles.length - 1]);
     }
+    paintCountdown();
   }
 
   function chartFontSize() {
     if (state.activeMode === 'tv') {
-      return Math.round(Math.max(12, Math.min(20, root.innerWidth / 160)));
+      return Math.round(Math.max(12, Math.min(24, root.innerWidth / 145)));
     }
-    return state.activeMode === 'phone' ? 10 : 11;
+    return state.activeMode === 'phone' ? 10.5 : 11;
+  }
+
+  function formatTickMark(t, tickMarkType) {
+    const sec = Number(t) - TZ_OFFSET;
+    if (!Number.isFinite(sec)) return '';
+    if (tickMarkType === 0) return String(new Date(sec * 1000).getUTCFullYear());
+    if (tickMarkType === 1) return fmt.fmtMonth(sec);
+    if (tickMarkType === 2 || state.klineInterval === '1d') return fmt.fmtDay(sec);
+    return fmt.fmtTime(sec);
   }
 
   function init() {
@@ -388,27 +434,27 @@
       chart = root.LightweightCharts.createChart(wrap, {
         layout: {
           background: { type: 'solid', color: 'transparent' },
-          textColor: '#8d9fb2',
+          textColor: '#97a9bd',
           fontFamily: '"JetBrains Mono", monospace',
           fontSize: chartFontSize(),
         },
         grid: {
-          vertLines: { color: 'rgba(255, 255, 255, 0.032)' },
-          horzLines: { color: 'rgba(255, 255, 255, 0.05)' },
+          vertLines: { color: 'rgba(255, 255, 255, 0.03)' },
+          horzLines: { color: 'rgba(255, 255, 255, 0.048)' },
         },
         crosshair: {
           mode: root.LightweightCharts.CrosshairMode.Normal,
           vertLine: {
-            color: 'rgba(76, 184, 240, 0.42)',
+            color: 'rgba(73, 186, 242, 0.44)',
             width: 1,
             style: 3,
-            labelBackgroundColor: '#131d2c',
+            labelBackgroundColor: '#121c2b',
           },
           horzLine: {
-            color: 'rgba(76, 184, 240, 0.42)',
+            color: 'rgba(73, 186, 242, 0.44)',
             width: 1,
             style: 3,
-            labelBackgroundColor: '#131d2c',
+            labelBackgroundColor: '#121c2b',
           },
         },
         rightPriceScale: {
@@ -418,36 +464,36 @@
           ticksVisible: false,
           alignLabels: true,
           borderColor: 'rgba(255, 255, 255, 0.09)',
-          scaleMargins: { top: 0.07, bottom: 0.18 },
+          scaleMargins: { top: 0.08, bottom: 0.18 },
         },
         timeScale: {
           visible: true,
           borderVisible: true,
           ticksVisible: false,
           borderColor: 'rgba(255, 255, 255, 0.09)',
-          timeVisible: true,
+          timeVisible: state.klineInterval !== '1d',
           secondsVisible: false,
           rightOffset: 2,
           barSpacing: state.activeMode === 'phone' ? 8 : 13,
           minBarSpacing: 3,
-          tickMarkFormatter: (t) => fmt.fmtTime(t - TZ_OFFSET),
+          tickMarkFormatter: formatTickMark,
         },
         localization: {
-          timeFormatter: (t) => fmt.fmtFull(t - TZ_OFFSET),
+          timeFormatter: (t) => fmt.fmtFull(Number(t) - TZ_OFFSET),
         },
         handleScroll: true,
         handleScale: true,
       });
 
-      /* Add candlestick series FIRST so the right price scale inherits 4-decimal precision */
+      /* Add candlestick series FIRST so right price scale inherits 4-decimal precision */
       candleSeries = chart.addCandlestickSeries({
         upColor: '#10d984',
         downColor: '#f4435d',
         borderUpColor: '#10d984',
         borderDownColor: '#f4435d',
-        wickUpColor: '#4ef2ab',
-        wickDownColor: '#ff758a',
-        priceLineColor: 'rgba(16, 217, 132, 0.42)',
+        wickUpColor: '#4ff2ac',
+        wickDownColor: '#ff788d',
+        priceLineColor: 'rgba(16, 217, 132, 0.45)',
         priceLineWidth: 1,
         priceLineStyle: 2,
         lastValueVisible: true,
@@ -455,12 +501,22 @@
       });
 
       emaSeries = chart.addLineSeries({
-        color: 'rgba(76, 184, 240, 0.85)',
-        lineWidth: 1.5,
+        color: 'rgba(73, 186, 242, 0.88)',
+        lineWidth: 1.6,
         priceLineVisible: false,
         lastValueVisible: false,
         crosshairMarkerVisible: false,
         visible: state.showEma,
+        priceFormat,
+      });
+
+      ema50Series = chart.addLineSeries({
+        color: 'rgba(242, 173, 51, 0.85)',
+        lineWidth: 1.5,
+        priceLineVisible: false,
+        lastValueVisible: false,
+        crosshairMarkerVisible: false,
+        visible: state.showEma50,
         priceFormat,
       });
 
@@ -502,12 +558,15 @@
       chart.timeScale().subscribeVisibleLogicalRangeChange(scheduleExtremaSync);
 
       chart.subscribeCrosshairMove((param) => {
+        const stage = el.stage();
         if (!param?.time || !param.seriesData?.get(candleSeries)) {
           isHovering = false;
+          stage?.classList.remove('is-inspecting');
           if (state.candles.length) paintOhlc(state.candles[state.candles.length - 1]);
           return;
         }
         isHovering = true;
+        stage?.classList.add('is-inspecting');
         const c = param.seriesData.get(candleSeries);
         const v = volumeSeries ? param.seriesData.get(volumeSeries)?.value : null;
         paintOhlc({ open: c.open, high: c.high, low: c.low, close: c.close, volume: v });
@@ -527,7 +586,7 @@
       console.error('[XRP Chart] init failed:', err);
       if (resizeObserver) resizeObserver.disconnect();
       chart?.remove();
-      chart = candleSeries = volumeSeries = emaSeries = null;
+      chart = candleSeries = volumeSeries = emaSeries = ema50Series = null;
       if (el.resetBtn()) el.resetBtn().disabled = true;
       if (el.basicCanvas()) el.basicCanvas().hidden = false;
       if (el.basicLabel()) el.basicLabel().hidden = false;
@@ -626,12 +685,16 @@
       volumeSeries.update({
         time: t,
         value: v,
-        color: c >= o ? 'rgba(16, 217, 132, 0.22)' : 'rgba(244, 67, 93, 0.22)',
+        color: c >= o ? 'rgba(16, 217, 132, 0.24)' : 'rgba(244, 67, 93, 0.24)',
       });
     }
     if (emaSeries && state.showEma && arr.length >= 5) {
       const emaArr = computeEma(arr, 20);
       if (emaArr.length) emaSeries.update(emaArr[emaArr.length - 1]);
+    }
+    if (ema50Series && state.showEma50 && arr.length >= 5) {
+      const ema50Arr = computeEma(arr, 50);
+      if (ema50Arr.length) ema50Series.update(ema50Arr[ema50Arr.length - 1]);
     }
     if (!isHovering) paintOhlc(candle);
     if (isNewBar || h >= visibleHi || l <= visibleLo) {
@@ -646,9 +709,14 @@
     XRP.cache.write('timeframe', tf);
     chartGeneration++;
 
+    chart?.applyOptions({
+      timeScale: { timeVisible: tf !== '1d' },
+    });
+
     candleSeries?.setData([]);
     volumeSeries?.setData([]);
     emaSeries?.setData([]);
+    ema50Series?.setData([]);
     if (el.basicCanvas()) el.basicCanvas().width = el.basicCanvas().width;
 
     for (const line of [hiLine, loLine, midLine]) {
@@ -670,6 +738,7 @@
     if (saved) commitRows(saved.value, false);
     if (!candleSeries) init();
 
+    paintCountdown();
     bus.emit('chart:tf-changed', tf);
   }
 
@@ -717,6 +786,7 @@
     applyKline,
     switchTimeframe,
     applyOverlays,
+    paintCountdown,
     setStatus,
     onModeChange,
     getGeneration,

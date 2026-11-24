@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   XRP TERMINAL v3 — CONFIG, FORMATTERS & RESILIENT CACHE
+   XRP TERMINAL v4 — CONFIG, FORMATTERS & RESILIENT CACHE
    ═══════════════════════════════════════════════════════════════ */
 (function (root) {
   'use strict';
@@ -17,28 +17,29 @@
     PROXY_CP: 'https://corsproxy.io/?',
     PROXY_AO: 'https://api.allorigins.win/get?url=',
     MAX_CANDLES: 1500,
-    VISIBLE_CANDLES_DESK: 68,
-    VISIBLE_CANDLES_PHONE: 38,
+    VISIBLE_CANDLES_TV: 64,
+    VISIBLE_CANDLES_PC: 76,
+    VISIBLE_CANDLES_PHONE: 42,
     IDLE_MS: 4000,
     DEFAULT_HOLDINGS: 1_000_000,
-    CCY_CYCLE_MS: 5000,
+    CCY_CYCLE_MS: 5500,
     TIMEFRAMES: ['1m', '3m', '5m', '15m', '1h', '4h', '1d'],
     WS_HOSTS: ['wss://data-stream.binance.vision:443', 'wss://stream.binance.com:443'],
     POLL: {
       tickers: 15_000,
       candles: 30_000,
-      jpy: 60_000,
-      brent: 120_000,
+      jpy: 45_000,
+      brent: 60_000,
       weather: 300_000,
       aqi: 600_000,
       rlusd: 300_000,
       rates: 900_000,
       treasury: 900_000,
       meta: 3_600_000,
-      morpho: 30_000,
+      morpho: 25_000,
     },
     STALE: {
-      fx: 120_000,
+      fx: 180_000,
       brent: 300_000,
       weather: 900_000,
       aqi: 1_500_000,
@@ -53,8 +54,8 @@
       LLTV_WAD: 770000000000000000n,
       RPC_URLS: [
         'https://ethereum-rpc.publicnode.com',
-        'https://eth.llamarpc.com',
         'https://eth.drpc.org',
+        'https://1rpc.io/eth',
       ],
     },
     PORTFOLIO_CCY: [
@@ -65,12 +66,12 @@
     ],
   };
 
-  /* ── Cache (with graceful v2 migration) ── */
-  const CACHE_PREFIX = 'xrp-terminal-v3:';
-  const LEGACY_PREFIX = 'xrp-terminal-v2:';
+  /* ── Cache (with seamless v3 & v2 migration) ── */
+  const CACHE_PREFIX = 'xrp-terminal-v4:';
+  const LEGACY_PREFIXES = ['xrp-terminal-v3:', 'xrp-terminal-v2:'];
 
   function readCache(key, maxAge = 7 * DAY_MS) {
-    for (const prefix of [CACHE_PREFIX, LEGACY_PREFIX]) {
+    for (const prefix of [CACHE_PREFIX, ...LEGACY_PREFIXES]) {
       try {
         const raw = localStorage.getItem(prefix + key);
         if (!raw) continue;
@@ -150,6 +151,18 @@
     timeZone: CFG.TZ,
   });
 
+  const timeFmtDayMon = new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    timeZone: CFG.TZ,
+  });
+
+  const timeFmtMonYr = new Intl.DateTimeFormat('en-GB', {
+    month: 'short',
+    year: '2-digit',
+    timeZone: CFG.TZ,
+  });
+
   const timeFmtFull = new Intl.DateTimeFormat('en-GB', {
     hour12: false,
     day: '2-digit',
@@ -180,6 +193,14 @@
     return timeFmtHm.format(new Date(sec * 1000));
   }
 
+  function fmtDay(sec) {
+    return timeFmtDayMon.format(new Date(sec * 1000));
+  }
+
+  function fmtMonth(sec) {
+    return timeFmtMonYr.format(new Date(sec * 1000));
+  }
+
   function fmtFull(sec) {
     return timeFmtFull.format(new Date(sec * 1000));
   }
@@ -191,6 +212,11 @@
 
   function toTzSec(ms) {
     return Math.floor(Number(ms) / 1000) + CFG.TZ_OFFSET_SEC;
+  }
+
+  function tfPeriodMs(tf) {
+    const unit = tf.endsWith('d') ? DAY_MS : tf.endsWith('h') ? 3_600_000 : 60_000;
+    return (parseInt(tf, 10) || 1) * unit;
   }
 
   function numeric(v) {
@@ -215,11 +241,14 @@
     fmtHoldingsShort,
     stateClass,
     fmtTime,
+    fmtDay,
+    fmtMonth,
     fmtFull,
     fmtFeedTime,
     timeFmtClock,
     timeFmtDate,
     toTzSec,
+    tfPeriodMs,
     numeric,
     dayTime,
   };

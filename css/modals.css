@@ -1,18 +1,24 @@
 /* ═══════════════════════════════════════════════════════════════
-   XRP TERMINAL v3 — DIALOG MODALS & DRAWERS
+   XRP TERMINAL v4 — DIALOG MODALS & MOBILE BOTTOM SHEETS
    ═══════════════════════════════════════════════════════════════ */
 
 dialog.modal {
   margin: auto;
-  width: min(620px, 94vw);
-  max-height: min(86dvh, 760px);
+  width: min(640px, 94vw);
+  max-height: min(86dvh, 780px);
   padding: 0;
   border: 1px solid var(--border-mid);
   border-radius: var(--r-lg);
-  background: #0d131d;
+  background: #0c121c;
   color: var(--ink-1);
   box-shadow: var(--shadow-dialog), var(--bevel-top);
   overflow: hidden;
+}
+
+/* Proportional 10-foot scaling when dialogs are opened on TV */
+body[data-mode="tv"] dialog.modal {
+  width: min(calc(var(--u) * 44), 92vw);
+  max-height: 86dvh;
 }
 
 dialog.modal[open] {
@@ -21,9 +27,9 @@ dialog.modal[open] {
 }
 
 dialog.modal::backdrop {
-  background: rgba(4, 7, 12, 0.78);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: rgba(3, 6, 11, 0.78);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
 }
 
 .modal-head {
@@ -33,14 +39,14 @@ dialog.modal::backdrop {
   gap: 12px;
   padding: 16px 20px;
   border-bottom: 1px solid var(--border-subtle);
-  background: rgba(8, 12, 19, 0.7);
+  background: rgba(7, 11, 18, 0.78);
   flex-shrink: 0;
 }
 
 .modal-head h2 {
   font-size: 16px;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
   color: var(--ink-1);
 }
 
@@ -82,13 +88,13 @@ dialog.modal::backdrop {
 }
 
 .modal-body a {
-  color: var(--cyan);
+  color: var(--cyan-bright);
   text-decoration: none;
-  border-bottom: 1px solid rgba(76, 184, 240, 0.35);
+  border-bottom: 1px solid rgba(73, 186, 242, 0.35);
 }
 
 .modal-body a:hover {
-  border-bottom-color: var(--cyan);
+  border-bottom-color: var(--cyan-bright);
 }
 
 .modal-foot {
@@ -98,7 +104,7 @@ dialog.modal::backdrop {
   gap: 12px;
   padding: 12px 20px;
   border-top: 1px solid var(--border-subtle);
-  background: rgba(8, 12, 19, 0.7);
+  background: rgba(7, 11, 18, 0.78);
   flex-shrink: 0;
   flex-wrap: wrap;
 }
@@ -162,6 +168,7 @@ dialog.modal::backdrop {
   padding: 14px;
   border-radius: var(--r-md);
   background: var(--surface-well);
+  box-shadow: var(--well-inset);
   border: 1px solid var(--border-subtle);
 }
 
@@ -171,6 +178,14 @@ dialog.modal::backdrop {
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
+}
+
+.setting-toggles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
+  gap: 10px 14px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border-subtle);
 }
 
 .setting-label {
@@ -214,10 +229,10 @@ dialog.modal::backdrop {
 }
 
 .holding-input {
-  width: 130px;
+  width: 132px;
   padding: 5px 9px;
   border-radius: var(--r-sm);
-  background: #080c12;
+  background: #070b11;
   border: 1px solid var(--border-mid);
   color: var(--ink-1);
   font-family: var(--font-mono);
@@ -265,6 +280,7 @@ dialog.modal::backdrop {
   padding: 10px 12px;
   border-radius: var(--r-md);
   background: var(--surface-well);
+  box-shadow: var(--well-inset);
   border: 1px solid var(--border-subtle);
   display: flex;
   flex-direction: column;
@@ -339,10 +355,25 @@ body[data-mode="phone"] dialog.modal {
   width: 100vw;
   max-width: 100vw;
   max-height: 88dvh;
-  border-radius: 16px 16px 0 0;
+  border-radius: 18px 18px 0 0;
   border-left: none;
   border-right: none;
   border-bottom: none;
+}
+
+body[data-mode="phone"] dialog.modal::before {
+  content: '';
+  display: block;
+  width: 36px;
+  height: 4px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.2);
+  margin: 8px auto 0;
+  flex-shrink: 0;
+}
+
+body[data-mode="phone"] .modal-foot {
+  padding-bottom: max(14px, env(safe-area-inset-bottom));
 }
 
 body[data-mode="phone"] .kv-grid,

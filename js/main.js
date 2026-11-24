@@ -1,11 +1,11 @@
 /* ═══════════════════════════════════════════════════════════════
-   XRP TERMINAL v3 — APPLICATION BOOTSTRAP ORCHESTRATOR
+   XRP TERMINAL v4 — APPLICATION BOOTSTRAP ORCHESTRATOR
    ═══════════════════════════════════════════════════════════════ */
 (function (root) {
   'use strict';
 
   const XRP = (root.XRP = root.XRP || {});
-  const { CFG, state, api, chart, market, macro, weather, morpho, ui } = XRP;
+  const { CFG, cache, state, api, chart, market, macro, weather, morpho, ui } = XRP;
 
   if (root.__xrpTerminalBooted) return;
   root.__xrpTerminalBooted = true;
@@ -23,9 +23,32 @@
     [macro.fetchXrpMeta, CFG.POLL.meta],
   ];
 
+  function applyBootstrapPayload(b) {
+    if (!b || typeof b !== 'object') return false;
+    if (Array.isArray(b.tickers)) market.ingestTickerRows(b.tickers, 'REST');
+    if (Array.isArray(b.klines) && b.tf === state.klineInterval) {
+      chart.commitRows(b.klines, true, chart.getVersion());
+      cache.write('candles:' + state.klineInterval, chart.rowsFromMemory());
+      chart.setStatus('');
+    }
+    if (b.jpy) macro.acceptMacro(b.jpy);
+    if (b.brent) macro.acceptMacro(b.brent);
+    if (b.rates) macro.applyRates(b.rates, b.rates.source || 'Backend FX', true);
+    if (b.treasury) macro.acceptTreasury(b.treasury);
+    if (b.rlusd?.marketCap > 0) macro.acceptRlusd(b.rlusd.marketCap, b.rlusd.source || 'Backend');
+    if (b.meta) macro.acceptMeta(b.meta);
+    if (b.weather?.current) weather.applyWeather(b.weather, true);
+    if (Number.isFinite(b.aqi?.aqi)) weather.applyAqi(b.aqi.aqi, b.aqi.src || 'US AQI', true, b.aqi.pm25);
+    if (b.morpho) morpho.ingestBundle(b.morpho);
+    ui.scheduleRender();
+    return true;
+  }
+
   async function refreshAllFeeds() {
     chart.init();
     if (!market.isLiveSocket()) market.forceReconnect();
+    const boot = await api.fetchBootstrap(state.klineInterval);
+    if (applyBootstrapPayload(boot)) return;
     await Promise.allSettled([
       ...jobs.map(([fn]) => api.runJob(fn)),
       morpho.refreshAll(),
@@ -41,14 +64,19 @@
   ui.resetIdle();
   ui.tickClock();
   ui.paintPortfolio();
+  morpho.paint();
 
-  /* Boot chart engine (loads TradingView Lightweight Charts asynchronously with canvas fallback) */
+  /* Boot chart engine + live Binance WebSocket stream immediately */
   chart.init();
-
-  /* Start live WebSocket stream + staggered polling jobs + Morpho loan monitor */
   market.connectWs();
-  jobs.forEach(([fn, interval]) => api.scheduleJob(fn, interval));
-  morpho.refreshAll();
+
+  /* Hydrate via single-roundtrip /api/bootstrap if backend present, else run staggered client jobs */
+  (async function bootFeeds() {
+    const boot = await api.fetchBootstrap(state.klineInterval);
+    const hydrated = applyBootstrapPayload(boot);
+    jobs.forEach(([fn, interval]) => api.scheduleJob(fn, interval, !hydrated));
+    if (!hydrated) morpho.refreshAll();
+  })();
 
   setInterval(() => {
     if (!document.hidden) ui.tickClock();

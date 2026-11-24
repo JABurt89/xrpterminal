@@ -1,11 +1,11 @@
 /* ═══════════════════════════════════════════════════════════════
-   XRP TERMINAL v3 — MORPHO BLUE (FXRP / RLUSD) ON-CHAIN MONITOR
+   XRP TERMINAL v4 — MORPHO BLUE (FXRP / RLUSD) ON-CHAIN MONITOR
    ═══════════════════════════════════════════════════════════════ */
 (function (root) {
   'use strict';
 
   const XRP = (root.XRP = root.XRP || {});
-  const { CFG, cache, fmt, state, bus } = XRP;
+  const { CFG, DAY_MS, cache, fmt, state, bus, api } = XRP;
 
   const M = CFG.MORPHO;
   const WAD = 10n ** 18n;
@@ -32,6 +32,74 @@
   }
   function persistEntryPrices() {
     cache.write('morphoEntryPrices', Object.fromEntries(entryPrices.entries()));
+  }
+
+  function normalizeSavings(raw) {
+    if (!raw || typeof raw !== 'object') return null;
+    if (!Number.isFinite(raw.borrowedXrp) || !Number.isFinite(raw.repaidXrp)) return null;
+    try {
+      return {
+        borrowedXrp: Number(raw.borrowedXrp),
+        repaidXrp: Number(raw.repaidXrp),
+        netShares: typeof raw.netShares === 'bigint' ? raw.netShares : BigInt(String(raw.netShares || '0')),
+        count: Number(raw.count) || 0,
+        checkedAt: Number(raw.checkedAt) || Date.now(),
+        liquidated: Boolean(raw.liquidated),
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  function persistSnapshot() {
+    const { latest, interest, savings } = state.morpho;
+    if (!latest) return;
+    cache.write('morphoSnap', {
+      latest,
+      interest,
+      savings: savings
+        ? {
+            ...savings,
+            netShares: savings.netShares.toString(),
+          }
+        : null,
+    });
+  }
+
+  /* Restore last verified Morpho snapshot immediately on boot */
+  (function hydrateSavedSnapshot() {
+    const snap = cache.read('morphoSnap', 7 * DAY_MS)?.value;
+    if (!snap?.latest) return;
+    state.morpho.latest = { ...snap.latest, cachedBoot: true };
+    if (snap.interest) state.morpho.interest = snap.interest;
+    const sav = normalizeSavings(snap.savings);
+    if (sav) state.morpho.savings = sav;
+  })();
+
+  function ingestBundle(bundle) {
+    if (!bundle || typeof bundle !== 'object') return false;
+    let updated = false;
+    if (bundle.position && Number.isFinite(bundle.position.debt) && Number.isFinite(bundle.position.collateral)) {
+      state.morpho.latest = { ...bundle.position, receivedAt: Date.now(), cachedBoot: false };
+      state.morpho.failed = false;
+      updated = true;
+    }
+    if (bundle.interest && Number.isFinite(bundle.interest.amount)) {
+      state.morpho.interest = { ...bundle.interest, receivedAt: Date.now() };
+      state.morpho.interestFailed = false;
+      updated = true;
+    }
+    const sav = normalizeSavings(bundle.savings);
+    if (sav) {
+      state.morpho.savings = sav;
+      state.morpho.savingsError = '';
+      updated = true;
+    }
+    if (updated) {
+      persistSnapshot();
+      paint();
+    }
+    return updated;
   }
 
   const word = (v) => BigInt(v).toString(16).padStart(64, '0');
@@ -173,7 +241,6 @@
     if (oracleRaw <= 0n) throw new Error('Invalid oracle');
 
     const debtRaw = accruedDebt(m, position, rate, BigInt(block.timestamp));
-    // Live on-chain continuous-compounded APY from IRM per-second borrow rate
     const borrowApy = Math.expm1((Number(rate) / 1e18) * SECONDS_PER_YEAR);
 
     const rec = calculatePosition({
@@ -193,6 +260,7 @@
     rec.source = 'CHAIN';
     rec.block = BigInt(block.number).toString();
     rec.receivedAt = Date.now();
+    rec.cachedBoot = false;
     return rec;
   }
 
@@ -200,7 +268,6 @@
     if (busy || document.hidden) return;
     busy = true;
     try {
-      // Await RLUSD/USD quote first on initial boot so first chain paint uses live USD rate
       if (!state.morpho.usdQuote) await updateUsdQuote();
 
       const attempts = M.RPC_URLS.map((_, i) => (rpcPreferred + i) % M.RPC_URLS.length);
@@ -209,6 +276,7 @@
           state.morpho.latest = await readChain(M.RPC_URLS[i]);
           rpcPreferred = i;
           state.morpho.failed = false;
+          persistSnapshot();
           return;
         } catch (err) {
           console.warn('[Morpho RPC]', err.message);
@@ -235,11 +303,13 @@
         const candidate = calculatePosition(pos);
         candidate.source = 'API';
         candidate.receivedAt = Date.now();
+        candidate.cachedBoot = false;
         if (!state.morpho.latest || candidate.timestamp >= state.morpho.latest.timestamp) {
           state.morpho.latest = candidate;
         }
         if (pos.market.loanAsset.price) state.morpho.usdQuote = pos.market.loanAsset.price;
         state.morpho.failed = false;
+        persistSnapshot();
       } finally {
         clearTimeout(timer);
       }
@@ -279,6 +349,7 @@
       if (!Number.isFinite(amount)) throw new Error('Invalid interest amount');
       state.morpho.interest = { amount, block: d.last_indexed_block, receivedAt: Date.now() };
       state.morpho.interestFailed = false;
+      persistSnapshot();
     } catch (err) {
       state.morpho.interestFailed = true;
       console.warn('[Morpho Interest]', err.message);
@@ -372,6 +443,7 @@
       }
       state.morpho.savings = h;
       state.morpho.savingsError = '';
+      persistSnapshot();
     } catch (err) {
       state.morpho.savingsError = err.message;
     } finally {
@@ -397,11 +469,11 @@
     const xrpPrice = state.xrpUsd;
     const xrpTs = state.tickerTimes['xrpusdt@ticker'] || 0;
 
-    /* 1. Interest */
-    const interestOld = interestFailed || (interest && Date.now() - interest.receivedAt > 120_000);
+    /* 1. Accrued Interest */
+    const interestOld = interestFailed || (interest && Date.now() - interest.receivedAt > 180_000);
     const interestTxt = interest ? fmt.num(interest.amount, 2) : '—';
     put('interest', interestTxt);
-    document.querySelectorAll('[data-loan="interest"]').forEach((el) => (el.style.opacity = interestOld ? '0.5' : ''));
+    document.querySelectorAll('[data-loan="interest"]').forEach((el) => (el.style.opacity = interestOld ? '0.55' : ''));
     setText('ldInterest', interest ? interestTxt + ' RLUSD' : '—');
     setText(
       'ldInterestDetail',
@@ -441,7 +513,7 @@
 
       const old =
         !!savingsError ||
-        Date.now() - savings.checkedAt > 120_000 ||
+        Date.now() - savings.checkedAt > 300_000 ||
         (xrpTs && Date.now() - xrpTs > 45_000) ||
         failed ||
         Date.now() - latest.timestamp > 600_000;
@@ -449,7 +521,7 @@
       for (const key of ['saved-xrp', 'saved-usd']) {
         document.querySelectorAll(`[data-loan="${key}"]`).forEach((el) => {
           el.className = savedXrp >= 0 ? 'positive' : 'negative';
-          el.style.opacity = old ? '0.5' : '';
+          el.style.opacity = old ? '0.55' : '';
         });
       }
       setText(
@@ -465,7 +537,7 @@
     const ltvFill = document.getElementById('loanLtvFill');
 
     if (!latest) {
-      put('status', failed ? 'Unavailable' : 'Checking');
+      put('status', failed ? 'Unavailable' : 'Syncing');
       if (riskBadge) {
         riskBadge.className = 'risk-badge unknown';
         riskBadge.textContent = failed ? 'ERR' : 'SYNC';
@@ -496,23 +568,26 @@
     const ltvPct = Number.isFinite(r.ltv) ? r.ltv * 100 : 100;
     const ltvTxt = Number.isFinite(r.ltv) ? fmt.num(ltvPct, 2) + '%' : '≥77%';
     const apyTxt = r.apy != null ? fmt.num(r.apy * 100, 2) + '%' : '—';
+    const collDigits = Math.abs(r.collateral - Math.round(r.collateral)) < 0.005 ? 0 : 2;
+    const collTxt = fmt.num(r.collateral, collDigits);
     const bufferTxt =
       r.bufferPct != null
-        ? `${r.bufferPct >= 0 ? fmt.num(r.bufferPct, 1) + '% buffer' : 'BELOW LIQ'}${r.apy != null ? ' · ' + apyTxt + ' APY' : ''}`
+        ? `${r.bufferPct >= 0 ? fmt.num(r.bufferPct, 1) + '% buf' : 'BELOW LIQ'}${r.apy != null ? ' · ' + apyTxt + ' APY' : ''}`
         : r.debt === 0
           ? 'Debt-free'
           : '—';
 
-    put('status', (old ? 'OLD · ' : '') + (r.source || 'API') + ' · ' + timeStr);
+    const statusTag = r.cachedBoot ? 'CACHED' : old ? 'OLD · ' + (r.source || 'API') : r.source || 'API';
+    put('status', `${statusTag} · ${timeStr}`);
+    put('collateral', collTxt);
     put('debt', fmt.num(r.debt, 2));
     put('liquidation', liqTxt);
-    put('ltv', ltvTxt);
 
-    setText('loanLtvSummary', `LTV ${ltvTxt} / 77.0% LLTV`);
+    setText('loanLtvSummary', `LTV ${ltvTxt} / 77%`);
     setText('loanBuffer', bufferTxt);
     if (ltvFill) ltvFill.style.width = Math.max(0, Math.min(100, ltvPct)).toFixed(1) + '%';
     if (card) {
-      card.classList.toggle('loan-old', old);
+      card.classList.toggle('loan-old', old && !r.cachedBoot);
       card.dataset.risk = risk;
     }
     if (riskBadge) {
@@ -521,7 +596,7 @@
     }
 
     /* Inspector modal fields */
-    setText('loanDialogSub', `${r.source === 'CHAIN' ? 'Ethereum Block #' + r.block : 'Morpho GraphQL API'} · Updated ${timeStr} ICT`);
+    setText('loanDialogSub', `${r.source === 'CHAIN' && r.block ? 'Ethereum Block #' + r.block : 'Morpho GraphQL API'} · Updated ${timeStr} ICT`);
     setText('ldCollateral', fmt.num(r.collateral, 2) + ' FXRP');
     setText('ldDebt', fmt.num(r.debt, 2) + ' RLUSD');
     setText('ldApy', apyTxt);
@@ -536,14 +611,19 @@
     bus.emit('morpho:update');
   }
 
-  function refreshAll() {
-    if (document.hidden || navigator.onLine === false) return Promise.resolve();
-    return Promise.allSettled([updateUsdQuote().then(refreshPosition), refreshInterest(), refreshSavings()]);
+  async function refreshAll() {
+    if (document.hidden || navigator.onLine === false) return;
+    if (await api.hasBackend()) {
+      const bundle = await api.safeJson('/api/morpho', 12_000);
+      if (ingestBundle(bundle)) return;
+    }
+    await Promise.allSettled([updateUsdQuote().then(refreshPosition), refreshInterest(), refreshSavings()]);
   }
 
   bus.on('ticker:xrp', paint);
 
   XRP.morpho = {
+    ingestBundle,
     refreshAll,
     paint,
   };
