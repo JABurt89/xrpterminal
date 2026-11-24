@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   XRP TERMINAL v3 — MACRO, FX, BRENT, TREASURY & ECOSYSTEM FEEDS
+   XRP TERMINAL v4 — MACRO, FX, BRENT, TREASURY & ECOSYSTEM FEEDS
    ═══════════════════════════════════════════════════════════════ */
 (function (root) {
   'use strict';
@@ -12,7 +12,7 @@
   const providerMemory = new Map();
   const providerRetry = new Map();
 
-  /* ── New York FX Market Session Clock ── */
+  /* ── New York FX / Futures Market Session Clock ── */
   const NY_FMT = new Intl.DateTimeFormat('en-US', {
     timeZone: 'America/New_York',
     weekday: 'short',
@@ -101,31 +101,54 @@
     if (!meta || meta.symbol !== (asset === 'jpy' ? 'JPY=X' : 'BZ=F') || (meta.currency && meta.currency !== (asset === 'jpy' ? 'JPY' : 'USD'))) {
       return null;
     }
+    const prevClose = fmt.numeric(meta.previousClose)
+      ? Number(meta.previousClose)
+      : fmt.numeric(meta.chartPreviousClose)
+        ? Number(meta.chartPreviousClose)
+        : null;
+
+    let points = uniquePoints((r.timestamp || []).map((time, i) => ({ time, value: r.indicators?.quote?.[0]?.close?.[i] })));
+
     if (asset === 'brent') {
       if (meta.currency !== 'USD' || meta.instrumentType !== 'FUTURE') return null;
+      const price = Number(meta.regularMarketPrice);
+      const asOf = Number(meta.regularMarketTime);
+      const chgPct = prevClose && prevClose > 0 ? ((price - prevClose) / prevClose) * 100 : null;
       return {
         asset,
         source: 'Yahoo Finance',
         instrument: 'BZ=F',
         kind: 'futures',
         unit: 'USD/barrel',
-        price: Number(meta.regularMarketPrice),
-        asOf: Number(meta.regularMarketTime),
+        price,
+        prevClose,
+        chgPct,
+        asOf,
         fetchedAt: Date.now(),
       };
     }
-    let points = uniquePoints((r.timestamp || []).map((time, i) => ({ time, value: r.indicators?.quote?.[0]?.close?.[i] })));
+
     if (points.length < 2) return null;
     const last = points[points.length - 1];
     points = points.filter((p) => p.time >= last.time - 86400);
+    const metaPrice = Number(meta.regularMarketPrice);
+    const metaTime = Number(meta.regularMarketTime);
+    const price = Number.isFinite(metaPrice) && metaPrice > 0 ? metaPrice : last.value;
+    const asOf = Number.isFinite(metaTime) && metaTime >= last.time ? metaTime : last.time;
+    if (asOf > last.time && price > 0) points.push({ time: asOf, value: price });
+    const baseOpen = prevClose && prevClose > 0 ? prevClose : points[0]?.value;
+    const chgPct = baseOpen && baseOpen > 0 ? ((price - baseOpen) / baseOpen) * 100 : null;
+
     return {
       asset,
       source: 'Yahoo Finance',
       instrument: 'USD/JPY',
       kind: 'intraday',
       unit: 'JPY/USD',
-      price: last.value,
-      asOf: last.time,
+      price,
+      prevClose: baseOpen || null,
+      chgPct,
+      asOf,
       points,
       fetchedAt: Date.now(),
     };
@@ -157,6 +180,7 @@
       kind: 'futures',
       unit: 'USD/barrel',
       price: +json.priceUsd,
+      chgPct: fmt.numeric(json.changePercent) ? +json.changePercent : null,
       asOf,
       fetchedAt: Date.now(),
       providerStale: /stale|error|unavailable/i.test(String(json.quoteStatus || '')),
@@ -168,7 +192,20 @@
     const points = uniquePoints(Object.entries(json.rates).map(([day, r]) => ({ time: fmt.dayTime(day), value: r?.JPY })));
     if (points.length < 5) return null;
     const last = points[points.length - 1];
-    return { asset: 'jpy', source: 'ECB / Frankfurter', instrument: 'USD/JPY', kind: 'daily', unit: 'JPY/USD', price: last.value, asOf: last.time, points, fetchedAt: Date.now() };
+    const prev = points[points.length - 2]?.value;
+    return {
+      asset: 'jpy',
+      source: 'ECB / Frankfurter',
+      instrument: 'USD/JPY',
+      kind: 'daily',
+      unit: 'JPY/USD',
+      price: last.value,
+      prevClose: prev || null,
+      chgPct: prev ? ((last.value - prev) / prev) * 100 : null,
+      asOf: last.time,
+      points,
+      fetchedAt: Date.now(),
+    };
   }
 
   function frankfurterV2Record(json) {
@@ -176,7 +213,20 @@
     const points = uniquePoints(json.filter((r) => r.base === 'USD' && r.quote === 'JPY').map((r) => ({ time: fmt.dayTime(r.date), value: r.rate })));
     if (!points.length) return null;
     const last = points[points.length - 1];
-    return { asset: 'jpy', source: 'ECB / Frankfurter', instrument: 'USD/JPY', kind: 'daily', unit: 'JPY/USD', price: last.value, asOf: last.time, points, fetchedAt: Date.now() };
+    const prev = points.length > 1 ? points[points.length - 2].value : null;
+    return {
+      asset: 'jpy',
+      source: 'ECB / Frankfurter',
+      instrument: 'USD/JPY',
+      kind: 'daily',
+      unit: 'JPY/USD',
+      price: last.value,
+      prevClose: prev,
+      chgPct: prev ? ((last.value - prev) / prev) * 100 : null,
+      asOf: last.time,
+      points,
+      fetchedAt: Date.now(),
+    };
   }
 
   function currencyLatestRecord(json) {
@@ -190,15 +240,17 @@
     if (!r || r.providerStale) return true;
     const age = now - r.asOf * 1000;
     if (r.kind === 'daily') return age > 4 * DAY_MS;
-    const parts = {};
-    NY_FMT.formatToParts(new Date(r.asOf * 1000)).forEach((p) => (parts[p.type] = p.value));
-    const nowParts = {};
-    NY_FMT.formatToParts(new Date(now)).forEach((p) => (nowParts[p.type] = p.value));
-    const fridayClose = parts.weekday === 'Fri' && +parts.hour >= 15;
-    if (fridayClose && (fxSessionState().st === 'closed' || (nowParts.weekday === 'Sun' && +nowParts.hour <= 22))) {
-      return age > 3.2 * DAY_MS;
+
+    // Weekend / FX & NYMEX daily maintenance pause awareness
+    if (fxSessionState().st === 'closed') {
+      return age > 3.5 * DAY_MS;
     }
-    return age > 90 * 60_000;
+
+    // NYMEX Brent futures pause 17:00-18:00 ET and Stooq/OilWatch may report session settlement
+    if (r.asset === 'brent' && /OilWatch/i.test(r.source || '')) {
+      return age > 28 * 3_600_000;
+    }
+    return age > 180 * 60_000;
   }
 
   function preferMacro(next, prev) {
@@ -234,21 +286,24 @@
   }
 
   function acceptMacro(rec) {
-    if (!validMacro(rec, rec?.asset) || !preferMacro(rec, state.macro[rec.asset])) return;
+    if (!validMacro(rec, rec?.asset) || !preferMacro(rec, state.macro[rec.asset])) return false;
     state.macro[rec.asset] = rec;
     cache.write('macro5:' + rec.asset, rec, rec.fetchedAt);
     if (rec.asset === 'jpy') {
       state.usdJpyPrev = state.usdJpy;
       state.usdJpy = rec.price;
+      state.usdJpyChgPct = Number.isFinite(rec.chgPct) ? rec.chgPct : null;
       state.jpy24hHi = rec.kind === 'daily' ? null : Math.max(...rec.points.map((p) => p.value));
       state.jpy24hLo = rec.kind === 'daily' ? null : Math.min(...rec.points.map((p) => p.value));
       state.lastUpdate.jpy = state.lastUpdate.fx = rec.fetchedAt;
     } else {
       state.brentUsdPrev = state.brentUsd;
       state.brentUsd = rec.price;
+      state.brentChgPct = Number.isFinite(rec.chgPct) ? rec.chgPct : null;
       state.lastUpdate.brent = rec.fetchedAt;
     }
     bus.emit('macro:update', rec.asset);
+    return true;
   }
 
   async function refreshMacro(asset) {
@@ -263,11 +318,11 @@
       }
     }
 
-    /* Static / GitHub Pages mode: query CORS-native providers first (zero browser CORS errors) */
+    /* Static / GitHub Pages mode: query CORS-native providers first */
     const nativeTasks = [];
     if (asset === 'brent') {
       nativeTasks.push(
-        providerRecord('brent-oilwatch-v1', asset, 'https://americasoilwatch.com/api/v1/brent', oilWatchRecord, 300_000)
+        providerRecord('brent-oilwatch-v1', asset, 'https://americasoilwatch.com/api/v1/brent', oilWatchRecord, 180_000)
       );
     } else {
       const start = new Date(Date.now() - 35 * DAY_MS).toISOString().slice(0, 10);
@@ -281,10 +336,10 @@
 
     await Promise.allSettled(nativeTasks.map((t) => t.then((rec) => rec && acceptMacro(rec))));
 
-    /* Fallback to Yahoo via allorigins proxy ONLY if CORS-native providers did not yield a fresh record */
-    if (!state.macro[asset] || macroExpired(state.macro[asset])) {
+    /* Also try intraday Yahoo via CORS proxy in static mode if current record is only daily or expired */
+    if (!state.macro[asset] || state.macro[asset].kind === 'daily' || macroExpired(state.macro[asset])) {
       const symbol = asset === 'jpy' ? 'JPY=X' : BRENT_SYMBOL;
-      const qs = asset === 'brent' ? '?interval=1d&range=5d' : '?interval=5m&range=5d';
+      const qs = '?interval=5m&range=5d';
       const proxyTasks = ['query1', 'query2'].map((host) =>
         providerRecord(
           'ao-' + host + ':' + asset,
@@ -317,7 +372,10 @@
     }
     if (!changed) return false;
     if (source) state.sources.rates = source;
-    if (live) state.lastUpdate.rates = Date.now();
+    if (live) {
+      state.lastUpdate.rates = Date.now();
+      cache.write('rates2', { thb: state.rates.thb, twd: state.rates.twd, cad: state.rates.cad });
+    }
     bus.emit('portfolio:update');
     return true;
   }
@@ -329,7 +387,6 @@
     if (await api.hasBackend()) {
       const b = await api.safeJson('/api/rates', 8000);
       if (b && RATE_CODES.every((c) => Number(b[c]) > 0)) {
-        cache.write('rates2', { thb: b.thb, twd: b.twd, cad: b.cad });
         applyRates(b, b.source || 'Backend FX', true);
         return;
       }
@@ -348,7 +405,6 @@
         if (Number.isFinite(v) && v > 0) rates[code] = v;
       }
       if (RATE_CODES.every((c) => rates[c])) {
-        cache.write('rates2', rates);
         applyRates(rates, new URL(url).hostname, true);
         return;
       }
@@ -368,6 +424,16 @@
     );
   }
 
+  function acceptTreasury(r) {
+    if (!validTreasuryRate(r)) return false;
+    state.treasuryRate = r;
+    state.treasuryStatus = 'live';
+    cache.write('treasury13week', r);
+    bus.emit('treasury:update');
+    bus.emit('portfolio:update');
+    return true;
+  }
+
   async function fetchTreasuryRate() {
     const cached = cache.read('treasury13week', 365 * DAY_MS)?.value;
     if (validTreasuryRate(cached) && (!state.treasuryRate || cached.date >= state.treasuryRate.date)) {
@@ -385,7 +451,7 @@
     if (!latest) {
       const url =
         'https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/od/auctions_query' +
-        '?filter=security_type:eq:Bill,security_term:eq:13-Week&fields=auction_date,security_type,security_term,high_investment_rate&sort=-auction_date&page%5Bsize%5D=10';
+        '?filter=security_type:eq:Bill,security_term:eq:13-Week&fields=auction_date,security_type,security_term,high_investment_rate&sort=-auction_date&page%5Bsize%5D=15';
       const payload = await api.safeJson(url, 11_000);
       const candidates = (Array.isArray(payload?.data) ? payload.data : [])
         .filter((r) => r.security_type === 'Bill' && r.security_term === '13-Week' && fmt.numeric(r.high_investment_rate))
@@ -396,17 +462,25 @@
     }
 
     if (latest && (!state.treasuryRate || latest.date >= state.treasuryRate.date)) {
-      state.treasuryRate = latest;
-      state.treasuryStatus = 'live';
-      cache.write('treasury13week', latest);
+      acceptTreasury(latest);
     } else {
-      state.treasuryStatus = 'offline';
+      state.treasuryStatus = state.treasuryRate ? 'cached' : 'offline';
+      bus.emit('treasury:update');
+      bus.emit('portfolio:update');
     }
-    bus.emit('treasury:update');
-    bus.emit('portfolio:update');
   }
 
   /* ── RLUSD Circulating Market Cap ── */
+  function acceptRlusd(cap, source) {
+    if (!(cap > 0)) return false;
+    state.rlusdMcap = cap;
+    state.sources.rlusd = source || 'Live';
+    state.lastUpdate.rlusd = Date.now();
+    cache.write('rlusd', cap);
+    bus.emit('macro:update', 'rlusd');
+    return true;
+  }
+
   async function fetchRlusd() {
     if (!state.rlusdMcap) {
       const cached = cache.read('rlusd', 7 * DAY_MS)?.value;
@@ -419,11 +493,7 @@
     if (await api.hasBackend()) {
       const b = await api.safeJson('/api/rlusd', 8000);
       if (b?.marketCap > 0) {
-        state.rlusdMcap = b.marketCap;
-        state.sources.rlusd = b.source || 'Backend';
-        state.lastUpdate.rlusd = Date.now();
-        cache.write('rlusd', b.marketCap);
-        bus.emit('macro:update', 'rlusd');
+        acceptRlusd(b.marketCap, b.source || 'Backend');
         return;
       }
     }
@@ -435,16 +505,21 @@
       cap = (llama?.peggedAssets || []).find((a) => a.symbol === 'RLUSD' || a.gecko_id === 'ripple-usd')?.circulating?.peggedUSD;
       src = 'DeFiLlama';
     }
-    if (cap > 0) {
-      state.rlusdMcap = cap;
-      state.sources.rlusd = src;
-      state.lastUpdate.rlusd = Date.now();
-      cache.write('rlusd', cap);
-      bus.emit('macro:update', 'rlusd');
-    }
+    acceptRlusd(cap, src);
   }
 
   /* ── XRP Supply & ATH Metadata ── */
+  function acceptMeta(meta) {
+    if (!meta || (!meta.supply && !meta.ath)) return false;
+    if (meta.supply) state.xrpSupply = meta.supply;
+    if (meta.ath) state.xrpAth = meta.ath;
+    state.sources.meta = meta.source || 'Live';
+    state.lastUpdate.meta = Date.now();
+    cache.write('xrpMeta', { supply: state.xrpSupply, ath: state.xrpAth });
+    bus.emit('macro:update', 'meta');
+    return true;
+  }
+
   async function fetchXrpMeta() {
     const cached = cache.read('xrpMeta', 7 * DAY_MS)?.value;
     if (cached && (!state.xrpSupply || !state.xrpAth)) {
@@ -456,15 +531,7 @@
 
     if (await api.hasBackend()) {
       const b = await api.safeJson('/api/xrp-meta', 8000);
-      if (b && (b.supply || b.ath)) {
-        if (b.supply) state.xrpSupply = b.supply;
-        if (b.ath) state.xrpAth = b.ath;
-        state.sources.meta = b.source || 'Backend';
-        state.lastUpdate.meta = Date.now();
-        cache.write('xrpMeta', { supply: state.xrpSupply, ath: state.xrpAth });
-        bus.emit('macro:update', 'meta');
-        return;
-      }
+      if (acceptMeta(b)) return;
     }
 
     const cg = await api.safeJson(
@@ -472,29 +539,32 @@
       8000
     );
     if (cg?.market_data) {
-      if (cg.market_data.circulating_supply) state.xrpSupply = cg.market_data.circulating_supply;
-      if (cg.market_data.ath?.usd) state.xrpAth = cg.market_data.ath.usd;
-      state.sources.meta = 'CoinGecko';
-      state.lastUpdate.meta = Date.now();
-      cache.write('xrpMeta', { supply: state.xrpSupply, ath: state.xrpAth });
-      bus.emit('macro:update', 'meta');
+      acceptMeta({
+        supply: cg.market_data.circulating_supply,
+        ath: cg.market_data.ath?.usd,
+        source: 'CoinGecko',
+      });
       return;
     }
 
     const cp = await api.safeJson('https://api.coinpaprika.com/v1/tickers/xrp-xrp', 8000);
     if (cp?.quotes?.USD) {
-      if (cp.circulating_supply) state.xrpSupply = cp.circulating_supply;
-      if (cp.quotes.USD.ath_price) state.xrpAth = cp.quotes.USD.ath_price;
-      state.sources.meta = 'CoinPaprika';
-      state.lastUpdate.meta = Date.now();
-      cache.write('xrpMeta', { supply: state.xrpSupply, ath: state.xrpAth });
-      bus.emit('macro:update', 'meta');
+      acceptMeta({
+        supply: cp.circulating_supply,
+        ath: cp.quotes.USD.ath_price,
+        source: 'CoinPaprika',
+      });
     }
   }
 
   XRP.macro = {
     refreshJpy: () => refreshMacro('jpy'),
     refreshBrent: () => refreshMacro('brent'),
+    acceptMacro,
+    applyRates,
+    acceptTreasury,
+    acceptRlusd,
+    acceptMeta,
     fetchRates,
     fetchTreasuryRate,
     fetchRlusd,

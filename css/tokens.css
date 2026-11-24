@@ -1,55 +1,60 @@
 /* ═══════════════════════════════════════════════════════════════
-   XRP TERMINAL v3 — DESIGN SYSTEM TOKENS
-   Aesthetic: Precision Obsidian Financial Instrument
+   XRP TERMINAL v4 — DESIGN SYSTEM TOKENS
+   Aesthetic: Precision Obsidian Telemetry Instrument
    ═══════════════════════════════════════════════════════════════ */
 
 :root {
-  /* Palette — Deep Obsidian Slate */
-  --bg-canvas:       #06090f;
-  --bg-radial:       #0f1826;
-  --surface-panel:   linear-gradient(180deg, rgba(18, 25, 36, 0.96) 0%, rgba(11, 16, 24, 0.98) 100%);
-  --surface-bar:     linear-gradient(180deg, rgba(16, 23, 34, 0.97) 0%, rgba(10, 14, 22, 0.98) 100%);
-  --surface-well:    rgba(6, 10, 16, 0.72);
+  /* Architectural Obsidian & Titanium Slate Surfaces */
+  --bg-canvas:       #05080d;
+  --bg-atmosphere:   #0c1524;
+  --surface-panel:   linear-gradient(180deg, rgba(17, 25, 38, 0.96) 0%, rgba(10, 15, 23, 0.98) 100%);
+  --surface-bar:     linear-gradient(180deg, rgba(16, 23, 35, 0.97) 0%, rgba(9, 14, 22, 0.99) 100%);
+  --surface-spot:    radial-gradient(90% 100% at 0% 0%, rgba(16, 217, 132, 0.08) 0%, transparent 62%),
+                     linear-gradient(180deg, rgba(17, 26, 39, 0.97) 0%, rgba(10, 15, 24, 0.99) 100%);
+  --surface-well:    rgba(5, 9, 15, 0.78);
   --surface-hover:   rgba(255, 255, 255, 0.055);
-  --surface-active:  rgba(255, 255, 255, 0.09);
+  --surface-active:  rgba(255, 255, 255, 0.095);
 
-  /* Architectural Hairlines & Elevation */
+  /* Crisp 1px Hairlines & Specular Top Edge */
   --border-subtle:   rgba(255, 255, 255, 0.075);
-  --border-mid:      rgba(255, 255, 255, 0.12);
-  --border-strong:   rgba(255, 255, 255, 0.2);
-  --bevel-top:       inset 0 1px 0 rgba(255, 255, 255, 0.065);
-  --shadow-panel:    0 10px 28px rgba(0, 0, 0, 0.42);
-  --shadow-dialog:   0 24px 72px rgba(0, 0, 0, 0.78);
+  --border-mid:      rgba(255, 255, 255, 0.13);
+  --border-strong:   rgba(255, 255, 255, 0.22);
+  --bevel-top:       inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  --well-inset:      inset 0 1px 2px rgba(0, 0, 0, 0.55);
+  --shadow-panel:    0 10px 28px rgba(0, 0, 0, 0.45);
+  --shadow-dialog:   0 28px 80px rgba(0, 0, 0, 0.82);
 
-  /* Typography Ink Hierarchy (WCAG AA+ on obsidian) */
-  --ink-1:           #f3f6fa;
-  --ink-2:           #9fb0c2;
-  --ink-3:           #6f8194;
-  --ink-4:           #4f6072;
+  /* WCAG AA+ Ink Hierarchy */
+  --ink-1:           #f4f7fb;
+  --ink-2:           #a8b8ca;
+  --ink-3:           #76899e;
+  --ink-4:           #536579;
 
-  /* Semantic Data Colors (Surgical, zero garish glow) */
+  /* Surgical Semantic Accents (Zero Purple, Zero Garish Neon) */
   --up:              #10d984;
-  --up-bright:       #4ef2ab;
-  --up-bg:           rgba(16, 217, 132, 0.11);
-  --up-border:       rgba(16, 217, 132, 0.28);
+  --up-bright:       #4ff2ac;
+  --up-bg:           rgba(16, 217, 132, 0.12);
+  --up-border:       rgba(16, 217, 132, 0.3);
 
   --dn:              #f4435d;
-  --dn-bright:       #ff758a;
-  --dn-bg:           rgba(244, 67, 93, 0.12);
-  --dn-border:       rgba(244, 67, 93, 0.3);
+  --dn-bright:       #ff788d;
+  --dn-bg:           rgba(244, 67, 93, 0.125);
+  --dn-border:       rgba(244, 67, 93, 0.32);
 
-  --amber:           #f0a830;
-  --amber-bg:        rgba(240, 168, 48, 0.12);
-  --amber-border:    rgba(240, 168, 48, 0.3);
+  --amber:           #f2ad33;
+  --amber-bright:    #ffc457;
+  --amber-bg:        rgba(242, 173, 51, 0.13);
+  --amber-border:    rgba(242, 173, 51, 0.32);
 
-  --cyan:            #4cb8f0;
-  --cyan-bg:         rgba(76, 184, 240, 0.11);
-  --cyan-border:     rgba(76, 184, 240, 0.28);
+  --cyan:            #49baf2;
+  --cyan-bright:     #7cd2ff;
+  --cyan-bg:         rgba(73, 186, 242, 0.12);
+  --cyan-border:     rgba(73, 186, 242, 0.3);
 
-  --flat-bg:         rgba(255, 255, 255, 0.045);
+  --flat-bg:         rgba(255, 255, 255, 0.048);
 
-  /* Fonts */
-  --font-ui:         'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  /* Typography */
+  --font-ui:         'Plus Jakarta Sans', 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono:       'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
   /* Radii */
@@ -62,48 +67,63 @@
   --t-fast:          140ms cubic-bezier(0.2, 0, 0, 1);
   --t-med:           260ms cubic-bezier(0.2, 0, 0, 1);
 
-  /* Proportional 16:9 Viewport Unit (19.2px @ 1080p, 12.8px @ 720p, 38.4px @ 4K) */
+  /* Proportional 16:9-Safe Unit: guarantees 100dvh >= 56.25 * var(--u) on ALL aspect ratios */
   --u:               min(1vw, 1.7778vh);
   --u:               min(1vw, 1.7778dvh);
 
-  /* Default PC Scale */
-  --pad-x:           clamp(10px, calc(var(--u) * 0.72), 20px);
-  --pad-y:           clamp(8px, calc(var(--u) * 0.56), 16px);
-  --gap:             clamp(8px, calc(var(--u) * 0.55), 14px);
-  --card-px:         clamp(12px, calc(var(--u) * 0.82), 22px);
-  --card-py:         clamp(10px, calc(var(--u) * 0.65), 18px);
+  /* Default PC Workstation Scale (24-inch viewing distance) */
+  --pad-x:           clamp(10px, calc(var(--u) * 0.68), 18px);
+  --pad-y:           clamp(8px, calc(var(--u) * 0.52), 14px);
+  --gap:             clamp(7px, calc(var(--u) * 0.5), 12px);
+  --card-px:         clamp(12px, calc(var(--u) * 0.8), 20px);
+  --card-py:         clamp(10px, calc(var(--u) * 0.62), 16px);
 
+  --fs-micro:        clamp(9.5px, calc(var(--u) * 0.54), 11.5px);
   --fs-label:        clamp(10px, calc(var(--u) * 0.58), 12px);
-  --fs-xs:           clamp(10.5px, calc(var(--u) * 0.62), 12.5px);
-  --fs-sm:           clamp(11.5px, calc(var(--u) * 0.7), 14px);
-  --fs-md:           clamp(13px, calc(var(--u) * 0.84), 17px);
-  --fs-lg:           clamp(16px, calc(var(--u) * 1.08), 22px);
-  --fs-xl:           clamp(20px, calc(var(--u) * 1.4), 30px);
-  --fs-clock:        clamp(18px, calc(var(--u) * 1.45), 32px);
-  --fs-hero:         clamp(36px, calc(var(--u) * 3.45), 76px);
+  --fs-xs:           clamp(11px, calc(var(--u) * 0.64), 13px);
+  --fs-sm:           clamp(12px, calc(var(--u) * 0.72), 14.5px);
+  --fs-md:           clamp(13.5px, calc(var(--u) * 0.86), 17.5px);
+  --fs-lg:           clamp(16px, calc(var(--u) * 1.1), 22px);
+  --fs-xl:           clamp(21px, calc(var(--u) * 1.48), 31px);
+  --fs-clock:        clamp(18px, calc(var(--u) * 1.42), 30px);
+  --fs-hero:         clamp(36px, calc(var(--u) * 3.35), 72px);
 }
 
-/* ══════════ TV 10-FOOT SCALE (PROPORTIONAL 720p -> 4K) ══════════ */
+/* ══════════ TV 10-FOOT SCALE (STRICT ZERO-SCROLL 720p -> 4K UHD) ══════════ */
 body[data-mode="tv"] {
-  --pad-x:           clamp(10px, calc(var(--u) * 0.85), 34px);
-  --pad-y:           clamp(8px, calc(var(--u) * 0.65), 26px);
-  --gap:             clamp(7px, calc(var(--u) * 0.6), 22px);
-  --card-px:         clamp(12px, calc(var(--u) * 0.92), 36px);
-  --card-py:         clamp(9px, calc(var(--u) * 0.68), 26px);
+  --pad-x:           clamp(10px, calc(var(--u) * 0.78), 32px);
+  --pad-y:           clamp(8px, calc(var(--u) * 0.6), 24px);
+  --gap:             clamp(7px, calc(var(--u) * 0.56), 22px);
+  --card-px:         clamp(12px, calc(var(--u) * 0.9), 36px);
+  --card-py:         clamp(9px, calc(var(--u) * 0.68), 28px);
 
-  --fs-label:        clamp(10px, calc(var(--u) * 0.65), 24px);
-  --fs-xs:           clamp(10.5px, calc(var(--u) * 0.68), 25px);
-  --fs-sm:           clamp(11.5px, calc(var(--u) * 0.78), 28px);
-  --fs-md:           clamp(13.5px, calc(var(--u) * 0.94), 34px);
-  --fs-lg:           clamp(16px, calc(var(--u) * 1.18), 44px);
-  --fs-xl:           clamp(21px, calc(var(--u) * 1.56), 58px);
-  --fs-clock:        clamp(20px, calc(var(--u) * 1.72), 64px);
-  --fs-hero:         clamp(40px, calc(var(--u) * 3.85), 144px);
+  /* Boosted 10-foot sofa legibility across every tier */
+  --fs-micro:        clamp(10px, calc(var(--u) * 0.64), 25px);
+  --fs-label:        clamp(10.5px, calc(var(--u) * 0.7), 27px);
+  --fs-xs:           clamp(11.5px, calc(var(--u) * 0.78), 30px);
+  --fs-sm:           clamp(12.5px, calc(var(--u) * 0.9), 35px);
+  --fs-md:           clamp(14.5px, calc(var(--u) * 1.06), 41px);
+  --fs-lg:           clamp(17px, calc(var(--u) * 1.28), 50px);
+  --fs-xl:           clamp(23px, calc(var(--u) * 1.78), 68px);
+  --fs-clock:        clamp(21px, calc(var(--u) * 1.82), 70px);
+  --fs-hero:         clamp(40px, calc(var(--u) * 4.05), 156px);
+
+  /* High-contrast 10-foot secondary ink */
+  --ink-2:           #b8c7d8;
+  --ink-3:           #8a9eb3;
 }
 
-/* Translucent obsidian mode when ambient rain video is active */
+/* Optional TV HDMI Overscan Safe-Area Margin (2.2% inset, still 100% zero-scroll) */
+body[data-mode="tv"].tv-overscan {
+  --pad-x:           calc(var(--u) * 2.1);
+  --pad-y:           calc(var(--u) * 1.35);
+}
+
+/* Translucent glass obsidian when ambient Chiang Mai rain video is active */
 body.rain-on {
-  --surface-panel:   linear-gradient(180deg, rgba(15, 22, 33, 0.78) 0%, rgba(9, 13, 20, 0.86) 100%);
-  --surface-bar:     linear-gradient(180deg, rgba(13, 19, 29, 0.82) 0%, rgba(8, 12, 19, 0.9) 100%);
-  --surface-well:    rgba(5, 8, 14, 0.64);
+  --surface-panel:   linear-gradient(180deg, rgba(14, 21, 32, 0.78) 0%, rgba(8, 13, 20, 0.86) 100%);
+  --surface-bar:     linear-gradient(180deg, rgba(13, 19, 30, 0.82) 0%, rgba(8, 12, 19, 0.9) 100%);
+  --surface-spot:    radial-gradient(90% 100% at 0% 0%, rgba(16, 217, 132, 0.09) 0%, transparent 62%),
+                     linear-gradient(180deg, rgba(14, 22, 34, 0.8) 0%, rgba(8, 13, 20, 0.88) 100%);
+  --surface-well:    rgba(4, 8, 14, 0.65);
 }

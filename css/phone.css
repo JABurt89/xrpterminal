@@ -1,10 +1,11 @@
 /* ═══════════════════════════════════════════════════════════════
-   XRP TERMINAL v3 — THUMB-FIRST PHONE MODE (FULL DATA PARITY)
+   XRP TERMINAL v4 — THUMB-FIRST PHONE MODE (FULL DATA PARITY)
    ═══════════════════════════════════════════════════════════════ */
 
 body[data-mode="phone"] {
   height: auto;
   min-height: 100dvh;
+  max-height: none;
   overflow-x: hidden;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
@@ -15,14 +16,15 @@ body[data-mode="phone"] {
   --card-px:    14px;
   --card-py:    13px;
 
+  --fs-micro:   10px;
   --fs-label:   10.5px;
   --fs-xs:      11.5px;
   --fs-sm:      13px;
   --fs-md:      15px;
   --fs-lg:      18px;
-  --fs-xl:      26px;
-  --fs-clock:   14px;
-  --fs-hero:    clamp(36px, 11.5vw, 48px);
+  --fs-xl:      25px;
+  --fs-clock:   13px;
+  --fs-hero:    clamp(36px, 11vw, 46px);
 }
 
 body[data-mode="phone"] .shell {
@@ -35,11 +37,11 @@ body[data-mode="phone"] .shell {
   padding:
     max(8px, env(safe-area-inset-top))
     max(12px, env(safe-area-inset-right))
-    max(20px, env(safe-area-inset-bottom))
+    max(22px, env(safe-area-inset-bottom))
     max(12px, env(safe-area-inset-left));
 }
 
-/* Sticky top command bar */
+/* Sticky floating command bar */
 body[data-mode="phone"] .cmd-bar {
   order: 0;
   position: sticky;
@@ -51,11 +53,11 @@ body[data-mode="phone"] .cmd-bar {
   gap: 8px;
   padding: 8px 11px;
   border-radius: var(--r-lg);
-  background: rgba(11, 16, 24, 0.92);
+  background: rgba(10, 15, 24, 0.92);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   border: 1px solid var(--border-mid);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
 }
 
 body[data-mode="phone"] .cmd-left,
@@ -65,7 +67,7 @@ body[data-mode="phone"] .cmd-right {
   box-shadow: none;
   padding: 0;
   border-radius: 0;
-  gap: 8px;
+  gap: 7px;
 }
 
 body[data-mode="phone"] .brand-mark {
@@ -76,24 +78,24 @@ body[data-mode="phone"] .brand-mark {
 body[data-mode="phone"] .brand-sub,
 body[data-mode="phone"] .clock-date,
 body[data-mode="phone"] .clock-tz,
-body[data-mode="phone"] .pc-only,
 body[data-mode="phone"] #btnFullscreen,
-body[data-mode="phone"] #btnShortcuts {
+body[data-mode="phone"] #btnShortcuts,
+body[data-mode="phone"] .chart-mini-quote {
   display: none;
 }
 
 body[data-mode="phone"] .brand-title {
   font-size: 13.5px;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.07em;
 }
 
-@media (max-width: 460px) {
+@media (max-width: 450px) {
   body[data-mode="phone"] .brand-word-term {
     display: none;
   }
 }
 
-/* Sticky live XRP mini-price pill — display:none when inactive so it takes zero width */
+/* Scroll-aware sticky XRP spot pill */
 body[data-mode="phone"] .sticky-spot {
   display: none;
   align-items: baseline;
@@ -122,7 +124,7 @@ body[data-mode="phone"] .clock-time {
 }
 
 body[data-mode="phone"] .status-pill {
-  padding: 4px 7px;
+  padding: 4px 8px;
   font-size: 10px;
   gap: 5px;
 }
@@ -145,6 +147,10 @@ body[data-mode="phone"] .macro-ribbon   { order: 5; }
 body[data-mode="phone"] .env-bar        { order: 6; }
 
 /* Spot Hero on Phone */
+body[data-mode="phone"] .card-spot .venue-tag {
+  display: none;
+}
+
 body[data-mode="phone"] .spot-price-row {
   align-items: center;
 }
@@ -153,67 +159,99 @@ body[data-mode="phone"] .spot-chg-pill {
   font-size: 14px;
 }
 
-/* Live Interactive Chart on Phone */
+/* Live Interactive Chart on Phone — Crisp 2-Row Thumb Toolbar */
 body[data-mode="phone"] .chart-stage {
-  height: 305px;
+  height: 336px;
   flex-shrink: 0;
 }
 
 body[data-mode="phone"] .chart-toolbar {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 7px;
-  padding: 8px 10px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  row-gap: 7px;
+  column-gap: 8px;
+  align-items: center;
+  padding: 8px 11px;
 }
 
 body[data-mode="phone"] .chart-tb-left {
+  display: contents;
+}
+
+body[data-mode="phone"] .chart-title-group {
+  grid-column: 1;
+  grid-row: 1;
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
   gap: 6px;
-  width: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 
 body[data-mode="phone"] .chart-tb-right {
+  grid-column: 2;
+  grid-row: 1;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  gap: 4px;
+}
+
+body[data-mode="phone"] .tf-group {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   width: 100%;
+}
+
+body[data-mode="phone"] .ohlc-readout {
+  display: none;
+  grid-column: 1 / -1;
+  grid-row: 3;
+  font-size: 10.5px;
+  gap: 7px;
+  padding-top: 2px;
+}
+
+body[data-mode="phone"] .chart-stage.is-inspecting .ohlc-readout {
+  display: flex;
 }
 
 body[data-mode="phone"] .chart-title {
   font-size: 12px;
 }
 
-body[data-mode="phone"] .chart-mini-quote {
-  font-size: 12.5px;
-}
-
-body[data-mode="phone"] .tf-group {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  width: 100%;
+@media (max-width: 480px) {
+  body[data-mode="phone"] .chart-pair-prefix {
+    display: none;
+  }
 }
 
 body[data-mode="phone"] .tf-group .seg-btn {
-  padding: 5px 2px;
+  padding: 6px 2px;
   font-size: 10.5px;
   text-align: center;
 }
 
+body[data-mode="phone"] .chart-overlays .chip-btn,
 body[data-mode="phone"] #resetChart {
-  padding: 4px 10px;
-  font-size: 10.5px;
+  display: inline-flex;
+  padding: 4px 7px;
+  font-size: 9.5px;
 }
 
-body[data-mode="phone"] .ohlc-readout {
-  display: none;
+/* Portfolio & Cross Tickers on Phone — Zero Header Truncation */
+body[data-mode="phone"] #portfolioHeading {
+  letter-spacing: 0.06em;
+  font-size: 10px;
 }
 
-/* Portfolio & Cross Tickers on Phone */
+body[data-mode="phone"] #ccyTabs .seg-btn {
+  padding: 4px 6px;
+  font-size: 10px;
+}
+
 body[data-mode="phone"] .tbill-bar {
   padding: 8px 10px;
 }
@@ -280,7 +318,7 @@ body[data-mode="phone"] .env-phone-title {
   justify-content: space-between;
   font-size: 10.5px;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--ink-3);
 }
@@ -288,11 +326,18 @@ body[data-mode="phone"] .env-phone-title {
 body[data-mode="phone"] .env-current {
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 10px 14px;
+}
+
+@media (max-width: 460px) {
+  body[data-mode="phone"] .env-divider {
+    display: none;
+  }
 }
 
 body[data-mode="phone"] .hourly-strip {
   display: flex !important;
+  justify-content: flex-start;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
@@ -306,14 +351,14 @@ body[data-mode="phone"] .hourly-strip::-webkit-scrollbar {
 
 body[data-mode="phone"] .hr-cell {
   display: flex !important;
-  min-width: 56px;
-  padding: 6px 6px;
+  min-width: 58px;
+  padding: 6px 7px;
 }
 
 /* Phone Landscape Optimization */
 @media (orientation: landscape) and (max-height: 520px) {
   body[data-mode="phone"] .chart-stage {
-    height: 240px;
+    height: 260px;
   }
   body[data-mode="phone"] .macro-ribbon {
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -332,8 +377,11 @@ body[data-mode="phone"] .hr-cell {
   }
 }
 
-/* Extra-small phones (360px wide) */
+/* Extra-compact phones (<= 370px wide) */
 @media (max-width: 370px) {
+  body[data-mode="phone"] #btnToggleEma50 {
+    display: none;
+  }
   body[data-mode="phone"] .morpho-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

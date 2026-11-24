@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   XRP TERMINAL v3 — CENTRAL REACTIVE STATE STORE
+   XRP TERMINAL v4 — CENTRAL REACTIVE STATE STORE
    ═══════════════════════════════════════════════════════════════ */
 (function (root) {
   'use strict';
@@ -17,8 +17,9 @@
   const savedTf = cache.read('timeframe', Infinity)?.value;
   const initialTf = CFG.TIMEFRAMES.includes(savedTf) ? savedTf : '15m';
 
+  const urlMode = document.documentElement?.dataset?.urlMode || null;
   const savedModePref = cache.read('mode', Infinity)?.value;
-  const modePref = ['auto', 'tv', 'pc', 'phone'].includes(savedModePref) ? savedModePref : 'auto';
+  const modePref = urlMode || (['auto', 'tv', 'pc', 'phone'].includes(savedModePref) ? savedModePref : 'auto');
 
   const state = {
     /* Display & UI preferences */
@@ -26,8 +27,12 @@
     activeMode: document.body?.dataset?.mode || 'pc',
     holdings,
     showEma: cache.read('showEma', Infinity)?.value === true,
+    showEma50: cache.read('showEma50', Infinity)?.value === true,
     showVol: cache.read('showVol', Infinity)?.value !== false,
     oledShift: cache.read('oledShift', Infinity)?.value !== false,
+    tvOverscan:
+      cache.read('tvOverscan', Infinity)?.value === true ||
+      new URLSearchParams(location.search).get('overscan') === '1',
     rainEnabled: cache.read('rain', Infinity)?.value === true,
 
     /* Market prices */
@@ -37,6 +42,9 @@
     xrp24hHi: null,
     xrp24hLo: null,
     xrp24hVol: null,
+    xrpVwap: null,
+    xrpBid: null,
+    xrpAsk: null,
 
     btcUsd: null,
     btcPrev: null,
@@ -53,10 +61,12 @@
     /* Macro & Ecosystem */
     usdJpy: null,
     usdJpyPrev: null,
+    usdJpyChgPct: null,
     jpy24hHi: null,
     jpy24hLo: null,
     brentUsd: null,
     brentUsdPrev: null,
+    brentChgPct: null,
     xrpSupply: null,
     xrpAth: null,
     rlusdMcap: null,

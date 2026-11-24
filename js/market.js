@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   XRP TERMINAL v3 — BINANCE WEBSOCKET & REST MARKET ENGINE
+   XRP TERMINAL v4 — BINANCE WEBSOCKET & REST MARKET ENGINE
    ═══════════════════════════════════════════════════════════════ */
 (function (root) {
   'use strict';
@@ -58,6 +58,9 @@
       state.xrp24hHi = +d.h;
       state.xrp24hLo = +d.l;
       state.xrp24hVol = +d.q;
+      if (d.w != null && Number.isFinite(+d.w) && +d.w > 0) state.xrpVwap = +d.w;
+      if (d.b != null && Number.isFinite(+d.b) && +d.b > 0) state.xrpBid = +d.b;
+      if (d.a != null && Number.isFinite(+d.a) && +d.a > 0) state.xrpAsk = +d.a;
       recomputePortfolio();
       bus.emit('ticker:xrp', { price: state.xrpUsd, prev: state.xrpPrev, timestamp: +d.E });
       return true;
@@ -91,6 +94,34 @@
     return false;
   }
 
+  function ingestTickerRows(rows, source = 'REST') {
+    if (!Array.isArray(rows)) return false;
+    let count = 0;
+    for (const t of rows) {
+      if (!t?.symbol) continue;
+      const accepted = acceptMessage(
+        {
+          stream: t.symbol.toLowerCase() + '@ticker',
+          data: {
+            c: t.lastPrice,
+            P: t.priceChangePercent,
+            h: t.highPrice,
+            l: t.lowPrice,
+            q: t.quoteVolume,
+            w: t.weightedAvgPrice,
+            b: t.bidPrice,
+            a: t.askPrice,
+            E: t.closeTime,
+          },
+        },
+        source
+      );
+      if (accepted) count++;
+    }
+    if (count > 0) bus.emit('market:status');
+    return count > 0;
+  }
+
   async function refreshCandles() {
     const tf = state.klineInterval;
     const version = chart.getVersion();
@@ -116,23 +147,7 @@
       Array.isArray(r) && r.length === 3 && r.every((t) => Number.isFinite(+t.lastPrice) && +t.lastPrice > 0)
     );
     if (!rows) return;
-    for (const t of rows) {
-      acceptMessage(
-        {
-          stream: t.symbol.toLowerCase() + '@ticker',
-          data: {
-            c: t.lastPrice,
-            P: t.priceChangePercent,
-            h: t.highPrice,
-            l: t.lowPrice,
-            q: t.quoteVolume,
-            E: t.closeTime,
-          },
-        },
-        'REST'
-      );
-    }
-    bus.emit('market:status');
+    ingestTickerRows(rows, 'REST');
   }
 
   function closeSocket() {
@@ -180,7 +195,9 @@
     connectTimer = setTimeout(failed, 10_000);
     ws.onopen = () => {
       clearTimeout(connectTimer);
-      api.runJob(refreshCandles, 'candles:' + chart.getGeneration());
+      if (!state.candles.length) {
+        api.runJob(refreshCandles, 'candles:' + chart.getGeneration());
+      }
     };
     ws.onclose = ws.onerror = failed;
     ws.onmessage = (evt) => {
@@ -209,7 +226,7 @@
 
   function isLiveSocket() {
     if (!currentWs) return false;
-    if (currentWs.readyState === 0) return true; // CONNECTING
+    if (currentWs.readyState === 0) return true;
     return currentWs.readyState === 1 && (!state.lastWsMsg || Date.now() - state.lastWsMsg <= 10_000);
   }
 
@@ -229,9 +246,7 @@
       return;
     }
     const last = state.candles[state.candles.length - 1];
-    const tf = state.klineInterval;
-    const unitMs = tf.endsWith('d') ? 86_400_000 : tf.endsWith('h') ? 3_600_000 : 60_000;
-    const period = parseInt(tf, 10) * unitMs;
+    const period = XRP.fmt.tfPeriodMs(state.klineInterval);
     const lastMs = (last.time - CFG.TZ_OFFSET_SEC) * 1000;
     chart.setStatus(Date.now() > lastMs + period + 60_000 ? 'Delayed candle data' : '');
   }
@@ -242,7 +257,9 @@
   });
 
   bus.on('chart:ready', () => {
-    api.runJob(refreshCandles, 'candles:' + chart.getGeneration());
+    if (!state.candles.length) {
+      api.runJob(refreshCandles, 'candles:' + chart.getGeneration());
+    }
   });
 
   XRP.market = {
@@ -250,6 +267,7 @@
     closeSocket,
     forceReconnect,
     isLiveSocket,
+    ingestTickerRows,
     refreshCandles,
     refreshTickers,
     recomputePortfolio,

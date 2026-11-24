@@ -3,16 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="Real-time XRP market terminal with live candlestick charts, 1M XRP portfolio and 13-week US Treasury yield tracker, Morpho FXRP/RLUSD loan health monitor, macro FX and Brent oil telemetry, and Chiang Mai weather and AQI — engineered for TV, PC, and Phone.">
+<meta name="description" content="Precision real-time XRP market terminal with live candlestick charts, 1M XRP multi-currency portfolio and 13-week US Treasury yield tracker, on-chain Morpho FXRP/RLUSD loan health monitor, live NYMEX Brent and USD/JPY macro telemetry, and Chiang Mai weather and US AQI — engineered for zero-scroll TV, PC workstation, and Phone.">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#06090f">
-<title>XRP Terminal</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%2306090f'/><path d='M7 8 L16 17 L25 8 M7 24 L16 15 L25 24' stroke='%2310d984' stroke-width='3.2' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+<meta name="theme-color" content="#05080d">
+<title>XRP Terminal · Live Market, Morpho DeFi &amp; Macro Telemetry</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%2305080d'/><path d='M7 8 L16 17 L25 8 M7 24 L16 15 L25 24' stroke='%2310d984' stroke-width='3.2' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 
 <link rel="stylesheet" href="./css/tokens.css">
 <link rel="stylesheet" href="./css/base.css">
@@ -20,24 +22,33 @@
 <link rel="stylesheet" href="./css/phone.css">
 <link rel="stylesheet" href="./css/modals.css">
 
-<!-- Synchronous mode bootstrap to avoid any flash of wrong layout -->
+<!-- Synchronous zero-FOUC display mode & overscan bootstrap -->
 <script>
 (function bootstrapMode() {
   var qs = new URLSearchParams(location.search);
   var raw = (qs.get('mode') || '').toLowerCase();
-  var mode = null;
-  if (raw === 'tv' || raw === 'pc' || raw === 'phone') mode = raw;
-  else if (qs.get('tv') === '1') mode = 'tv';
-  else if (qs.get('mobile') === '1') mode = 'phone';
-  else if (qs.get('mobile') === '0') mode = 'pc';
+  var urlMode = null;
+  if (raw === 'tv' || raw === 'pc' || raw === 'phone') urlMode = raw;
+  else if (qs.get('tv') === '1') urlMode = 'tv';
+  else if (qs.get('mobile') === '1') urlMode = 'phone';
+  else if (qs.get('mobile') === '0') urlMode = 'pc';
+
+  var mode = urlMode;
+  if (urlMode) {
+    document.documentElement.dataset.urlMode = urlMode;
+  }
 
   if (!mode) {
-    try {
-      var saved = JSON.parse(localStorage.getItem('xrp-terminal-v3:mode') || 'null');
-      if (saved && (saved.value === 'tv' || saved.value === 'pc' || saved.value === 'phone')) {
-        mode = saved.value;
-      }
-    } catch (_) {}
+    var prefixes = ['xrp-terminal-v4:', 'xrp-terminal-v3:'];
+    for (var i = 0; i < prefixes.length; i++) {
+      try {
+        var saved = JSON.parse(localStorage.getItem(prefixes[i] + 'mode') || 'null');
+        if (saved && (saved.value === 'tv' || saved.value === 'pc' || saved.value === 'phone')) {
+          mode = saved.value;
+          break;
+        }
+      } catch (_) {}
+    }
   }
 
   if (!mode) {
@@ -55,7 +66,15 @@
 </script>
 </head>
 <body data-mode="pc">
-<script>document.body.dataset.mode = document.documentElement.dataset.bootMode || 'pc';</script>
+<script>
+document.body.dataset.mode = document.documentElement.dataset.bootMode || 'pc';
+try {
+  var ov = JSON.parse(localStorage.getItem('xrp-terminal-v4:tvOverscan') || 'null');
+  if ((ov && ov.value === true) || new URLSearchParams(location.search).get('overscan') === '1') {
+    document.body.classList.add('tv-overscan');
+  }
+} catch (_) {}
+</script>
 
 <!-- Optional Ambient Rain Background Video -->
 <div class="bg-rain" id="bgRainWrap" hidden>
@@ -65,7 +84,7 @@
 <!-- ══════════════════ UNIFIED RESPONSIVE TERMINAL SHELL ══════════════════ -->
 <main class="shell" id="terminalShell">
 
-  <!-- BAND 1A & 1C: COMMAND BAR (display:contents on TV/PC, sticky header on Phone) -->
+  <!-- BAND 1A & 1C: COMMAND BAR (display:contents on TV/PC, sticky glass bar on Phone) -->
   <header class="cmd-bar" id="cmdBar">
     <div class="cmd-left">
       <div class="brand">
@@ -103,17 +122,21 @@
 
       <div class="top-chrome">
         <div class="seg-group mode-switch" id="modeSwitch" role="group" aria-label="Display mode">
-          <button type="button" class="seg-btn" data-set-mode="tv" title="Zero-scroll 10-foot TV display [V]">TV</button>
-          <button type="button" class="seg-btn" data-set-mode="pc" title="Interactive PC workstation [V]">PC</button>
-          <button type="button" class="seg-btn" data-set-mode="phone" title="Thumb-first Phone view [V]">PH</button>
+          <button type="button" class="seg-btn" id="btnModeTv" data-set-mode="tv" title="Zero-scroll 10-foot TV display [V]">TV</button>
+          <button type="button" class="seg-btn" id="btnModePc" data-set-mode="pc" title="Interactive PC workstation [V]">PC</button>
+          <button type="button" class="seg-btn" id="btnModePhone" data-set-mode="phone" title="Thumb-first Phone view [V]">PH</button>
         </div>
-        <button type="button" class="icon-action pc-only" id="btnShortcuts" title="Keyboard shortcuts [?]" aria-label="Keyboard shortcuts">?</button>
-        <button type="button" class="icon-action" id="btnFullscreen" title="Toggle fullscreen [F]" aria-label="Toggle fullscreen">⛶</button>
+        <button type="button" class="icon-action pc-only" id="btnShortcuts" title="Keyboard &amp; TV remote shortcuts [?]" aria-label="Keyboard shortcuts">?</button>
+        <button type="button" class="icon-action" id="btnFullscreen" title="Toggle fullscreen [F]" aria-label="Toggle fullscreen">
+          <svg class="svg-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>
+          </svg>
+        </button>
       </div>
     </div>
   </header>
 
-  <!-- BAND 1B: CHIANG MAI ENVIRONMENT & FORECAST (Center topbar on TV/PC, bottom card on Phone) -->
+  <!-- BAND 1B: CHIANG MAI ENVIRONMENT & FORECAST (Center topbar on TV/PC, card on Phone) -->
   <section class="env-bar" id="envBar" aria-label="Chiang Mai Weather and Air Quality">
     <div class="env-phone-title">
       <span>Chiang Mai Environment</span>
@@ -121,7 +144,9 @@
     </div>
     <div class="env-current">
       <div class="env-metric">
-        <span class="env-icon" id="wxIcon" aria-hidden="true">⏳</span>
+        <span class="env-icon" id="wxIcon" aria-hidden="true">
+          <svg class="svg-ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"/><path d="M12 2.5v2.2M12 19.3v2.2M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6"/></svg>
+        </span>
         <div class="env-stack">
           <span class="env-val mono" id="wxTemp">--°C</span>
           <span class="env-sub mono" id="wxHiLo">H --° · L --°</span>
@@ -129,10 +154,12 @@
       </div>
       <div class="env-divider" aria-hidden="true"></div>
       <div class="env-metric">
-        <span class="env-icon" aria-hidden="true">💧</span>
+        <span class="env-icon cool" aria-hidden="true">
+          <svg class="svg-ico" viewBox="0 0 24 24"><path d="M12 3.2c-3.8 5-6.5 8.3-6.5 11.7a6.5 6.5 0 0 0 13 0c0-3.4-2.7-6.7-6.5-11.7Z"/></svg>
+        </span>
         <div class="env-stack">
           <span class="env-val mono" id="wxHum">--%</span>
-          <span class="env-sub">Humidity</span>
+          <span class="env-sub" id="wxHumSub">Humidity</span>
         </div>
       </div>
       <div class="env-divider" aria-hidden="true"></div>
@@ -154,9 +181,12 @@
         <div class="card-kicker">
           <span class="kicker-dot xrp"></span>
           <span>XRP / USDT</span>
-          <span class="venue-tag">BINANCE SPOT</span>
+          <span class="venue-tag">BINANCE</span>
         </div>
-        <div class="ath-badge" id="xrpAth" title="Distance from All-Time High">ATH <strong>—</strong></div>
+        <div class="spot-head-meta">
+          <span class="vwap-badge" id="xrpVwap" hidden title="24-Hour Volume-Weighted Average Price">VWAP —</span>
+          <div class="ath-badge" id="xrpAth" title="Distance from All-Time High">ATH <strong>—</strong></div>
+        </div>
       </div>
 
       <div class="spot-price-row">
@@ -172,13 +202,14 @@
 
       <div class="range-block">
         <div class="range-meta">
-          <span>24H Intraday Range</span>
+          <span>24H Range</span>
           <span class="range-pos" id="rangePos">—</span>
         </div>
         <div class="range-row">
           <span class="range-cap lo mono" id="rangeLo">—</span>
-          <div class="range-track" role="img" aria-label="24-hour price range position">
+          <div class="range-track" role="img" aria-label="24-hour price range position with VWAP reference">
             <div class="range-fill" id="rangeFill"></div>
+            <div class="range-vwap-tick" id="rangeVwapTick" hidden title="24H VWAP"></div>
             <div class="range-marker" id="rangeDot"></div>
           </div>
           <span class="range-cap hi mono" id="rangeHi">—</span>
@@ -190,12 +221,12 @@
     <article class="panel card-portfolio" id="cardPortfolio">
       <div class="portfolio-top">
         <div class="card-head">
-          <div class="card-kicker" id="portfolioHeading">1M XRP Portfolio · 24H</div>
+          <div class="card-kicker" id="portfolioHeading">1M XRP · 24H</div>
           <div class="seg-group" id="ccyTabs" role="group" aria-label="Portfolio display currency">
-            <button type="button" class="seg-btn accent-active" data-ccy="thb">THB</button>
-            <button type="button" class="seg-btn accent-active" data-ccy="twd">TWD</button>
-            <button type="button" class="seg-btn accent-active active" data-ccy="usd">USD</button>
-            <button type="button" class="seg-btn accent-active" data-ccy="cad">CAD</button>
+            <button type="button" class="seg-btn accent-active" id="btnCcyThb" data-ccy="thb">THB</button>
+            <button type="button" class="seg-btn accent-active" id="btnCcyTwd" data-ccy="twd">TWD</button>
+            <button type="button" class="seg-btn accent-active active" id="btnCcyUsd" data-ccy="usd">USD</button>
+            <button type="button" class="seg-btn accent-active" id="btnCcyCad" data-ccy="cad">CAD</button>
           </div>
         </div>
 
@@ -250,17 +281,18 @@
     <article class="panel card-morpho" id="cardMorpho" data-risk="normal" tabindex="0" role="button" aria-label="Open Morpho FXRP/RLUSD loan breakdown">
       <div class="card-head">
         <div class="card-kicker">
+          <span class="kicker-dot cyan"></span>
           <span>Morpho · FXRP / RLUSD</span>
         </div>
         <div class="morpho-status-wrap">
-          <span class="morpho-meta" data-loan="status">Checking</span>
+          <span class="morpho-meta" data-loan="status">Syncing</span>
           <span class="risk-badge unknown" id="loanRiskBadge">SYNC</span>
         </div>
       </div>
 
       <div class="ltv-gauge">
         <div class="ltv-gauge-head">
-          <span class="ltv-gauge-label" id="loanLtvSummary">LTV — / 77.0% LLTV</span>
+          <span class="ltv-gauge-label" id="loanLtvSummary">LTV — / 77% LLTV</span>
           <span class="ltv-buffer" id="loanBuffer">Buffer —</span>
         </div>
         <div class="ltv-track" role="img" aria-label="Loan-to-value ratio against 77 percent liquidation threshold">
@@ -271,20 +303,20 @@
 
       <div class="morpho-grid">
         <div class="morpho-cell">
+          <small>FXRP Locked</small>
+          <strong data-loan="collateral">—</strong>
+        </div>
+        <div class="morpho-cell">
           <small>Debt · RLUSD</small>
           <strong data-loan="debt">—</strong>
         </div>
         <div class="morpho-cell">
-          <small>Interest · RLUSD</small>
-          <strong data-loan="interest">—</strong>
-        </div>
-        <div class="morpho-cell">
-          <small>XRP Liq. · USD</small>
+          <small>XRP Liq · USD</small>
           <strong data-loan="liquidation">—</strong>
         </div>
         <div class="morpho-cell">
-          <small>LTV / 77%</small>
-          <strong data-loan="ltv">—</strong>
+          <small>Interest · RLUSD</small>
+          <strong data-loan="interest">—</strong>
         </div>
         <div class="morpho-cell">
           <small>XRP Saved</small>
@@ -299,89 +331,114 @@
 
   </section>
 
-  <!-- BAND 3: MACRO TELEMETRY RIBBON (8 Metrics) -->
+  <!-- BAND 3: MACRO TELEMETRY RIBBON (8 Metrics with Live Session Deltas) -->
   <section class="macro-ribbon" aria-label="Macro and Market Telemetry">
-    <div class="macro-cell">
+    <div class="macro-cell" id="macroCellJpy">
       <div class="macro-top">
         <span class="macro-label">USD / JPY</span>
         <span class="fx-badge" id="fxBadge"></span>
       </div>
-      <span class="macro-val fx mono" id="usdJpy">···</span>
+      <div class="macro-val-row">
+        <span class="macro-val fx mono" id="usdJpy">···</span>
+        <span class="micro-chg s-fl" id="usdJpyChg"></span>
+      </div>
     </div>
-    <div class="macro-cell">
+    <div class="macro-cell" id="macroCellXrpJpy">
       <div class="macro-top">
         <span class="macro-label">XRP / JPY</span>
         <span class="macro-tag">CROSS</span>
       </div>
-      <span class="macro-val mono" id="xrpJpy">···</span>
+      <div class="macro-val-row">
+        <span class="macro-val mono" id="xrpJpy">···</span>
+        <span class="micro-chg s-fl" id="xrpJpyChg"></span>
+      </div>
     </div>
-    <div class="macro-cell">
+    <div class="macro-cell" id="macroCellBrent">
       <div class="macro-top">
         <span class="macro-label">Brent / USD</span>
-        <span class="macro-tag">BZ=F</span>
+        <span class="macro-tag" id="brentTag">BZ=F</span>
       </div>
-      <span class="macro-val oil mono" id="brentUsd">—</span>
+      <div class="macro-val-row">
+        <span class="macro-val oil mono" id="brentUsd">—</span>
+        <span class="micro-chg s-fl" id="brentUsdChg"></span>
+      </div>
     </div>
-    <div class="macro-cell">
+    <div class="macro-cell" id="macroCellBrentJpy">
       <div class="macro-top">
         <span class="macro-label">Brent / JPY</span>
         <span class="macro-tag">BBL</span>
       </div>
-      <span class="macro-val oil mono" id="brentJpy">—</span>
+      <div class="macro-val-row">
+        <span class="macro-val oil mono" id="brentJpy">—</span>
+      </div>
     </div>
-    <div class="macro-cell">
+    <div class="macro-cell" id="macroCellVol">
       <div class="macro-top">
         <span class="macro-label">24H Vol</span>
         <span class="macro-tag">USDT</span>
       </div>
-      <span class="macro-val mono" id="vol24">···</span>
+      <div class="macro-val-row">
+        <span class="macro-val mono" id="vol24">···</span>
+      </div>
     </div>
-    <div class="macro-cell">
+    <div class="macro-cell" id="macroCellMcap">
       <div class="macro-top">
         <span class="macro-label">Mkt Cap</span>
         <span class="macro-tag">XRP</span>
       </div>
-      <span class="macro-val mono" id="mcap">···</span>
+      <div class="macro-val-row">
+        <span class="macro-val mono" id="mcap">···</span>
+      </div>
     </div>
-    <div class="macro-cell">
+    <div class="macro-cell" id="macroCellRlusd">
       <div class="macro-top">
         <span class="macro-label">RLUSD Cap</span>
         <span class="macro-tag">STABLE</span>
       </div>
-      <span class="macro-val mono" id="rlusdCap">···</span>
+      <div class="macro-val-row">
+        <span class="macro-val mono" id="rlusdCap">···</span>
+      </div>
     </div>
-    <div class="macro-cell">
+    <div class="macro-cell" id="macroCellSats">
       <div class="macro-top">
         <span class="macro-label">XRP / Sats</span>
         <span class="macro-tag">BTC</span>
       </div>
-      <span class="macro-val mono" id="xrpSats">···</span>
+      <div class="macro-val-row">
+        <span class="macro-val mono" id="xrpSats">···</span>
+      </div>
     </div>
   </section>
 
-  <!-- BAND 4: LIVE CANDLESTICK + VOLUME CHART STAGE -->
-  <section class="panel chart-stage" aria-label="Live XRP USDT Candlestick Chart">
+  <!-- BAND 4: LIVE CANDLESTICK + VOLUME + EMA CHART STAGE -->
+  <section class="panel chart-stage" id="chartStage" aria-label="Live XRP USDT Candlestick Chart">
     <div class="chart-toolbar">
       <div class="chart-tb-left">
-        <div class="chart-title">
-          <span class="live-dot" id="chartLiveDot"></span>
-          <span>XRP / USDT · <span id="mainIntervalLabel">15M</span></span>
+        <div class="chart-title-group">
+          <div class="chart-title">
+            <span class="live-dot" id="chartLiveDot"></span>
+            <span><span class="chart-pair-prefix">XRP / USDT · </span><span id="mainIntervalLabel">15M</span></span>
+          </div>
+          <span class="candle-timer" id="candleCountdown" title="Time remaining in current candle"></span>
         </div>
         <div class="seg-group tf-group" id="tfGroup" role="group" aria-label="Chart timeframe">
-          <button type="button" class="seg-btn accent-active" data-tf="1m">1M</button>
-          <button type="button" class="seg-btn accent-active" data-tf="3m">3M</button>
-          <button type="button" class="seg-btn accent-active" data-tf="5m">5M</button>
-          <button type="button" class="seg-btn accent-active active" data-tf="15m">15M</button>
-          <button type="button" class="seg-btn accent-active" data-tf="1h">1H</button>
-          <button type="button" class="seg-btn accent-active" data-tf="4h">4H</button>
-          <button type="button" class="seg-btn accent-active" data-tf="1d">1D</button>
+          <button type="button" class="seg-btn accent-active" id="btnTf1m" data-tf="1m">1M</button>
+          <button type="button" class="seg-btn accent-active" id="btnTf3m" data-tf="3m">3M</button>
+          <button type="button" class="seg-btn accent-active" id="btnTf5m" data-tf="5m">5M</button>
+          <button type="button" class="seg-btn accent-active active" id="btnTf15m" data-tf="15m">15M</button>
+          <button type="button" class="seg-btn accent-active" id="btnTf1h" data-tf="1h">1H</button>
+          <button type="button" class="seg-btn accent-active" id="btnTf4h" data-tf="4h">4H</button>
+          <button type="button" class="seg-btn accent-active" id="btnTf1d" data-tf="1d">1D</button>
         </div>
         <div class="ohlc-readout" id="ohlcBar" aria-live="off"></div>
       </div>
 
       <div class="chart-tb-right">
-        <button type="button" class="chip-btn pc-only" id="btnToggleEma" title="Toggle 20-period EMA overlay [E]">EMA 20</button>
-        <button type="button" class="chip-btn pc-only is-on" id="btnToggleVol" title="Toggle volume histogram">VOL</button>
+        <div class="chart-overlays">
+          <button type="button" class="chip-btn pc-only" id="btnToggleEma" title="Toggle 20-period EMA overlay [E]">EMA 20</button>
+          <button type="button" class="chip-btn amber pc-only" id="btnToggleEma50" title="Toggle 50-period EMA overlay [M]">EMA 50</button>
+          <button type="button" class="chip-btn is-on pc-only" id="btnToggleVol" title="Toggle volume histogram">VOL</button>
+        </div>
         <button type="button" class="chip-btn" id="resetChart" disabled title="Reset zoom to latest candles [R]">Reset</button>
         <span class="venue-tag" id="basicLabel" hidden>Canvas</span>
         <div class="chart-mini-quote" id="xrpUsdtMini">···</div>
@@ -405,14 +462,17 @@
 
 </main>
 
+<!-- 10-Foot Remote / Hotkey HUD Toast -->
+<div class="hud-toast" id="hudToast" role="status" aria-live="polite"></div>
+
 <!-- ══════════════════ MODAL 1: DATA FEEDS & TERMINAL SETTINGS ══════════════════ -->
 <dialog class="modal" id="feedDialog" aria-labelledby="feedDialogTitle">
   <div class="modal-head">
     <div>
-      <h2 id="feedDialogTitle">Data Feeds &amp; Settings</h2>
+      <h2 id="feedDialogTitle">Data Feeds &amp; Terminal Settings</h2>
       <div class="modal-head-sub" id="backendStatusLine">Direct client telemetry</div>
     </div>
-    <button type="button" class="modal-close" data-close-dialog aria-label="Close">×</button>
+    <button type="button" class="modal-close" id="btnCloseFeedDialog" data-close-dialog aria-label="Close">×</button>
   </div>
   <div class="modal-body">
     <table class="data-table">
@@ -430,20 +490,20 @@
       <div class="setting-row">
         <div class="setting-label">
           <strong>Display Mode</strong>
-          <span>Auto detects TV, PC, or Phone; or lock a mode</span>
+          <span>Auto detects TV, PC, or Phone; or lock a display profile</span>
         </div>
         <div class="seg-group" id="dialogModeGroup">
-          <button type="button" class="seg-btn" data-pref-mode="auto">Auto</button>
-          <button type="button" class="seg-btn" data-pref-mode="tv">TV</button>
-          <button type="button" class="seg-btn" data-pref-mode="pc">PC</button>
-          <button type="button" class="seg-btn" data-pref-mode="phone">Phone</button>
+          <button type="button" class="seg-btn" id="btnPrefAuto" data-pref-mode="auto">Auto</button>
+          <button type="button" class="seg-btn" id="btnPrefTv" data-pref-mode="tv">TV</button>
+          <button type="button" class="seg-btn" id="btnPrefPc" data-pref-mode="pc">PC</button>
+          <button type="button" class="seg-btn" id="btnPrefPhone" data-pref-mode="phone">Phone</button>
         </div>
       </div>
 
       <div class="setting-row">
         <div class="setting-label">
           <strong>Portfolio XRP Holdings</strong>
-          <span>Used for portfolio value, 24h P&amp;L, and T-Bill income</span>
+          <span>Used for live portfolio value, 24h P&amp;L, and 13W T-Bill yield</span>
         </div>
         <div class="holding-input-wrap">
           <input type="number" id="holdingInput" class="holding-input" min="1" step="1000" value="1000000" aria-label="XRP holdings quantity">
@@ -451,20 +511,24 @@
         </div>
       </div>
 
-      <div class="setting-row">
-        <label class="setting-toggle">
+      <div class="setting-toggles-grid">
+        <label class="setting-toggle" for="ambientRain">
           <input type="checkbox" id="ambientRain">
-          <span>Ambient rain video background</span>
+          <span>Ambient rain video</span>
         </label>
-        <label class="setting-toggle">
+        <label class="setting-toggle" for="oledShiftToggle">
           <input type="checkbox" id="oledShiftToggle">
-          <span>TV OLED pixel-shift protection</span>
+          <span>TV OLED pixel-shift</span>
+        </label>
+        <label class="setting-toggle" for="tvOverscanToggle">
+          <input type="checkbox" id="tvOverscanToggle">
+          <span>TV overscan safe margin</span>
         </label>
       </div>
     </div>
   </div>
   <div class="modal-foot">
-    <span class="mono" style="font-size:11.5px;color:var(--ink-3);">XRP Terminal v3.0 · Asia/Bangkok (ICT)</span>
+    <span class="mono" style="font-size:11.5px;color:var(--ink-3);">XRP Terminal v4.0 · Asia/Bangkok (ICT)</span>
     <button type="button" class="primary-btn" id="refreshFeeds">Refresh All Feeds</button>
   </div>
 </dialog>
@@ -476,7 +540,7 @@
       <h2 id="loanDialogTitle">Morpho Blue · FXRP / RLUSD Loan</h2>
       <div class="modal-head-sub" id="loanDialogSub">Ethereum Mainnet · Wallet 0x8A44…f246</div>
     </div>
-    <button type="button" class="modal-close" data-close-dialog aria-label="Close">×</button>
+    <button type="button" class="modal-close" id="btnCloseLoanDialog" data-close-dialog aria-label="Close">×</button>
   </div>
   <div class="modal-body">
     <div class="kv-grid">
@@ -499,7 +563,7 @@
   </div>
   <div class="modal-foot">
     <button type="button" class="chip-btn" id="btnCopyWallet">Copy Wallet 0x8A44…f246</button>
-    <a class="primary-btn" href="https://app.morpho.org/ethereum/variable/0x4fa31e3f8ba345227d44e1cf48559eea53a90dd5311dc006984c060f2f311d96/rlusd-fxrp" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">Open Morpho Market ↗</a>
+    <a class="primary-btn" id="linkMorphoMarket" href="https://app.morpho.org/ethereum/variable/0x4fa31e3f8ba345227d44e1cf48559eea53a90dd5311dc006984c060f2f311d96/rlusd-fxrp" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">Open Morpho Market ↗</a>
   </div>
 </dialog>
 
@@ -510,7 +574,7 @@
       <h2 id="treasuryDialogTitle">13-Week US Treasury Bill Income</h2>
       <div class="modal-head-sub" data-treasury-summary>Checking latest completed auction…</div>
     </div>
-    <button type="button" class="modal-close" data-close-dialog aria-label="Close">×</button>
+    <button type="button" class="modal-close" id="btnCloseTreasuryDialog" data-close-dialog aria-label="Close">×</button>
   </div>
   <div class="modal-body">
     <table class="data-table">
@@ -533,7 +597,7 @@
   </div>
   <div class="modal-foot">
     <span class="mono" style="font-size:11.5px;color:var(--ink-3);">Pre-tax passive yield estimate</span>
-    <button type="button" class="chip-btn" data-close-dialog>Close</button>
+    <button type="button" class="chip-btn" id="btnDoneTreasuryDialog" data-close-dialog>Close</button>
   </div>
 </dialog>
 
@@ -542,15 +606,17 @@
   <div class="modal-head">
     <div>
       <h2 id="shortcutsDialogTitle">Keyboard &amp; TV Remote Controls</h2>
-      <div class="modal-head-sub">Fast navigation for PC &amp; living-room displays</div>
+      <div class="modal-head-sub">Instant navigation for PC workstation &amp; living-room TV</div>
     </div>
-    <button type="button" class="modal-close" data-close-dialog aria-label="Close">×</button>
+    <button type="button" class="modal-close" id="btnCloseShortcutsDialog" data-close-dialog aria-label="Close">×</button>
   </div>
   <div class="modal-body">
     <div class="kbd-list">
       <div class="kbd-item"><span>Timeframes (1M – 1D)</span><span><kbd>1</kbd> – <kbd>7</kbd></span></div>
+      <div class="kbd-item"><span>TV Remote Timeframes</span><span><kbd>←</kbd> <kbd>→</kbd></span></div>
+      <div class="kbd-item"><span>TV Remote Currency</span><span><kbd>↑</kbd> <kbd>↓</kbd></span></div>
       <div class="kbd-item"><span>Reset chart zoom</span><kbd>R</kbd></div>
-      <div class="kbd-item"><span>Toggle EMA 20 overlay</span><kbd>E</kbd></div>
+      <div class="kbd-item"><span>Toggle EMA 20 / EMA 50</span><span><kbd>E</kbd> / <kbd>M</kbd></span></div>
       <div class="kbd-item"><span>Cycle TV / PC / Phone</span><kbd>V</kbd></div>
       <div class="kbd-item"><span>Cycle portfolio currency</span><kbd>C</kbd></div>
       <div class="kbd-item"><span>Toggle fullscreen</span><kbd>F</kbd></div>
@@ -561,12 +627,12 @@
     </div>
   </div>
   <div class="modal-foot">
-    <span style="font-size:12px;color:var(--ink-3);">TV Remote: Left/Right arrows cycle chart timeframes</span>
-    <button type="button" class="chip-btn" data-close-dialog>Done</button>
+    <span style="font-size:12px;color:var(--ink-3);">TV Mode guarantees strict zero-scroll from 720p to 4K UHD</span>
+    <button type="button" class="chip-btn" id="btnDoneShortcutsDialog" data-close-dialog>Done</button>
   </div>
 </dialog>
 
-<!-- Modular Application Scripts (works over HTTPS, localhost, and file://) -->
+<!-- Modular Application Scripts (zero-build: runs over HTTPS, localhost, and file://) -->
 <script defer src="./js/config.js"></script>
 <script defer src="./js/api.js"></script>
 <script defer src="./js/state.js"></script>

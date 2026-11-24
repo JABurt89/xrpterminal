@@ -1,11 +1,11 @@
 /* ═══════════════════════════════════════════════════════════════
-   XRP TERMINAL v3 — UI PAINTER, MODE CONTROLLER & INTERACTIONS
+   XRP TERMINAL v4 — UI PAINTER, MODE CONTROLLER & INTERACTIONS
    ═══════════════════════════════════════════════════════════════ */
 (function (root) {
   'use strict';
 
   const XRP = (root.XRP = root.XRP || {});
-  const { CFG, cache, fmt, state, bus, api, chart, market, macro, weather, morpho } = XRP;
+  const { CFG, cache, fmt, state, bus, api, chart, market, macro, morpho } = XRP;
 
   const $ = (id) => document.getElementById(id);
 
@@ -13,9 +13,20 @@
   let lastFeedSig = '';
   let idleTimer = null;
   let oledTimer = null;
+  let toastTimer = null;
   let oledStep = 0;
   let wakeLock = null;
   const flashTimers = new WeakMap();
+
+  /* ── 10-Foot Remote / Hotkey HUD Toast ── */
+  function showToast(text) {
+    const el = $('hudToast');
+    if (!el || !text) return;
+    el.textContent = text;
+    el.classList.add('visible');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('visible'), 1600);
+  }
 
   /* ── Mode Detection & Switching (TV / PC / Phone) ── */
   function detectAutoMode() {
@@ -51,7 +62,9 @@
       btn.setAttribute('aria-pressed', String(active));
     });
 
+    syncTvOverscan();
     syncOledShift();
+    paintPortfolio();
     chart.onModeChange();
     scheduleRender();
   }
@@ -62,9 +75,9 @@
     clearTimeout(flashTimers.get(el));
     const cls = dir === 'up' ? 'flash-up' : 'flash-dn';
     el.classList.remove('flash-up', 'flash-dn');
-    void el.offsetWidth; // restart keyframe cleanly
+    void el.offsetWidth;
     el.classList.add(cls);
-    flashTimers.set(el, setTimeout(() => el.classList.remove(cls), 430));
+    flashTimers.set(el, setTimeout(() => el.classList.remove(cls), 460));
   }
 
   /* ── Portfolio & Currency Cycling ── */
@@ -95,7 +108,9 @@
   function paintPortfolio() {
     const heading = $('portfolioHeading');
     if (heading) {
-      heading.textContent = `${fmt.fmtHoldingsShort(state.holdings)} XRP Portfolio · 24H`;
+      const shortQty = fmt.fmtHoldingsShort(state.holdings);
+      heading.textContent =
+        state.activeMode === 'phone' ? `${shortQty} XRP · 24H` : `${shortQty} XRP Portfolio · 24H`;
     }
 
     const p = state.portfolio;
@@ -133,24 +148,34 @@
     if ($('treasuryDialog')?.open) paintTreasuryModal();
   }
 
-  function cycleCurrency() {
-    if (document.hidden || !state.portfolio || state.ccyPinned) return;
+  function stepCurrency(dir = 1, pin = false) {
+    if (!state.portfolio) return;
     let next = state.ccyIndex;
-    for (let step = 1; step <= CFG.PORTFOLIO_CCY.length; step++) {
-      const idx = (state.ccyIndex + step) % CFG.PORTFOLIO_CCY.length;
+    const len = CFG.PORTFOLIO_CCY.length;
+    for (let step = 1; step <= len; step++) {
+      const idx = (state.ccyIndex + dir * step + len * 4) % len;
       if (ccyRate(CFG.PORTFOLIO_CCY[idx].code)) {
         next = idx;
         break;
       }
     }
-    if (next === state.ccyIndex) return;
+    if (next === state.ccyIndex && !pin) return;
     state.ccyIndex = next;
+    if (pin) {
+      state.ccyPinned = true;
+      cache.write('pinnedCurrency', CFG.PORTFOLIO_CCY[next].code);
+    }
     const els = [$('portfolioVal'), $('portfolioPnl'), $('portfolioCcy'), $('portfolioIncome')].filter(Boolean);
     els.forEach((el) => el.classList.add('ccy-fade'));
     setTimeout(() => {
       paintPortfolio();
       els.forEach((el) => el.classList.remove('ccy-fade'));
-    }, 170);
+    }, 160);
+  }
+
+  function cycleCurrency() {
+    if (document.hidden || !state.portfolio || state.ccyPinned) return;
+    stepCurrency(1, false);
   }
 
   function paintTreasuryModal() {
@@ -169,7 +194,7 @@
       );
     } else {
       const stale = Date.now() - Date.parse(tRate.date) > 10 * XRP.DAY_MS;
-      const tag = state.treasuryStatus === 'live' ? (stale ? 'older auction' : 'latest auction') : state.treasuryStatus === 'checking' ? 'refreshing' : 'cached';
+      const tag = state.treasuryStatus === 'live' ? (stale ? 'latest published auction' : 'latest auction') : state.treasuryStatus === 'checking' ? 'refreshing' : 'cached';
       const pct = (tRate.annualYield * 100).toFixed(3);
       summaryEls.forEach((el) => (el.textContent = `13-Week US T-Bill · ${pct}% Annual Yield (${tag})`));
       statusEls.forEach(
@@ -215,6 +240,19 @@
     }
   }
 
+  function paintMicroDelta(id, pct) {
+    const el = $(id);
+    if (!el) return;
+    if (pct == null || !Number.isFinite(pct)) {
+      el.textContent = '';
+      el.className = 'micro-chg s-fl';
+      return;
+    }
+    const cls = fmt.stateClass(pct);
+    el.className = 'micro-chg s-' + cls;
+    el.textContent = `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`;
+  }
+
   /* ── Main Reactive Paint Pass (rAF coalesced) ── */
   function scheduleRender() {
     if (renderQueued) return;
@@ -249,6 +287,16 @@
         const prev = state.xrpUsd / (1 + pct / 100);
         const diff = state.xrpUsd - prev;
         absEl.textContent = `24H ${diff >= 0 ? '+' : '−'}$${fmt.num(Math.abs(diff), 4)}`;
+        if (state.xrpBid && state.xrpAsk) {
+          absEl.title = `Best Bid $${fmt.num(state.xrpBid, 4)} · Best Ask $${fmt.num(state.xrpAsk, 4)}`;
+        }
+      }
+
+      /* 24H VWAP pill */
+      const vwapEl = $('xrpVwap');
+      if (vwapEl && state.xrpVwap != null) {
+        vwapEl.textContent = `VWAP $${fmt.num(state.xrpVwap, 4)}`;
+        vwapEl.hidden = false;
       }
 
       /* Chart header mini quote */
@@ -271,7 +319,7 @@
       document.title = `${arrow} $${state.xrpUsd.toFixed(4)} XRP · Terminal`;
     }
 
-    /* XRP 24h Range */
+    /* XRP 24h Range + VWAP Tick */
     if (state.xrpUsd != null && state.xrp24hLo != null && state.xrp24hHi != null) {
       const lo = state.xrp24hLo;
       const hi = state.xrp24hHi;
@@ -285,6 +333,18 @@
       $('rangeDot').style.left = pctStr;
       $('rangeFill').style.width = pctStr;
       $('rangePos').textContent = `${Math.round(pos * 100)}% OF RANGE · ${spreadPct.toFixed(1)}% SPREAD`;
+
+      const vTick = $('rangeVwapTick');
+      if (vTick) {
+        if (state.xrpVwap != null && span > 0 && state.xrpVwap >= lo && state.xrpVwap <= hi) {
+          const vPos = ((state.xrpVwap - lo) / span) * 100;
+          vTick.style.left = vPos.toFixed(1) + '%';
+          vTick.title = `24H VWAP $${fmt.num(state.xrpVwap, 4)}`;
+          vTick.hidden = false;
+        } else {
+          vTick.hidden = true;
+        }
+      }
     }
 
     /* ATH Distance */
@@ -341,10 +401,35 @@
     }
 
     /* Macro Ribbon */
-    if (state.usdJpy != null) $('usdJpy').textContent = '¥' + fmt.num(state.usdJpy, 2);
-    if (state.usdJpy != null && state.xrpUsd != null) $('xrpJpy').textContent = '¥' + fmt.num(state.xrpUsd * state.usdJpy, 2);
-    if (state.brentUsd != null) $('brentUsd').textContent = '$' + fmt.num(state.brentUsd, 2);
-    if (state.brentUsd != null && state.usdJpy != null) $('brentJpy').textContent = '¥' + fmt.num(state.brentUsd * state.usdJpy, 0);
+    if (state.usdJpy != null) {
+      $('usdJpy').textContent = '¥' + fmt.num(state.usdJpy, 2);
+      paintMicroDelta('usdJpyChg', state.usdJpyChgPct);
+      const jpyRec = state.macro.jpy;
+      if (jpyRec && $('macroCellJpy')) {
+        $('macroCellJpy').title = `${jpyRec.source} (${jpyRec.kind}) · As of ${fmt.fmtFeedTime(jpyRec.asOf * 1000)} ICT`;
+      }
+    }
+    if (state.usdJpy != null && state.xrpUsd != null) {
+      $('xrpJpy').textContent = '¥' + fmt.num(state.xrpUsd * state.usdJpy, 2);
+      if (state.xrp24hPct != null) {
+        const combPct = ((1 + state.xrp24hPct / 100) * (1 + (state.usdJpyChgPct || 0) / 100) - 1) * 100;
+        paintMicroDelta('xrpJpyChg', combPct);
+      }
+    }
+    if (state.brentUsd != null) {
+      $('brentUsd').textContent = '$' + fmt.num(state.brentUsd, 2);
+      paintMicroDelta('brentUsdChg', state.brentChgPct);
+      const bRec = state.macro.brent;
+      if (bRec) {
+        if ($('brentTag')) $('brentTag').textContent = bRec.instrument || 'BZ=F';
+        if ($('macroCellBrent')) {
+          $('macroCellBrent').title = `${bRec.instrument} · ${bRec.source} · As of ${fmt.fmtFeedTime(bRec.asOf * 1000)} ICT`;
+        }
+      }
+    }
+    if (state.brentUsd != null && state.usdJpy != null) {
+      $('brentJpy').textContent = '¥' + fmt.num(state.brentUsd * state.usdJpy, 0);
+    }
     if (state.xrp24hVol != null) $('vol24').textContent = '$' + fmt.compact(state.xrp24hVol);
     if (state.xrpUsd != null && state.xrpSupply != null) $('mcap').textContent = '$' + fmt.compact(state.xrpUsd * state.xrpSupply);
     if (state.rlusdMcap != null) $('rlusdCap').textContent = '$' + fmt.compact(state.rlusdMcap);
@@ -399,7 +484,7 @@
     market.checkCandleDelay();
   }
 
-  /* ── Clock & FX Market Session Badge ── */
+  /* ── Clock, Candle Countdown & FX Session Badge ── */
   const pad2 = (n) => String(n).padStart(2, '0');
   const fmtDurShort = (s) => Math.floor(s / 3600) + ':' + pad2(Math.floor((s % 3600) / 60));
 
@@ -410,6 +495,8 @@
     if ($('clk')) $('clk').textContent = state.activeMode === 'phone' ? t.slice(0, 5) : t;
     if ($('clkDate')) $('clkDate').textContent = d;
     if ($('envPhoneUpdated')) $('envPhoneUpdated').textContent = t.slice(0, 5) + ' ICT';
+
+    chart.paintCountdown();
 
     const fx = macro.fxSessionState();
     const badge = $('fxBadge');
@@ -439,8 +526,8 @@
       ['XRP / USDT', state.tickerSources['xrpusdt@ticker'] || 'Binance', state.tickerTimes['xrpusdt@ticker'], 45_000],
       ['BTC / USDT', state.tickerSources['btcusdt@ticker'] || 'Binance', state.tickerTimes['btcusdt@ticker'], 45_000],
       ['XRP / BTC', state.tickerSources['xrpbtc@ticker'] || 'Binance', state.tickerTimes['xrpbtc@ticker'], 45_000],
-      ['USD / JPY', state.macro.jpy?.source || '—', state.macro.jpy ? state.macro.jpy.asOf * 1000 : 0, null, state.macro.jpy && !macro.macroExpired(state.macro.jpy)],
-      ['Brent Futures', state.macro.brent?.source || '—', state.macro.brent ? state.macro.brent.asOf * 1000 : 0, null, state.macro.brent && !macro.macroExpired(state.macro.brent)],
+      ['USD / JPY', state.macro.jpy ? `${state.macro.jpy.source} (${state.macro.jpy.kind})` : '—', state.macro.jpy ? state.macro.jpy.asOf * 1000 : 0, null, state.macro.jpy && !macro.macroExpired(state.macro.jpy)],
+      ['Brent Futures', state.macro.brent ? `${state.macro.brent.source} (${state.macro.brent.instrument})` : '—', state.macro.brent ? state.macro.brent.asOf * 1000 : 0, null, state.macro.brent && !macro.macroExpired(state.macro.brent)],
       ['FX Rates (THB/TWD/CAD)', state.sources.rates, state.lastUpdate.rates, 3_600_000],
       ['13W US T-Bill', state.treasuryRate ? 'US Treasury' : '—', state.treasuryRate?.date || '—', null, !!state.treasuryRate],
       ['RLUSD Market Cap', state.sources.rlusd, state.lastUpdate.rlusd, CFG.STALE.rlusd],
@@ -480,7 +567,7 @@
     }
   }
 
-  /* ── Ambient Rain Video & TV OLED Shift ── */
+  /* ── Ambient Rain Video, TV Overscan & OLED Shift ── */
   function syncRain() {
     const wrap = $('bgRainWrap');
     const video = $('bgVideo');
@@ -495,6 +582,12 @@
     } else {
       video.pause();
     }
+  }
+
+  function syncTvOverscan() {
+    const cb = $('tvOverscanToggle');
+    if (cb) cb.checked = state.tvOverscan;
+    document.body.classList.toggle('tv-overscan', state.tvOverscan && state.activeMode === 'tv');
   }
 
   function syncOledShift() {
@@ -544,6 +637,7 @@
       btn.classList.toggle('active', btn.dataset.tf === state.klineInterval);
     });
     $('btnToggleEma')?.classList.toggle('is-on', state.showEma);
+    $('btnToggleEma50')?.classList.toggle('is-on', state.showEma50);
     $('btnToggleVol')?.classList.toggle('is-on', state.showVol);
   }
 
@@ -554,6 +648,7 @@
       const btn = e.target.closest('[data-set-mode]');
       if (!btn) return;
       applyMode(btn.dataset.setMode, btn.dataset.setMode);
+      showToast(`DISPLAY · ${btn.dataset.setMode.toUpperCase()}`);
     });
 
     /* Dialog mode preference switch (includes Auto) */
@@ -563,7 +658,7 @@
       applyMode(btn.dataset.prefMode, btn.dataset.prefMode);
     });
 
-    /* Responsive auto-resize when modePref is 'auto' */
+    /* Responsive auto-resize ONLY when modePref is strictly 'auto' */
     let resizeDebounce = null;
     root.addEventListener('resize', () => {
       clearTimeout(resizeDebounce);
@@ -616,6 +711,13 @@
     $('btnToggleEma')?.addEventListener('click', () => {
       state.showEma = !state.showEma;
       cache.write('showEma', state.showEma);
+      syncChartControlsUI();
+      chart.applyOverlays();
+    });
+
+    $('btnToggleEma50')?.addEventListener('click', () => {
+      state.showEma50 = !state.showEma50;
+      cache.write('showEma50', state.showEma50);
       syncChartControlsUI();
       chart.applyOverlays();
     });
@@ -691,7 +793,7 @@
       market.recomputePortfolio();
     });
 
-    /* Rain & OLED settings */
+    /* Rain, OLED & Overscan settings */
     $('ambientRain')?.addEventListener('change', (e) => {
       state.rainEnabled = e.target.checked;
       cache.write('rain', state.rainEnabled);
@@ -715,6 +817,13 @@
       syncOledShift();
     });
 
+    $('tvOverscanToggle')?.addEventListener('change', (e) => {
+      state.tvOverscan = e.target.checked;
+      cache.write('tvOverscan', state.tvOverscan);
+      syncTvOverscan();
+      chart.onModeChange();
+    });
+
     /* Manual Refresh All */
     $('refreshFeeds')?.addEventListener('click', async (e) => {
       const btn = e.currentTarget;
@@ -730,31 +839,41 @@
       }
     });
 
-    /* Keyboard & TV Remote Navigation */
+    /* Keyboard & Smart TV Remote Navigation */
     document.addEventListener('keydown', (e) => {
       if (e.defaultPrevented || e.repeat || e.ctrlKey || e.altKey || e.metaKey) return;
       if (e.target.closest?.('input, textarea, select')) return;
 
       const openModal = document.querySelector('dialog.modal[open]');
-      if (openModal) return; // Let native Escape handle open dialogs
+      if (openModal) return;
 
       const key = e.key.toLowerCase();
       if (key === 'f') {
         toggleFullscreen();
       } else if (key === 'r') {
         chart.focusRecent();
+        showToast('CHART · RESET ZOOM');
       } else if (key === 'e') {
         state.showEma = !state.showEma;
         cache.write('showEma', state.showEma);
         syncChartControlsUI();
         chart.applyOverlays();
+        showToast(`EMA 20 · ${state.showEma ? 'ON' : 'OFF'}`);
+      } else if (key === 'm') {
+        state.showEma50 = !state.showEma50;
+        cache.write('showEma50', state.showEma50);
+        syncChartControlsUI();
+        chart.applyOverlays();
+        showToast(`EMA 50 · ${state.showEma50 ? 'ON' : 'OFF'}`);
       } else if (key === 'v') {
         const order = ['tv', 'pc', 'phone'];
         const next = order[(order.indexOf(state.activeMode) + 1) % order.length];
         applyMode(next, next);
+        showToast(`DISPLAY · ${next.toUpperCase()}`);
       } else if (key === 'c') {
         state.ccyPinned = false;
-        cycleCurrency();
+        stepCurrency(1, false);
+        showToast(`PORTFOLIO · ${activeCcy().label}`);
       } else if (key === 'l') {
         openDialog('loanDialog', () => morpho.paint());
       } else if (key === 'i') {
@@ -768,13 +887,20 @@
         if (tf) {
           chart.switchTimeframe(tf);
           syncChartControlsUI();
+          showToast(`TIMEFRAME · ${tf.toUpperCase()}`);
         }
       } else if (state.activeMode === 'tv' && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) {
+        e.preventDefault();
         const idx = CFG.TIMEFRAMES.indexOf(state.klineInterval);
         const dir = e.key === 'ArrowRight' ? 1 : -1;
         const nextTf = CFG.TIMEFRAMES[(idx + dir + CFG.TIMEFRAMES.length) % CFG.TIMEFRAMES.length];
         chart.switchTimeframe(nextTf);
         syncChartControlsUI();
+        showToast(`TIMEFRAME · ${nextTf.toUpperCase()}`);
+      } else if (state.activeMode === 'tv' && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+        e.preventDefault();
+        stepCurrency(e.key === 'ArrowDown' ? 1 : -1, true);
+        showToast(`PORTFOLIO · ${activeCcy().label} PINNED`);
       }
     });
 
@@ -806,7 +932,7 @@
       const line = $('backendStatusLine');
       if (line) {
         line.textContent = ok
-          ? 'Connected to local XRP Terminal backend (/api/* cached)'
+          ? 'Connected to XRP Terminal v4 server (/api/bootstrap + SWR cache)'
           : 'Direct browser telemetry (GitHub Pages / standalone mode)';
       }
     });
@@ -817,6 +943,7 @@
     bindEvents,
     syncChartControlsUI,
     syncRain,
+    syncTvOverscan,
     syncOledShift,
     acquireWakeLock,
     resetIdle,
@@ -825,5 +952,6 @@
     paintPortfolio,
     paintTreasuryModal,
     scheduleRender,
+    showToast,
   };
 })(window);
